@@ -1,73 +1,41 @@
 # Deployment
 
-## MVP Deployment Goal
-Deploy a simple web-accessible prototype for fast testing and iteration.
+## Two-Environment Model
 
-## Expected Topology
-The MVP should run as:
-- a web frontend for the React/Vite client
-- a single backend Node.js process for Socket.IO and in-memory room state
+| Env | PM2 | Port | nginx | Branch | Trigger |
+|---|---|---|---|---|---|
+| dev | app-dev | 3001 | :8081 | Feature branch | After code review |
+| prod | app-prod | 3000 | :80 | main | After final approval |
 
-Because room and match state live in memory, the backend should be deployed as a **single authoritative instance** for MVP.
+### URLs
+- Dev: http://20.106.185.110:8081
+- Prod: http://20.106.185.110
 
-## Key Constraint
-Do not horizontally scale the backend for MVP unless sticky routing and shared room state are intentionally introduced. Multi-instance deployment would break the in-memory single-source-of-truth model.
+## Infrastructure
+- VM: Azure Ubuntu 24.04, 2 vCPU, 8GB RAM
+- Process Manager: PM2 (auto-restart, log management)
+- Reverse Proxy: nginx (WebSocket support)
+- Deploy Root: ~/deployments/ (dev/ and prod/)
 
-## Deployment Characteristics
-- web only
-- anonymous access
-- ephemeral in-memory sessions
-- no database provisioning required
-- server restart clears active rooms/games
+## Deploy Commands
+bash scripts/deploy-env.sh dev feature/issue-N
+bash scripts/deploy-env.sh prod main
 
-## Platform Guidance
-The stakeholder has not locked a provider yet. Suitable MVP-friendly deployment options are platforms that can host:
-- a static or frontend app build
-- a long-running Node.js websocket-capable server
+Each deploy: pulls branch, npm ci, npm run build, pm2 restart, health check.
 
-Examples of acceptable categories:
-- single VM/VPS with reverse proxy
-- container host
-- PaaS that supports persistent websocket connections
+## Health Checks
+pm2 list, pm2 logs app-dev/app-prod
+curl http://localhost:3001/ (dev)
+curl http://localhost:3000/ (prod)
 
-## Operational Expectations
-For MVP, deployment should prioritize:
-- simplicity
-- quick iteration
-- easy restarts
-- straightforward logs/debugging
+## MVP Constraints
+- Single Node.js instance per env (in-memory room state)
+- No horizontal scaling
+- Backend restart clears active rooms
+- No database, anonymous access
 
-## Environment / Runtime Needs
-Likely runtime requirements:
-- Node.js runtime for backend
-- environment configuration for allowed client origin(s), if needed
-- websocket-compatible hosting/network path
-
-## Health and Runtime Considerations
-Recommended baseline:
-- simple health endpoint on backend
-- clear startup logging
-- frontend configured to connect to backend socket endpoint via environment variable/config
-
-## Failure Behavior
-Because state is in memory only:
-- backend restart drops active rooms and matches
-- disconnects should be expected and handled gracefully in UX
-- no recovery of active sessions after restart is required for MVP
-
-## Out of Scope for MVP Deployment
-- autoscaling backend cluster
-- zero-downtime room-state migration
-- multi-region synchronization
-- durable session recovery
-- complex infrastructure orchestration
-
-## Future Deployment Evolution
-If the game grows beyond MVP, revisit:
-- shared state store
-- sticky sessions / load balancing
-- durable persistence
-- observability and metrics
-- managed realtime infrastructure
-
-For now, optimize for one reliable instance and fast shipping.
+## Future
+- Domain + SSL (certbot)
+- Dynamic feature subdomains
+- Docker Compose migration
+- Shared state store for scaling
