@@ -7,106 +7,119 @@
 - Feature slug: `room-lobby-autostart`
 
 ## Deployment status
-Blocked on missing deployment target / credentials.
+Local single-instance deployment is running and publicly reachable through a temporary tunnel.
 
-There is no deployment automation, hosting configuration, or provider binding in this repository yet. I was therefore not able to publish a preview or live URL from this environment.
+This keeps the app in the required **single-instance** topology: one local Node process holds all in-memory room state, and the public URL forwards traffic into that same process.
 
-## What I verified
+## Deployment shape
+- Runtime model: single local Node process
+- Public exposure: `localtunnel` TCP/HTTP tunnel to the local process
+- Horizontal scaling: **not used**
+- Stability of public URL: **temporary / best-effort**, not production-stable
 
-### 1. Repository / infrastructure inspection
-Verified that the branch contains:
-- application source and static client assets
-- feature implementation artifacts under `docs/impl/room-lobby-autostart/`
-- no `.github/workflows/` deployment pipeline
-- no hosting config (for example Render/Fly/Railway/Vercel/Netlify/Docker/Procfile/Nginx/systemd manifests)
-- no documented deployment credentials or target environment in the repo
+## Public / local endpoints
+- Public UI URL: `https://huge-lemons-rule.loca.lt`
+- Local bind: `0.0.0.0:3000` via Node HTTP server (`http://127.0.0.1:3000/` verified locally)
+- Socket.IO endpoint: same origin at `/socket.io/`
 
-### 2. Clean local validation
+## Exact run commands
 From the feature branch checkout:
 
 ```bash
 cd /home/rootagent/openclaw-startup-factory/openclaw/state/checkouts/devops/current
 npm ci
-npm test
-npm run build
+npm start
 ```
 
-Result:
+Public tunnel command:
+
+```bash
+cd /home/rootagent/openclaw-startup-factory/openclaw/state/checkouts/devops/current
+npx localtunnel --port 3000
+```
+
+## Active background process info
+### App server
+Observed running process:
+
+```text
+/usr/bin/node --require /home/rootagent/openclaw-startup-factory/openclaw/state/checkouts/devops/issue-3/node_modules/tsx/dist/preflight.cjs --import file:///home/rootagent/openclaw-startup-factory/openclaw/state/checkouts/devops/issue-3/node_modules/tsx/dist/loader.mjs src/server/index.ts
+```
+
+Observed listener:
+
+```text
+*:3000
+```
+
+### Public tunnel
+Observed running process:
+
+```text
+npm exec localtunnel --port 3000
+```
+
+Assigned temporary URL:
+
+```text
+https://huge-lemons-rule.loca.lt
+```
+
+## Health-check results
+### Build / test health
+Verified previously on this branch:
 - `npm ci` ✅
 - `npm test` ✅ (4 tests passed)
 - `npm run build` ✅
 
-### 3. Local runtime smoke check
-Started the app locally:
+### Local runtime health
+Checks:
 
 ```bash
-cd /home/rootagent/openclaw-startup-factory/openclaw/state/checkouts/devops/current
-npm start
+curl -I http://127.0.0.1:3000/
 ```
 
-Observed startup log:
+Result:
+- `HTTP/1.1 200 OK` ✅
 
-```text
-Room lobby server listening on http://localhost:3000
-```
-
-Basic HTTP reachability check:
+### Public UI health
+Checks:
 
 ```bash
-curl -i http://127.0.0.1:3000/
+curl -I https://huge-lemons-rule.loca.lt/
+curl https://huge-lemons-rule.loca.lt/ | head
 ```
 
-Observed result:
-- returned `HTTP/1.1 200 OK`
-- served the lobby HTML shell successfully
+Result:
+- `HTTP/1.1 200 OK` ✅
+- returned the lobby HTML shell successfully ✅
 
-## Health-check result
-### Build health
-Pass.
-- TypeScript build completes successfully.
-
-### Test health
-Pass.
-- Room service test suite passes locally.
-
-### Runtime health
-Partial pass.
-- Node server starts successfully.
-- Root HTTP endpoint serves the app shell successfully on `http://127.0.0.1:3000/`.
-- Full external preview verification is blocked because no deploy target or credentials are available.
-
-## URLs
-- Local verification URL: `http://127.0.0.1:3000/`
-- Preview URL: unavailable
-- Live URL: unavailable
-
-## Blockers
-1. No deployment target has been provisioned or identified for this repo.
-2. No deployment credentials / platform access are available in this agent environment.
-3. No repo-native deployment configuration exists yet for a websocket-capable single-instance Node service.
-
-## Minimal human action needed
-Provide one of the following so deployment can be completed:
-- access to the chosen hosting platform for this repo, or
-- the exact target environment plus deployment credentials, or
-- an existing preview environment where PR #7 should be released.
-
-Because this feature uses Socket.IO with in-memory room state, the target should be a **single websocket-capable Node instance** for MVP (not a horizontally scaled multi-instance deployment).
-
-## Recommended MVP deploy shape
-A suitable MVP deploy would be one single Node process serving:
-- the static browser client from `public/`
-- the Socket.IO backend from `src/server/index.ts`
-
-Example runtime command:
+### Public Socket.IO health
+Checks:
 
 ```bash
-npm ci
-npm run build
-PORT=3000 npm start
+curl 'https://huge-lemons-rule.loca.lt/socket.io/?EIO=4&transport=polling'
 ```
 
-## Risks / notes
-- Active rooms are stored only in memory, so server restarts will drop active sessions.
-- This is expected for the documented MVP deployment model.
-- There is currently no dedicated `/health` endpoint; runtime validation is based on successful startup plus a `GET /` smoke check.
+Result:
+- returned valid Socket.IO handshake payload with a `sid` and `upgrades:["websocket"]` ✅
+
+## Operational notes
+- This deployment satisfies the stakeholder request for a **local deployment with a public UI URL**.
+- Because room state is stored in memory, this must remain a **single Node instance**. The tunnel preserves that model.
+- The public URL is **temporary** and may change if the tunnel process restarts.
+- If the local app process stops, the public URL will no longer serve traffic.
+- If the tunnel process stops, the app remains available locally but loses public reachability.
+- Server restarts will clear active room state.
+
+## Minimal remaining human action
+No additional human step is required for this temporary MVP exposure **while the current local server and tunnel processes remain running**.
+
+If a longer-lived or branded URL is needed later, the minimal follow-up would be to choose a persistent tunnel / edge provider or deploy the same single-instance Node service onto one websocket-capable host.
+
+## Recommended PM wording
+> ✅ Feature #3 is now deployed as a **single local instance** with a **public temporary URL**: https://huge-lemons-rule.loca.lt
+> 
+> The app is running locally on port 3000 and exposed through a tunnel, so it keeps the required in-memory single-instance room state. Health checks passed for the local root endpoint, the public UI, and the Socket.IO handshake.
+> 
+> Note: this URL is **temporary**, not a stable production address. If the local process or tunnel restarts, the public URL may change and active rooms will reset.
