@@ -102,3 +102,24 @@ pm2 save
 - The stale behavior was caused by the dev server checkout itself still being on old commit `d9b11bb`, not by a mismatched feature-branch HEAD.
 - This app serves non-fingerprinted static assets such as `/app.js`, so browser caching can potentially confuse verification, but the server-side deploy target was definitively outdated before the refresh.
 - After resetting the dev checkout to `origin/feature/issue-10` and restarting PM2, the public dev URL served the updated client code from `e7397cb`.
+
+---
+
+## Dev refresh update
+- Refresh reason: publish latest gameplay UI fixes together for stakeholder review
+- Refreshed deployed commit:   - full:                                                                 d006d267a1a8bd1665b533ccedb200fbedcda739
+  - short:     d006d26
+- Refreshed at (UTC):   2026-03-11 23:57
+- Dev URL:   http://20.106.185.110:8081/
+
+### Refresh validation
+- Dev deploy checkout reset to       origin/feature/issue-10 at   d006d26.
+-             npm test passed: 2 test files / 10 tests.
+- npm run build passed.
+- pm2 restart completed with               app-dev online.
+- Local health check on http://127.0.0.1:3001/ returned HTTP 200.
+- Public health check on http://20.106.185.110:8081/ returned HTTP 200.
+- Socket.IO polling handshake succeeded on /socket.io/.
+- Live /build-info.json returned:       {"version":"0.1.0","commit":"d006d26","builtAt":"2026-03-11T23:56:25.465Z","displayVersion":"v0.1.0+d006d26"}
+- Live /app.js contains gameplay-focused screen switching:   yes
+- Live /app.js contains transient message helper:   no
