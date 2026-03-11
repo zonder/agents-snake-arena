@@ -7,6 +7,11 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
+    <div class="toast-stack" aria-live="polite" aria-atomic="true">
+      <div id="status" class="toast status">Connecting…</div>
+      <div id="error" class="toast error hidden"></div>
+    </div>
+
     <main class="app">
       <section class="panel">
         <div class="panel-top">
@@ -16,9 +21,6 @@
           </div>
           <div id="buildMarker" class="build-marker" aria-live="polite">Build: loading…</div>
         </div>
-
-        <div id="status" class="status">Connecting…</div>
-        <div id="error" class="error hidden"></div>
 
         <div id="entry" class="screen entry-screen">
           <div class="actions">
@@ -62,8 +64,10 @@
             </aside>
 
             <div class="game-center">
-              <div id="board" class="board" aria-label="Game board"></div>
-              <p id="gameMessage" class="message game-message"></p>
+              <div class="board-frame">
+                <div id="boardStatusBadge" class="board-status-badge hidden"></div>
+                <div id="board" class="board" aria-label="Game board"></div>
+              </div>
             </div>
 
             <aside class="game-side game-side-right">

@@ -14,12 +14,12 @@ const readyButton = document.getElementById('readyButton');
 const lobbyMessage = document.getElementById('lobbyMessage');
 const phaseBadge = document.getElementById('phaseBadge');
 const boardEl = document.getElementById('board');
+const boardStatusBadgeEl = document.getElementById('boardStatusBadge');
 const gamePhaseLabel = document.getElementById('gamePhaseLabel');
 const countdownLabel = document.getElementById('countdownLabel');
 const speedLabel = document.getElementById('speedLabel');
 const score0El = document.getElementById('score0');
 const score1El = document.getElementById('score1');
-const gameMessageEl = document.getElementById('gameMessage');
 const buildMarkerEl = document.getElementById('buildMarker');
 
 let latestLobbyState = null;
@@ -30,7 +30,7 @@ let boardReady = false;
 loadBuildMarker();
 
 socket.on('connect', () => {
-  statusEl.textContent = 'Connected. Create a room or join with a code.';
+  setStatus('Connected. Create a room or join with a code.');
   showScreen('entry');
 });
 
@@ -42,17 +42,17 @@ socket.on('room:error', (payload) => {
 socket.on('room:created', (payload) => {
   yourSlotIndex = payload.yourSlotIndex;
   errorEl.classList.add('hidden');
-  statusEl.textContent = 'Room created.';
+  setStatus('Room created.');
 });
 
 socket.on('room:joined', (payload) => {
   yourSlotIndex = payload.yourSlotIndex;
   errorEl.classList.add('hidden');
-  statusEl.textContent = 'Joined room.';
+  setStatus('Joined room.');
 });
 
 socket.on('player:left', () => {
-  statusEl.textContent = 'A player left. Waiting for a replacement.';
+  setStatus('A player left. Waiting for a replacement.');
 });
 
 socket.on('lobby:state', (payload) => {
@@ -64,16 +64,16 @@ socket.on('lobby:state', (payload) => {
 });
 
 socket.on('game:countdown', (payload) => {
-  statusEl.textContent = `Match starts in ${payload.secondsRemaining}...`;
+  setStatus(`Match starts in ${payload.secondsRemaining}...`);
   showScreen('gameplay');
 });
 
 socket.on('game:start', (payload) => {
-  statusEl.textContent = `Game started in room ${payload.roomCode}.`;
+  setStatus(`Game started in room ${payload.roomCode}.`);
   gamePhaseLabel.textContent = 'In progress';
   countdownLabel.textContent = 'Countdown: go';
   speedLabel.textContent = `Speed: ${payload.tickIntervalMs}ms`;
-  gameMessageEl.textContent = 'Gameplay screen active. Lobby is fully hidden during the match.';
+  showBoardStatus('Go!');
   showScreen('gameplay');
 });
 
@@ -86,7 +86,7 @@ socket.on('game:ended', (payload) => {
   latestGameState = payload.finalState;
   renderGame(payload.finalState, payload.result.bySlot);
   const yourOutcome = yourSlotIndex === null ? 'draw' : payload.result.bySlot[yourSlotIndex];
-  statusEl.textContent = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
+  setStatus(yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.');
 });
 
 socket.on('room:closed', (payload) => {
@@ -97,10 +97,11 @@ socket.on('room:closed', (payload) => {
   roomCodeDisplay.textContent = '----';
   gameRoomCodeEl.textContent = '----';
   phaseBadge.textContent = 'Closed';
+  hideBoardStatus();
   showScreen('entry');
-  statusEl.textContent = payload.reason === 'player-disconnected'
+  setStatus(payload.reason === 'player-disconnected'
     ? 'Room closed because a player disconnected. Create or join a new room to play again.'
-    : 'Room closed. Create or join a new room to play again.';
+    : 'Room closed. Create or join a new room to play again.');
 });
 
 document.getElementById('createRoomButton').addEventListener('click', () => {
@@ -115,7 +116,7 @@ async function copyActiveRoomCode() {
   const roomCode = latestLobbyState?.roomCode || latestGameState?.roomCode;
   if (!roomCode) return;
   await navigator.clipboard.writeText(roomCode);
-  statusEl.textContent = 'Room code copied.';
+  setStatus('Room code copied.');
 }
 
 document.getElementById('copyRoomCodeButton').addEventListener('click', copyActiveRoomCode);
@@ -178,14 +179,17 @@ function renderLobby(state) {
   readyButton.textContent = you?.isReady ? 'Unready' : 'Ready';
   readyButton.disabled = !you || !you.isOccupied || state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
 
-  if (gameplayFocused) {
-    gamePhaseLabel.textContent = state.phase === 'starting' ? 'Countdown' : state.phase === 'game-over' ? 'Game over' : 'In progress';
-    gameMessageEl.textContent = state.phase === 'starting'
-      ? 'Both players are ready. Transitioning into gameplay.'
-      : state.phase === 'game-over'
-        ? 'Round finished. Lobby remains hidden while the result screen is shown.'
-        : 'Gameplay screen active. Lobby is fully hidden during the match.';
+  if (!gameplayFocused) {
+    hideBoardStatus();
+    return;
   }
+
+  gamePhaseLabel.textContent = state.phase === 'starting' ? 'Countdown' : state.phase === 'game-over' ? 'Game over' : 'In progress';
+  showBoardStatus(state.phase === 'starting'
+    ? 'Players ready'
+    : state.phase === 'game-over'
+      ? 'Round complete'
+      : 'Live match');
 }
 
 function renderGame(state, perSlotResult) {
@@ -199,16 +203,16 @@ function renderGame(state, perSlotResult) {
   if (state.phase === 'starting') {
     gamePhaseLabel.textContent = 'Countdown';
     countdownLabel.textContent = `Countdown: ${state.countdownSecondsRemaining ?? 3}`;
-    gameMessageEl.textContent = 'Queue your opening turn now. Snakes stay still until the countdown ends.';
+    showBoardStatus(`Match starts in ${state.countdownSecondsRemaining ?? 3}`);
   } else if (state.phase === 'in-progress') {
     gamePhaseLabel.textContent = 'In progress';
     countdownLabel.textContent = `Tick: ${state.tickNumber}`;
-    gameMessageEl.textContent = 'Avoid walls, avoid bodies, and race for the shared food.';
+    showBoardStatus('Live match');
   } else {
     gamePhaseLabel.textContent = 'Game over';
     countdownLabel.textContent = 'Countdown: closed soon';
     const yourOutcome = perSlotResult && yourSlotIndex !== null ? perSlotResult[yourSlotIndex] : 'draw';
-    gameMessageEl.textContent = yourOutcome === 'win' ? 'Result: you win.' : yourOutcome === 'lose' ? 'Result: you lose.' : 'Result: draw.';
+    showBoardStatus(yourOutcome === 'win' ? 'You win' : yourOutcome === 'lose' ? 'You lose' : 'Draw');
   }
 
   paintBoard(state);
@@ -219,6 +223,20 @@ function showScreen(screen) {
   lobbyEl.classList.toggle('hidden', screen !== 'lobby');
   gamePanelEl.classList.toggle('hidden', screen !== 'gameplay');
   panelEl.classList.toggle('gameplay-active', screen === 'gameplay');
+}
+
+function setStatus(message) {
+  statusEl.textContent = message;
+}
+
+function showBoardStatus(message) {
+  boardStatusBadgeEl.textContent = message;
+  boardStatusBadgeEl.classList.remove('hidden');
+}
+
+function hideBoardStatus() {
+  boardStatusBadgeEl.textContent = '';
+  boardStatusBadgeEl.classList.add('hidden');
 }
 
 function ensureBoard(width, height) {
