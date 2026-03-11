@@ -64,3 +64,41 @@ This confirms the deployed environment is serving both the app shell and the gam
 ## Notes
 - The first immediate localhost curl right after PM2 restart failed during process warm-up, but a follow-up check seconds later succeeded with the process stable and online.
 - No merge was performed.
+
+---
+
+## Dev refresh update
+- Refresh reason: stakeholder reported dev looked stale and did not reflect the latest lobby-hiding change
+- Previous deployed commit found on server checkout: `d9b11bb`
+- Refreshed deployed commit: `e7397cb` (`Hide lobby UI during active game states`)
+- Refreshed at (UTC): `2026-03-11 23:33`
+- Dev URL: `http://20.106.185.110:8081/`
+
+### Refresh actions
+```bash
+cd /home/rootagent/deployments/dev
+git fetch origin feature/issue-10
+git checkout feature/issue-10 || git checkout -b feature/issue-10 origin/feature/issue-10
+git reset --hard origin/feature/issue-10
+npm ci
+npm test
+npm run build
+pm2 startOrRestart /home/rootagent/deployments/ecosystem.config.js --only app-dev
+pm2 save
+```
+
+### Refresh validation
+- Server deployment checkout now resolves to `e7397cb7e3d038a849e7c71e2c91969aee88bde7`.
+- `npm test` passed: 2 test files / 10 tests.
+- `npm run build` passed.
+- `pm2 list` shows `app-dev` online after restart.
+- `curl -I http://127.0.0.1:3001/` returned `HTTP/1.1 200 OK` after warm-up.
+- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
+- Live `http://20.106.185.110:8081/app.js` now contains the updated gameplay-screen switch:
+  - `const gameplayFocused = state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';`
+  - `showScreen(gameplayFocused ? 'gameplay' : 'lobby');`
+
+### Caching / stale-asset conclusion
+- The stale behavior was caused by the dev server checkout itself still being on old commit `d9b11bb`, not by a mismatched feature-branch HEAD.
+- This app serves non-fingerprinted static assets such as `/app.js`, so browser caching can potentially confuse verification, but the server-side deploy target was definitively outdated before the refresh.
+- After resetting the dev checkout to `origin/feature/issue-10` and restarting PM2, the public dev URL served the updated client code from `e7397cb`.
