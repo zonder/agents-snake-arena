@@ -123,3 +123,42 @@ If a longer-lived or branded URL is needed later, the minimal follow-up would be
 > The app is running locally on port 3000 and exposed through a tunnel, so it keeps the required in-memory single-instance room state. Health checks passed for the local root endpoint, the public UI, and the Socket.IO handshake.
 > 
 > Note: this URL is **temporary**, not a stable production address. If the local process or tunnel restarts, the public URL may change and active rooms will reset.
+
+---
+
+## Production deployment update (main)
+- Deployed branch: `main`
+- Deployed commit: `f739a5a` (`Merge pull request #7 from zonder/feature/issue-3`)
+- Production URL: `http://20.106.185.110/`
+- Runtime: `pm2` process `app-prod` behind nginx on port 80, forwarding to local app on port 3000
+
+### Production deployment actions
+```bash
+cd /home/rootagent/deployments/prod
+git fetch origin main
+git checkout main
+git reset --hard origin/main
+npm ci
+npm run build
+pm2 startOrRestart /home/rootagent/deployments/ecosystem.config.js --only app-prod
+pm2 save
+```
+
+### Production health-check results
+Checks:
+
+```bash
+pm2 list
+curl -I http://127.0.0.1:3000/
+curl -I http://20.106.185.110/
+curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'
+```
+
+Results:
+- `app-prod` is `online` in PM2 ✅
+- local app on `http://127.0.0.1:3000/` returned `HTTP/1.1 200 OK` ✅
+- public prod URL `http://20.106.185.110/` returned `HTTP/1.1 200 OK` via nginx ✅
+- Socket.IO polling handshake returned a valid session payload ✅
+
+### Production blocker resolved during deploy
+Before deployment, `app-prod` was failing because `/home/rootagent/deployments/prod/package.json` was missing from the prod checkout. Syncing `origin/main` into `~/deployments/prod` resolved the startup failure.
