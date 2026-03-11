@@ -1,5 +1,6 @@
-import { createServer } from 'node:http';
+import { execSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
+import { createServer } from 'node:http';
 import { extname, join } from 'node:path';
 import { Server } from 'socket.io';
 import { EVENTS, type Direction } from '../shared/contracts.js';
@@ -7,6 +8,7 @@ import { RoomService, type ClientEvent } from './roomService.js';
 
 const publicDir = join(process.cwd(), 'public');
 const roomService = new RoomService();
+const buildInfo = resolveBuildInfo();
 
 const mimeTypes: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -15,7 +17,18 @@ const mimeTypes: Record<string, string> = {
 };
 
 const httpServer = createServer((req, res) => {
-  const urlPath = req.url === '/' ? '/index.html' : req.url || '/index.html';
+  const url = new URL(req.url || '/', 'http://localhost');
+
+  if (url.pathname === '/build-info.json') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store, max-age=0',
+    });
+    res.end(JSON.stringify(buildInfo));
+    return;
+  }
+
+  const urlPath = url.pathname === '/' ? '/index.html' : url.pathname;
   const filePath = join(publicDir, urlPath.replace(/^\//, ''));
 
   if (!filePath.startsWith(publicDir) || !existsSync(filePath)) {
@@ -24,7 +37,10 @@ const httpServer = createServer((req, res) => {
     return;
   }
 
-  res.writeHead(200, { 'Content-Type': mimeTypes[extname(filePath)] || 'application/octet-stream' });
+  res.writeHead(200, {
+    'Content-Type': mimeTypes[extname(filePath)] || 'application/octet-stream',
+    'Cache-Control': urlPath === '/index.html' ? 'no-store, max-age=0' : 'public, max-age=3600',
+  });
   res.end(readFileSync(filePath));
 });
 
@@ -62,7 +78,32 @@ function emitEvents(events: ClientEvent[] | { events: ClientEvent[] }) {
   }
 }
 
+function resolveBuildInfo() {
+  const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as { version?: string };
+  const version = packageJson.version || '0.0.0';
+  const commit = readGitValue('git rev-parse --short HEAD') || 'unknown';
+  const builtAt = process.env.BUILD_TIMESTAMP || new Date().toISOString();
+
+  return {
+    version,
+    commit,
+    builtAt,
+    displayVersion: `v${version}+${commit}`,
+  };
+}
+
+function readGitValue(command: string) {
+  try {
+    return execSync(command, {
+      cwd: process.cwd(),
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).toString().trim();
+  } catch {
+    return '';
+  }
+}
+
 const port = Number(process.env.PORT || 3000);
 httpServer.listen(port, () => {
-  console.log(`Room lobby server listening on http://localhost:${port}`);
+  console.log(`Room lobby server listening on http://localhost:${port} (${buildInfo.displayVersion})`);
 });

@@ -29,6 +29,8 @@ body { margin: 0; }
   display: grid;
   align-content: start;
 }
+.panel-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+h1 { margin: 0; }
 .subtitle,.message,.controls-hint { color: #cbd5e1; }
 .status,.error,.badge { margin: 12px 0; padding: 10px 12px; border-radius: 10px; }
 .status { background: #1d4ed8; }
@@ -82,6 +84,17 @@ button:disabled { opacity: .6; cursor: not-allowed; }
 .cell.snake-0 { background: #22c55e; }
 .cell.snake-1 { background: #38bdf8; }
 .cell.head { box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+.build-marker {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  border: 1px solid #475569;
+  background: #0f172a;
+  color: #cbd5e1;
+  font-size: 12px;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
 @media (max-width: 900px) {
   :root {
     --app-padding: 12px;
@@ -93,12 +106,16 @@ button:disabled { opacity: .6; cursor: not-allowed; }
   }
 }
 @media (max-width: 720px) {
-  .room-header,.game-header,.game-meta,.game-room-info { flex-direction: column; align-items: flex-start; }
+  .room-header,.game-header,.game-meta,.game-room-info,.panel-top { flex-direction: column; align-items: flex-start; }
   .scoreboard { width: 100%; }
   .score-card { flex: 1; }
   .room-code,.game-room-code { font-size: 24px; }
   .game-phase { font-size: 20px; }
   .board {
     width: min(100%, calc(100dvh - 420px));
+  }
+
+  .build-marker {
+    width: fit-content;
   }
 }

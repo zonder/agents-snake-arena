@@ -27,6 +27,13 @@
 - Disconnect during `starting` or `in-progress` immediately resolves the round and then closes the room after the result window.
 - During `starting`, `in-progress`, and `game-over`, the client hides the taller lobby section and keeps the room code available in the game header so the gameplay board appears where the lobby previously sat and is less likely to require vertical scrolling.
 
+## Build/version marker
+- Added a small visible `Build: ...` pill in the top-right of the main panel so reviewers can quickly confirm which deployment is live.
+- The client requests `/build-info.json` with `cache: 'no-store'` and a timestamp query param to reduce stale browser-cache confusion during deployment checks.
+- The server resolves build metadata at startup from the app version in `package.json` plus the current short git commit SHA, yielding a marker like `v0.1.0+abc1234`.
+- The marker tooltip includes version, commit SHA, and startup timestamp for extra debugging context when validating deploy freshness.
+- This change is presentation/debugging only and does not alter gameplay state or socket event behavior.
+
 ## Deviations / limitations
 - `game:state.result` is only used as a lightweight terminal snapshot hint; the client relies on `game:ended.result.bySlot` for the player-specific win/lose/draw message.
 - The browser UI is intentionally simple and snapshot-driven; it does not animate between ticks.

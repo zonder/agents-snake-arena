@@ -20,11 +20,14 @@ const speedLabel = document.getElementById('speedLabel');
 const score0El = document.getElementById('score0');
 const score1El = document.getElementById('score1');
 const gameMessageEl = document.getElementById('gameMessage');
+const buildMarkerEl = document.getElementById('buildMarker');
 
 let latestLobbyState = null;
 let latestGameState = null;
 let yourSlotIndex = null;
 let boardReady = false;
+
+loadBuildMarker();
 
 socket.on('connect', () => {
   statusEl.textContent = 'Connected. Create a room or join with a code.';
@@ -130,6 +133,23 @@ document.addEventListener('keydown', (event) => {
   if (!direction || !latestGameState) return;
   socket.emit('player:direction:set', { direction });
 });
+
+async function loadBuildMarker() {
+  try {
+    const response = await fetch(`/build-info.json?ts=${Date.now()}`, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`Build info request failed with ${response.status}`);
+    }
+
+    const buildInfo = await response.json();
+    buildMarkerEl.textContent = `Build: ${buildInfo.displayVersion}`;
+    buildMarkerEl.title = `Version ${buildInfo.version} • Commit ${buildInfo.commit} • Built ${buildInfo.builtAt}`;
+  } catch (error) {
+    console.error(error);
+    buildMarkerEl.textContent = 'Build: unavailable';
+    buildMarkerEl.title = 'Build metadata could not be loaded.';
+  }
+}
 
 function renderLobby(state) {
   roomCodeDisplay.textContent = state.roomCode;

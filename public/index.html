@@ -9,8 +9,13 @@
   <body>
     <main class="app">
       <section class="panel">
-        <h1>Multiplayer Snake</h1>
-        <p class="subtitle">Create a room, share the code, ready up, then survive the round.</p>
+        <div class="panel-top">
+          <div>
+            <h1>Multiplayer Snake</h1>
+            <p class="subtitle">Create a room, share the code, ready up, then survive the round.</p>
+          </div>
+          <div id="buildMarker" class="build-marker" aria-live="polite">Build: loading…</div>
+        </div>
 
         <div id="status" class="status">Connecting…</div>
         <div id="error" class="error hidden"></div>
