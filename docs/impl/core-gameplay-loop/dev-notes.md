@@ -26,6 +26,7 @@
 - Simultaneous same-cell head collisions and explicit cross-over head swaps both kill both snakes.
 - Disconnect during `starting` or `in-progress` immediately resolves the round and then closes the room after the result window.
 - During `starting`, `in-progress`, and `game-over`, the client hides the taller lobby section and now uses a board-first gameplay shell: the board sits centered in the top row, while round state, room code/copy, speed/countdown, and player score cards live in side columns (or wrap beneath the board on narrower screens) so the board stays reachable without unnecessary scrolling in the review viewport.
+- Follow-up UI cleanup: while gameplay is active, the global title/subtitle header and blue status banner are fully removed from above the board; match state feedback now lives in the left gameplay rail, and the build/version marker is mirrored into the right gameplay rail so reviewers can still confirm the live version without reintroducing top chrome over the board.
 - Follow-up UX polish for stakeholder feedback: moved changing session/status text out of normal document flow by converting the top status bar into a fixed toast and replacing the under-board gameplay copy with a small overlay badge anchored inside the board frame. This keeps countdown/gameplay/game-over messaging visible without any message block above the board changing layout or making the board jump.
 
 ## Build/version marker

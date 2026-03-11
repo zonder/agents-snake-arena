@@ -3,6 +3,7 @@ const socket = io();
 const statusEl = document.getElementById('status');
 const errorEl = document.getElementById('error');
 const panelEl = document.querySelector('.panel');
+const panelTopEl = document.getElementById('panelTop');
 const entryEl = document.getElementById('entry');
 const lobbyEl = document.getElementById('lobby');
 const gamePanelEl = document.getElementById('gamePanel');
@@ -14,23 +15,27 @@ const readyButton = document.getElementById('readyButton');
 const lobbyMessage = document.getElementById('lobbyMessage');
 const phaseBadge = document.getElementById('phaseBadge');
 const boardEl = document.getElementById('board');
-const boardStatusBadgeEl = document.getElementById('boardStatusBadge');
 const gamePhaseLabel = document.getElementById('gamePhaseLabel');
+const gameStatusInlineEl = document.getElementById('gameStatusInline');
 const countdownLabel = document.getElementById('countdownLabel');
 const speedLabel = document.getElementById('speedLabel');
 const score0El = document.getElementById('score0');
 const score1El = document.getElementById('score1');
+const gameMessageEl = document.getElementById('gameMessage');
 const buildMarkerEl = document.getElementById('buildMarker');
+const gameBuildMarkerEl = document.getElementById('gameBuildMarker');
 
 let latestLobbyState = null;
 let latestGameState = null;
 let yourSlotIndex = null;
 let boardReady = false;
+let buildMarkerText = 'Build: loading…';
+let buildMarkerTitle = 'Build metadata is loading.';
 
 loadBuildMarker();
 
 socket.on('connect', () => {
-  setStatus('Connected. Create a room or join with a code.');
+  statusEl.textContent = 'Connected. Create a room or join with a code.';
   showScreen('entry');
 });
 
@@ -42,17 +47,18 @@ socket.on('room:error', (payload) => {
 socket.on('room:created', (payload) => {
   yourSlotIndex = payload.yourSlotIndex;
   errorEl.classList.add('hidden');
-  setStatus('Room created.');
+  statusEl.textContent = 'Room created.';
 });
 
 socket.on('room:joined', (payload) => {
   yourSlotIndex = payload.yourSlotIndex;
   errorEl.classList.add('hidden');
-  setStatus('Joined room.');
+  statusEl.textContent = 'Joined room.';
 });
 
 socket.on('player:left', () => {
-  setStatus('A player left. Waiting for a replacement.');
+  statusEl.textContent = 'A player left. Waiting for a replacement.';
+  gameStatusInlineEl.textContent = 'A player left. Waiting for a replacement.';
 });
 
 socket.on('lobby:state', (payload) => {
@@ -64,16 +70,18 @@ socket.on('lobby:state', (payload) => {
 });
 
 socket.on('game:countdown', (payload) => {
-  setStatus(`Match starts in ${payload.secondsRemaining}...`);
+  statusEl.textContent = `Match starts in ${payload.secondsRemaining}...`;
+  gameStatusInlineEl.textContent = `Match starts in ${payload.secondsRemaining}...`;
   showScreen('gameplay');
 });
 
 socket.on('game:start', (payload) => {
-  setStatus(`Game started in room ${payload.roomCode}.`);
+  statusEl.textContent = `Game started in room ${payload.roomCode}.`;
   gamePhaseLabel.textContent = 'In progress';
+  gameStatusInlineEl.textContent = 'Game live.';
   countdownLabel.textContent = 'Countdown: go';
   speedLabel.textContent = `Speed: ${payload.tickIntervalMs}ms`;
-  showBoardStatus('Go!');
+  gameMessageEl.textContent = 'Gameplay screen active. Lobby is fully hidden during the match.';
   showScreen('gameplay');
 });
 
@@ -86,7 +94,9 @@ socket.on('game:ended', (payload) => {
   latestGameState = payload.finalState;
   renderGame(payload.finalState, payload.result.bySlot);
   const yourOutcome = yourSlotIndex === null ? 'draw' : payload.result.bySlot[yourSlotIndex];
-  setStatus(yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.');
+  const statusText = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
+  statusEl.textContent = statusText;
+  gameStatusInlineEl.textContent = statusText;
 });
 
 socket.on('room:closed', (payload) => {
@@ -97,11 +107,10 @@ socket.on('room:closed', (payload) => {
   roomCodeDisplay.textContent = '----';
   gameRoomCodeEl.textContent = '----';
   phaseBadge.textContent = 'Closed';
-  hideBoardStatus();
   showScreen('entry');
-  setStatus(payload.reason === 'player-disconnected'
+  statusEl.textContent = payload.reason === 'player-disconnected'
     ? 'Room closed because a player disconnected. Create or join a new room to play again.'
-    : 'Room closed. Create or join a new room to play again.');
+    : 'Room closed. Create or join a new room to play again.';
 });
 
 document.getElementById('createRoomButton').addEventListener('click', () => {
@@ -116,7 +125,11 @@ async function copyActiveRoomCode() {
   const roomCode = latestLobbyState?.roomCode || latestGameState?.roomCode;
   if (!roomCode) return;
   await navigator.clipboard.writeText(roomCode);
-  setStatus('Room code copied.');
+  const copiedText = 'Room code copied.';
+  statusEl.textContent = copiedText;
+  if (!gamePanelEl.classList.contains('hidden')) {
+    gameStatusInlineEl.textContent = copiedText;
+  }
 }
 
 document.getElementById('copyRoomCodeButton').addEventListener('click', copyActiveRoomCode);
@@ -143,13 +156,22 @@ async function loadBuildMarker() {
     }
 
     const buildInfo = await response.json();
-    buildMarkerEl.textContent = `Build: ${buildInfo.displayVersion}`;
-    buildMarkerEl.title = `Version ${buildInfo.version} • Commit ${buildInfo.commit} • Built ${buildInfo.builtAt}`;
+    buildMarkerText = `Build: ${buildInfo.displayVersion}`;
+    buildMarkerTitle = `Version ${buildInfo.version} • Commit ${buildInfo.commit} • Built ${buildInfo.builtAt}`;
   } catch (error) {
     console.error(error);
-    buildMarkerEl.textContent = 'Build: unavailable';
-    buildMarkerEl.title = 'Build metadata could not be loaded.';
+    buildMarkerText = 'Build: unavailable';
+    buildMarkerTitle = 'Build metadata could not be loaded.';
   }
+
+  syncBuildMarkers();
+}
+
+function syncBuildMarkers() {
+  buildMarkerEl.textContent = buildMarkerText;
+  buildMarkerEl.title = buildMarkerTitle;
+  gameBuildMarkerEl.textContent = buildMarkerText;
+  gameBuildMarkerEl.title = buildMarkerTitle;
 }
 
 function renderLobby(state) {
@@ -179,17 +201,19 @@ function renderLobby(state) {
   readyButton.textContent = you?.isReady ? 'Unready' : 'Ready';
   readyButton.disabled = !you || !you.isOccupied || state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
 
-  if (!gameplayFocused) {
-    hideBoardStatus();
-    return;
+  if (gameplayFocused) {
+    gamePhaseLabel.textContent = state.phase === 'starting' ? 'Countdown' : state.phase === 'game-over' ? 'Game over' : 'In progress';
+    gameStatusInlineEl.textContent = state.phase === 'starting'
+      ? 'Match starts in moments.'
+      : state.phase === 'game-over'
+        ? 'Round complete.'
+        : 'Game live.';
+    gameMessageEl.textContent = state.phase === 'starting'
+      ? 'Both players are ready. Transitioning into gameplay.'
+      : state.phase === 'game-over'
+        ? 'Round finished. Lobby remains hidden while the result screen is shown.'
+        : 'Gameplay screen active. Lobby is fully hidden during the match.';
   }
-
-  gamePhaseLabel.textContent = state.phase === 'starting' ? 'Countdown' : state.phase === 'game-over' ? 'Game over' : 'In progress';
-  showBoardStatus(state.phase === 'starting'
-    ? 'Players ready'
-    : state.phase === 'game-over'
-      ? 'Round complete'
-      : 'Live match');
 }
 
 function renderGame(state, perSlotResult) {
@@ -202,41 +226,34 @@ function renderGame(state, perSlotResult) {
 
   if (state.phase === 'starting') {
     gamePhaseLabel.textContent = 'Countdown';
+    gameStatusInlineEl.textContent = 'Match starts in moments.';
     countdownLabel.textContent = `Countdown: ${state.countdownSecondsRemaining ?? 3}`;
-    showBoardStatus(`Match starts in ${state.countdownSecondsRemaining ?? 3}`);
+    gameMessageEl.textContent = 'Queue your opening turn now. Snakes stay still until the countdown ends.';
   } else if (state.phase === 'in-progress') {
     gamePhaseLabel.textContent = 'In progress';
+    gameStatusInlineEl.textContent = 'Game live.';
     countdownLabel.textContent = `Tick: ${state.tickNumber}`;
-    showBoardStatus('Live match');
+    gameMessageEl.textContent = 'Avoid walls, avoid bodies, and race for the shared food.';
   } else {
     gamePhaseLabel.textContent = 'Game over';
     countdownLabel.textContent = 'Countdown: closed soon';
     const yourOutcome = perSlotResult && yourSlotIndex !== null ? perSlotResult[yourSlotIndex] : 'draw';
-    showBoardStatus(yourOutcome === 'win' ? 'You win' : yourOutcome === 'lose' ? 'You lose' : 'Draw');
+    gameStatusInlineEl.textContent = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
+    gameMessageEl.textContent = yourOutcome === 'win' ? 'Result: you win.' : yourOutcome === 'lose' ? 'Result: you lose.' : 'Result: draw.';
   }
 
   paintBoard(state);
 }
 
 function showScreen(screen) {
+  const gameplayActive = screen === 'gameplay';
   entryEl.classList.toggle('hidden', screen !== 'entry');
   lobbyEl.classList.toggle('hidden', screen !== 'lobby');
-  gamePanelEl.classList.toggle('hidden', screen !== 'gameplay');
-  panelEl.classList.toggle('gameplay-active', screen === 'gameplay');
-}
-
-function setStatus(message) {
-  statusEl.textContent = message;
-}
-
-function showBoardStatus(message) {
-  boardStatusBadgeEl.textContent = message;
-  boardStatusBadgeEl.classList.remove('hidden');
-}
-
-function hideBoardStatus() {
-  boardStatusBadgeEl.textContent = '';
-  boardStatusBadgeEl.classList.add('hidden');
+  gamePanelEl.classList.toggle('hidden', !gameplayActive);
+  panelEl.classList.toggle('gameplay-active', gameplayActive);
+  panelTopEl.classList.toggle('hidden', gameplayActive);
+  statusEl.classList.toggle('hidden', gameplayActive);
+  errorEl.classList.toggle('hidden', gameplayActive || !errorEl.textContent);
 }
 
 function ensureBoard(width, height) {
