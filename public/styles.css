@@ -34,14 +34,15 @@ body { margin: 0; }
 .status { background: #1d4ed8; }
 .error { background: #7f1d1d; }
 .hidden { display: none !important; }
-.actions { display: grid; gap: 12px; margin-top: 20px; }
+.screen { margin-top: 20px; }
+.actions { display: grid; gap: 12px; }
 .join-row { display: flex; gap: 8px; }
 input,button { border-radius: 10px; border: 1px solid #334155; padding: 12px 14px; font: inherit; }
 input { flex: 1; background: #0f172a; color: #f9fafb; text-transform: uppercase; }
 button { cursor: pointer; background: #22c55e; color: #052e16; font-weight: 700; }
 button:disabled { opacity: .6; cursor: not-allowed; }
 .secondary-button { background: #0f172a; color: #f9fafb; }
-.lobby,.game { margin-top: 20px; display: grid; gap: 16px; }
+.lobby,.game { display: grid; gap: 16px; }
 .room-header,.game-header,.game-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .game-header { align-items: flex-end; flex-wrap: wrap; }
 .game-room-info { display: flex; align-items: center; gap: 12px; }

@@ -27,3 +27,9 @@
 ## Known follow-up considerations
 - If the project later standardizes on React/Vite, the current server-side room service and shared contracts can be reused while replacing the static client.
 - Real leave events beyond socket disconnect are not yet exposed as a dedicated client action because the approved scope only required leave/disconnect handling before match start.
+
+## Follow-up Adjustment: Hide lobby during non-lobby phases
+- Updated the browser UI to use distinct screen containers for entry, lobby, and gameplay states instead of always rendering the lobby block.
+- The client now shows the lobby only for `waiting-for-players` and `lobby` phases.
+- When the server reports `starting` or `in-progress`, the gameplay screen replaces the lobby visually and keeps only essential room info (room code + phase badge) visible.
+- Added a defensive fallback so any future non-lobby phase (for example a later game-over phase) will continue to hide the lobby screen by default.

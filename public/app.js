@@ -3,6 +3,7 @@ const socket = io();
 const statusEl = document.getElementById('status');
 const errorEl = document.getElementById('error');
 const panelEl = document.querySelector('.panel');
+const entryEl = document.getElementById('entry');
 const lobbyEl = document.getElementById('lobby');
 const gamePanelEl = document.getElementById('gamePanel');
 const roomCodeInput = document.getElementById('roomCodeInput');
@@ -27,6 +28,7 @@ let boardReady = false;
 
 socket.on('connect', () => {
   statusEl.textContent = 'Connected. Create a room or join with a code.';
+  showScreen('entry');
 });
 
 socket.on('room:error', (payload) => {
@@ -60,6 +62,7 @@ socket.on('lobby:state', (payload) => {
 
 socket.on('game:countdown', (payload) => {
   statusEl.textContent = `Match starts in ${payload.secondsRemaining}...`;
+  showScreen('gameplay');
 });
 
 socket.on('game:start', (payload) => {
@@ -67,6 +70,8 @@ socket.on('game:start', (payload) => {
   gamePhaseLabel.textContent = 'In progress';
   countdownLabel.textContent = 'Countdown: go';
   speedLabel.textContent = `Speed: ${payload.tickIntervalMs}ms`;
+  gameMessageEl.textContent = 'Gameplay screen active. Lobby is fully hidden during the match.';
+  showScreen('gameplay');
 });
 
 socket.on('game:state', (payload) => {
@@ -84,14 +89,12 @@ socket.on('game:ended', (payload) => {
 socket.on('room:closed', (payload) => {
   latestGameState = null;
   latestLobbyState = null;
-  lobbyEl.classList.add('hidden');
-  gamePanelEl.classList.add('hidden');
-  panelEl.classList.remove('gameplay-active');
   boardEl.innerHTML = '';
   boardReady = false;
   roomCodeDisplay.textContent = '----';
   gameRoomCodeEl.textContent = '----';
   phaseBadge.textContent = 'Closed';
+  showScreen('entry');
   statusEl.textContent = payload.reason === 'player-disconnected'
     ? 'Room closed because a player disconnected. Create or join a new room to play again.'
     : 'Room closed. Create or join a new room to play again.';
@@ -129,15 +132,14 @@ document.addEventListener('keydown', (event) => {
 });
 
 function renderLobby(state) {
-  const gameplayFocused = state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
-  lobbyEl.classList.toggle('hidden', gameplayFocused);
-  gamePanelEl.classList.toggle('hidden', !gameplayFocused && !latestGameState);
-  panelEl.classList.toggle('gameplay-active', gameplayFocused || Boolean(latestGameState));
   roomCodeDisplay.textContent = state.roomCode;
   gameRoomCodeEl.textContent = state.roomCode;
   phaseBadge.textContent = state.phase;
   lobbyMessage.textContent = state.message || '';
   playersEl.innerHTML = '';
+
+  const gameplayFocused = state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
+  showScreen(gameplayFocused ? 'gameplay' : 'lobby');
 
   for (const player of state.players) {
     const card = document.createElement('div');
@@ -155,12 +157,19 @@ function renderLobby(state) {
   const you = state.players.find((player) => player.isYou);
   readyButton.textContent = you?.isReady ? 'Unready' : 'Ready';
   readyButton.disabled = !you || !you.isOccupied || state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
+
+  if (gameplayFocused) {
+    gamePhaseLabel.textContent = state.phase === 'starting' ? 'Countdown' : state.phase === 'game-over' ? 'Game over' : 'In progress';
+    gameMessageEl.textContent = state.phase === 'starting'
+      ? 'Both players are ready. Transitioning into gameplay.'
+      : state.phase === 'game-over'
+        ? 'Round finished. Lobby remains hidden while the result screen is shown.'
+        : 'Gameplay screen active. Lobby is fully hidden during the match.';
+  }
 }
 
 function renderGame(state, perSlotResult) {
-  panelEl.classList.add('gameplay-active');
-  gamePanelEl.classList.remove('hidden');
-  lobbyEl.classList.add('hidden');
+  showScreen('gameplay');
   gameRoomCodeEl.textContent = state.roomCode;
   ensureBoard(state.board.width, state.board.height);
   score0El.textContent = String(state.snakes[0].score);
@@ -183,6 +192,13 @@ function renderGame(state, perSlotResult) {
   }
 
   paintBoard(state);
+}
+
+function showScreen(screen) {
+  entryEl.classList.toggle('hidden', screen !== 'entry');
+  lobbyEl.classList.toggle('hidden', screen !== 'lobby');
+  gamePanelEl.classList.toggle('hidden', screen !== 'gameplay');
+  panelEl.classList.toggle('gameplay-active', screen === 'gameplay');
 }
 
 function ensureBoard(width, height) {
