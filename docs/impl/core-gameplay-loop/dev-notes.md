@@ -25,7 +25,7 @@
 - Food is only committed for surviving consumers; if the round ends on the consuming tick, the terminal result wins over replacement food logic.
 - Simultaneous same-cell head collisions and explicit cross-over head swaps both kill both snakes.
 - Disconnect during `starting` or `in-progress` immediately resolves the round and then closes the room after the result window.
-- During `starting`, `in-progress`, and `game-over`, the client hides the taller lobby section and keeps the room code available in the game header so the gameplay board appears where the lobby previously sat and is less likely to require vertical scrolling.
+- During `starting`, `in-progress`, and `game-over`, the client hides the taller lobby section and now uses a board-first gameplay shell: the board sits centered in the top row, while round state, room code/copy, speed/countdown, and player score cards live in side columns (or wrap beneath the board on narrower screens) so the board stays reachable without unnecessary scrolling in the review viewport.
 
 ## Build/version marker
 - Added a small visible `Build: ...` pill in the top-right of the main panel so reviewers can quickly confirm which deployment is live.

@@ -46,37 +46,47 @@
         </div>
 
         <section id="gamePanel" class="screen game hidden">
-          <div class="game-header">
-            <div>
-              <div class="eyebrow">Round</div>
-              <div id="gamePhaseLabel" class="game-phase">Waiting</div>
-            </div>
-            <div class="game-room-info">
-              <div>
-                <div class="eyebrow">Room code</div>
-                <div id="gameRoomCode" class="game-room-code">----</div>
+          <div class="game-shell">
+            <aside class="game-side game-side-left">
+              <div class="info-card">
+                <div class="eyebrow">Round</div>
+                <div id="gamePhaseLabel" class="game-phase">Waiting</div>
               </div>
-              <button id="copyGameRoomCodeButton" class="secondary-button" type="button">Copy code</button>
-            </div>
-            <div class="scoreboard">
-              <div class="score-card player-one">
-                <span>Player 1</span>
-                <strong id="score0">0</strong>
+              <div class="info-card">
+                <div class="eyebrow">Player 1</div>
+                <div class="score-card player-one solo-score-card">
+                  <span>Score</span>
+                  <strong id="score0">0</strong>
+                </div>
               </div>
-              <div class="score-card player-two">
-                <span>Player 2</span>
-                <strong id="score1">0</strong>
-              </div>
-            </div>
-          </div>
+            </aside>
 
-          <div class="game-meta">
-            <span id="countdownLabel">Countdown: --</span>
-            <span id="speedLabel">Speed: --</span>
-          </div>
+            <div class="game-center">
+              <div id="board" class="board" aria-label="Game board"></div>
+              <p id="gameMessage" class="message game-message"></p>
+            </div>
 
-          <div id="board" class="board" aria-label="Game board"></div>
-          <p id="gameMessage" class="message"></p>
+            <aside class="game-side game-side-right">
+              <div class="info-card room-info-card">
+                <div>
+                  <div class="eyebrow">Room code</div>
+                  <div id="gameRoomCode" class="game-room-code">----</div>
+                </div>
+                <button id="copyGameRoomCodeButton" class="secondary-button" type="button">Copy code</button>
+              </div>
+              <div class="info-card game-meta-stack">
+                <span id="countdownLabel">Countdown: --</span>
+                <span id="speedLabel">Speed: --</span>
+              </div>
+              <div class="info-card">
+                <div class="eyebrow">Player 2</div>
+                <div class="score-card player-two solo-score-card">
+                  <span>Score</span>
+                  <strong id="score1">0</strong>
+                </div>
+              </div>
+            </aside>
+          </div>
           <p class="controls-hint">Use arrow keys or WASD during countdown and gameplay.</p>
         </section>
       </section>
