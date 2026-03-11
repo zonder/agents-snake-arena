@@ -3,10 +3,32 @@
   font-family: Inter, system-ui, sans-serif;
   background: #111827;
   color: #f9fafb;
+  --app-padding: 16px;
+  --panel-padding: 20px;
 }
 body { margin: 0; }
-.app { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
-.panel { width: min(100%, 860px); background: #1f2937; border-radius: 16px; padding: 24px; box-shadow: 0 16px 40px rgba(0,0,0,.35); }
+.app {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: var(--app-padding);
+  box-sizing: border-box;
+}
+.panel {
+  width: min(100%, 860px);
+  background: #1f2937;
+  border-radius: 16px;
+  padding: var(--panel-padding);
+  box-shadow: 0 16px 40px rgba(0,0,0,.35);
+  box-sizing: border-box;
+}
+.panel.gameplay-active {
+  width: min(100%, 1120px);
+  min-height: calc(100dvh - (var(--app-padding) * 2));
+  display: grid;
+  align-content: start;
+}
 .subtitle,.message,.controls-hint { color: #cbd5e1; }
 .status,.error,.badge { margin: 12px 0; padding: 10px 12px; border-radius: 10px; }
 .status { background: #1d4ed8; }
@@ -18,23 +40,29 @@ input,button { border-radius: 10px; border: 1px solid #334155; padding: 12px 14p
 input { flex: 1; background: #0f172a; color: #f9fafb; text-transform: uppercase; }
 button { cursor: pointer; background: #22c55e; color: #052e16; font-weight: 700; }
 button:disabled { opacity: .6; cursor: not-allowed; }
+.secondary-button { background: #0f172a; color: #f9fafb; }
 .lobby,.game { margin-top: 20px; display: grid; gap: 16px; }
 .room-header,.game-header,.game-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.game-header { align-items: flex-end; }
+.game-header { align-items: flex-end; flex-wrap: wrap; }
+.game-room-info { display: flex; align-items: center; gap: 12px; }
 .eyebrow { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
-.room-code { font-size: 32px; font-weight: 800; letter-spacing: .14em; }
+.room-code,.game-room-code { font-size: 32px; font-weight: 800; letter-spacing: .14em; }
+.game-room-code { font-size: 24px; }
 .badge { background: #374151; width: fit-content; text-transform: capitalize; }
 .players { display: grid; gap: 12px; }
 .player { background: #111827; border: 1px solid #334155; border-radius: 12px; padding: 14px; }
 .player.you { border-color: #22c55e; }
 .player-meta { display: flex; justify-content: space-between; gap: 12px; }
 .player-state { color: #cbd5e1; margin-top: 8px; }
-.scoreboard { display: flex; gap: 12px; }
+.scoreboard { display: flex; gap: 12px; flex-wrap: wrap; }
 .score-card { min-width: 96px; background: #111827; border: 1px solid #334155; border-radius: 12px; padding: 10px 12px; display: grid; gap: 4px; }
 .score-card strong { font-size: 24px; }
 .player-one { border-color: #22c55e; }
 .player-two { border-color: #38bdf8; }
 .game-phase { font-size: 24px; font-weight: 700; }
+.game {
+  align-content: start;
+}
 .board {
   display: grid;
   grid-template-columns: repeat(30, minmax(0, 1fr));
@@ -44,15 +72,32 @@ button:disabled { opacity: .6; cursor: not-allowed; }
   border-radius: 12px;
   padding: 1px;
   aspect-ratio: 1;
+  width: min(100%, calc(100dvh - 320px));
+  max-width: 100%;
+  justify-self: center;
 }
 .cell { background: #0f172a; aspect-ratio: 1; }
 .cell.food { background: #ef4444; }
 .cell.snake-0 { background: #22c55e; }
 .cell.snake-1 { background: #38bdf8; }
 .cell.head { box-shadow: inset 0 0 0 2px rgba(255,255,255,.35); }
+@media (max-width: 900px) {
+  :root {
+    --app-padding: 12px;
+    --panel-padding: 16px;
+  }
+
+  .board {
+    width: min(100%, calc(100dvh - 360px));
+  }
+}
 @media (max-width: 720px) {
-  .panel { padding: 18px; }
-  .room-header,.game-header,.game-meta { flex-direction: column; align-items: flex-start; }
+  .room-header,.game-header,.game-meta,.game-room-info { flex-direction: column; align-items: flex-start; }
   .scoreboard { width: 100%; }
   .score-card { flex: 1; }
+  .room-code,.game-room-code { font-size: 24px; }
+  .game-phase { font-size: 20px; }
+  .board {
+    width: min(100%, calc(100dvh - 420px));
+  }
 }

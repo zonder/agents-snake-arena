@@ -11,6 +11,7 @@
   - keyboard controls (arrow keys / WASD)
   - result messaging
   - forced reset after `room:closed`
+  - a gameplay-focused layout that swaps the board into the main viewport during countdown/active play/result instead of leaving the full lobby stacked above it
 - Added tests for both low-level game logic and the room-service countdown/disconnect lifecycle.
 
 ## Key implementation choices
@@ -24,6 +25,7 @@
 - Food is only committed for surviving consumers; if the round ends on the consuming tick, the terminal result wins over replacement food logic.
 - Simultaneous same-cell head collisions and explicit cross-over head swaps both kill both snakes.
 - Disconnect during `starting` or `in-progress` immediately resolves the round and then closes the room after the result window.
+- During `starting`, `in-progress`, and `game-over`, the client hides the taller lobby section and keeps the room code available in the game header so the gameplay board appears where the lobby previously sat and is less likely to require vertical scrolling.
 
 ## Deviations / limitations
 - `game:state.result` is only used as a lightweight terminal snapshot hint; the client relies on `game:ended.result.bySlot` for the player-specific win/lose/draw message.

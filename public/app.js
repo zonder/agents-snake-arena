@@ -2,10 +2,12 @@ const socket = io();
 
 const statusEl = document.getElementById('status');
 const errorEl = document.getElementById('error');
+const panelEl = document.querySelector('.panel');
 const lobbyEl = document.getElementById('lobby');
 const gamePanelEl = document.getElementById('gamePanel');
 const roomCodeInput = document.getElementById('roomCodeInput');
 const roomCodeDisplay = document.getElementById('roomCodeDisplay');
+const gameRoomCodeEl = document.getElementById('gameRoomCode');
 const playersEl = document.getElementById('players');
 const readyButton = document.getElementById('readyButton');
 const lobbyMessage = document.getElementById('lobbyMessage');
@@ -84,9 +86,11 @@ socket.on('room:closed', (payload) => {
   latestLobbyState = null;
   lobbyEl.classList.add('hidden');
   gamePanelEl.classList.add('hidden');
+  panelEl.classList.remove('gameplay-active');
   boardEl.innerHTML = '';
   boardReady = false;
   roomCodeDisplay.textContent = '----';
+  gameRoomCodeEl.textContent = '----';
   phaseBadge.textContent = 'Closed';
   statusEl.textContent = payload.reason === 'player-disconnected'
     ? 'Room closed because a player disconnected. Create or join a new room to play again.'
@@ -101,11 +105,15 @@ document.getElementById('joinRoomButton').addEventListener('click', () => {
   socket.emit('room:join', { roomCode: roomCodeInput.value });
 });
 
-document.getElementById('copyRoomCodeButton').addEventListener('click', async () => {
-  if (!latestLobbyState) return;
-  await navigator.clipboard.writeText(latestLobbyState.roomCode);
+async function copyActiveRoomCode() {
+  const roomCode = latestLobbyState?.roomCode || latestGameState?.roomCode;
+  if (!roomCode) return;
+  await navigator.clipboard.writeText(roomCode);
   statusEl.textContent = 'Room code copied.';
-});
+}
+
+document.getElementById('copyRoomCodeButton').addEventListener('click', copyActiveRoomCode);
+document.getElementById('copyGameRoomCodeButton').addEventListener('click', copyActiveRoomCode);
 
 readyButton.addEventListener('click', () => {
   if (!latestLobbyState) return;
@@ -121,8 +129,12 @@ document.addEventListener('keydown', (event) => {
 });
 
 function renderLobby(state) {
-  lobbyEl.classList.remove('hidden');
+  const gameplayFocused = state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
+  lobbyEl.classList.toggle('hidden', gameplayFocused);
+  gamePanelEl.classList.toggle('hidden', !gameplayFocused && !latestGameState);
+  panelEl.classList.toggle('gameplay-active', gameplayFocused || Boolean(latestGameState));
   roomCodeDisplay.textContent = state.roomCode;
+  gameRoomCodeEl.textContent = state.roomCode;
   phaseBadge.textContent = state.phase;
   lobbyMessage.textContent = state.message || '';
   playersEl.innerHTML = '';
@@ -146,7 +158,10 @@ function renderLobby(state) {
 }
 
 function renderGame(state, perSlotResult) {
+  panelEl.classList.add('gameplay-active');
   gamePanelEl.classList.remove('hidden');
+  lobbyEl.classList.add('hidden');
+  gameRoomCodeEl.textContent = state.roomCode;
   ensureBoard(state.board.width, state.board.height);
   score0El.textContent = String(state.snakes[0].score);
   score1El.textContent = String(state.snakes[1].score);
