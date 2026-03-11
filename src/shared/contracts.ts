@@ -1,4 +1,7 @@
-export type RoomPhase = 'waiting-for-players' | 'lobby' | 'starting' | 'in-progress';
+export type RoomPhase = 'waiting-for-players' | 'lobby' | 'starting' | 'in-progress' | 'game-over';
+export type Direction = 'up' | 'down' | 'left' | 'right';
+export type RoundResult = 'win' | 'lose' | 'draw';
+export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect';
 
 export type LobbyErrorReason =
   | 'INVALID_ROOM_CODE'
@@ -6,6 +9,11 @@ export type LobbyErrorReason =
   | 'ROOM_FULL'
   | 'GAME_ALREADY_STARTED'
   | 'ACTION_NOT_ALLOWED';
+
+export interface GridPoint {
+  x: number;
+  y: number;
+}
 
 export interface LobbyPlayerView {
   slotIndex: 0 | 1;
@@ -25,6 +33,35 @@ export interface LobbyStatePayload {
   canStart: boolean;
   version: number;
   message?: string;
+}
+
+export interface PublicSnakeState {
+  slotIndex: 0 | 1;
+  body: GridPoint[];
+  direction: Direction;
+  alive: boolean;
+  score: number;
+}
+
+export interface PublicGameStatePayload {
+  roomCode: string;
+  phase: 'starting' | 'in-progress' | 'game-over';
+  tickNumber: number;
+  board: {
+    width: 30;
+    height: 30;
+  };
+  food: GridPoint;
+  snakes: [PublicSnakeState, PublicSnakeState];
+  foodsEaten: number;
+  tickIntervalMs: number;
+  countdownSecondsRemaining?: 3 | 2 | 1 | 0;
+  result?: {
+    outcome: RoundResult;
+    winnerSlotIndex: 0 | 1 | null;
+    deathReasons: Array<{ slotIndex: 0 | 1; reason: DeathReason }>;
+  };
+  version: number;
 }
 
 export interface RoomCreatedPayload {
@@ -48,13 +85,57 @@ export interface PlayerLeftPayload {
   reason: 'left' | 'disconnected';
 }
 
+export interface PlayerDirectionSetPayload {
+  direction: Direction;
+}
+
+export interface GameCountdownPayload {
+  roomCode: string;
+  phase: 'starting';
+  secondsRemaining: 3 | 2 | 1 | 0;
+  startsAt: number;
+  serverNow: number;
+  version: number;
+}
+
 export interface GameStartPayload {
   roomCode: string;
   phase: 'in-progress';
+  board: {
+    width: 30;
+    height: 30;
+  };
   players: [
-    { slotIndex: 0 | 1; label: 'Player 1' | 'Player 2' },
-    { slotIndex: 0 | 1; label: 'Player 1' | 'Player 2' }
+    { slotIndex: 0; label: 'Player 1' },
+    { slotIndex: 1; label: 'Player 2' }
   ];
+  tickIntervalMs: number;
+  startedAt: number;
+  version: number;
+}
+
+export type GameStatePayload = PublicGameStatePayload;
+
+export interface GameEndedPayload {
+  roomCode: string;
+  phase: 'game-over';
+  result: {
+    bySlot: {
+      0: RoundResult;
+      1: RoundResult;
+    };
+    winnerSlotIndex: 0 | 1 | null;
+    deathReasons: Array<{ slotIndex: 0 | 1; reason: DeathReason }>;
+  };
+  finalState: PublicGameStatePayload;
+  teardownAt: number;
+  version: number;
+}
+
+export interface RoomClosedPayload {
+  roomCode: string;
+  reason: 'round-complete' | 'player-disconnected';
+  version: number;
 }
 
 export const EVENTS = {
@@ -66,5 +147,10 @@ export const EVENTS = {
   lobbyState: 'lobby:state',
   playerReadySet: 'player:ready:set',
   playerLeft: 'player:left',
+  playerDirectionSet: 'player:direction:set',
+  gameCountdown: 'game:countdown',
   gameStart: 'game:start',
+  gameState: 'game:state',
+  gameEnded: 'game:ended',
+  roomClosed: 'room:closed',
 } as const;

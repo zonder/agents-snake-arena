@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import { readFileSync, existsSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { Server } from 'socket.io';
-import { EVENTS } from '../shared/contracts.js';
+import { EVENTS, type Direction } from '../shared/contracts.js';
 import { RoomService, type ClientEvent } from './roomService.js';
 
 const publicDir = join(process.cwd(), 'public');
@@ -28,9 +28,8 @@ const httpServer = createServer((req, res) => {
   res.end(readFileSync(filePath));
 });
 
-const io = new Server(httpServer, {
-  cors: { origin: '*' },
-});
+const io = new Server(httpServer, { cors: { origin: '*' } });
+roomService.setEventSink(emitEvents);
 
 io.on('connection', (socket) => {
   socket.on(EVENTS.roomCreate, () => {
@@ -42,10 +41,13 @@ io.on('connection', (socket) => {
   });
 
   socket.on(EVENTS.playerReadySet, (payload: { ready?: boolean }) => {
-    if (typeof payload?.ready !== 'boolean') {
-      return;
-    }
+    if (typeof payload?.ready !== 'boolean') return;
     emitEvents(roomService.setReady(socket.id, payload.ready).events);
+  });
+
+  socket.on(EVENTS.playerDirectionSet, (payload: { direction?: Direction }) => {
+    if (!payload?.direction || !['up', 'down', 'left', 'right'].includes(payload.direction)) return;
+    emitEvents(roomService.setDirection(socket.id, payload.direction));
   });
 
   socket.on('disconnect', () => {
@@ -53,8 +55,9 @@ io.on('connection', (socket) => {
   });
 });
 
-function emitEvents(events: ClientEvent[]) {
-  for (const event of events) {
+function emitEvents(events: ClientEvent[] | { events: ClientEvent[] }) {
+  const list = Array.isArray(events) ? events : events.events;
+  for (const event of list) {
     io.to(event.socketId).emit(event.type, event.payload);
   }
 }

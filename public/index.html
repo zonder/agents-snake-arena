@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Room Lobby Auto-Start</title>
+    <title>Multiplayer Snake</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <main class="app">
       <section class="panel">
-        <h1>Multiplayer Snake Lobby</h1>
-        <p class="subtitle">Create a room, share the code, and the game starts automatically when both players are ready.</p>
+        <h1>Multiplayer Snake</h1>
+        <p class="subtitle">Create a room, share the code, ready up, then survive the round.</p>
 
         <div id="status" class="status">Connecting…</div>
         <div id="error" class="error hidden"></div>
@@ -37,6 +37,34 @@
           <button id="readyButton">Ready</button>
           <p id="lobbyMessage" class="message"></p>
         </div>
+
+        <section id="gamePanel" class="game hidden">
+          <div class="game-header">
+            <div>
+              <div class="eyebrow">Round</div>
+              <div id="gamePhaseLabel" class="game-phase">Waiting</div>
+            </div>
+            <div class="scoreboard">
+              <div class="score-card player-one">
+                <span>Player 1</span>
+                <strong id="score0">0</strong>
+              </div>
+              <div class="score-card player-two">
+                <span>Player 2</span>
+                <strong id="score1">0</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="game-meta">
+            <span id="countdownLabel">Countdown: --</span>
+            <span id="speedLabel">Speed: --</span>
+          </div>
+
+          <div id="board" class="board" aria-label="Game board"></div>
+          <p id="gameMessage" class="message"></p>
+          <p class="controls-hint">Use arrow keys or WASD during countdown and gameplay.</p>
+        </section>
       </section>
     </main>
 
