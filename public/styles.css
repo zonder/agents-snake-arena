@@ -1,0 +1,30 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, sans-serif;
+  background: #111827;
+  color: #f9fafb;
+}
+body { margin: 0; }
+.app { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.panel { width: min(100%, 560px); background: #1f2937; border-radius: 16px; padding: 24px; box-shadow: 0 16px 40px rgba(0,0,0,.35); }
+.subtitle,.message { color: #cbd5e1; }
+.status,.error,.badge { margin: 12px 0; padding: 10px 12px; border-radius: 10px; }
+.status { background: #1d4ed8; }
+.error { background: #7f1d1d; }
+.hidden { display: none; }
+.actions { display: grid; gap: 12px; margin-top: 20px; }
+.join-row { display: flex; gap: 8px; }
+input,button { border-radius: 10px; border: 1px solid #334155; padding: 12px 14px; font: inherit; }
+input { flex: 1; background: #0f172a; color: #f9fafb; text-transform: uppercase; }
+button { cursor: pointer; background: #22c55e; color: #052e16; font-weight: 700; }
+button:disabled { opacity: .6; cursor: not-allowed; }
+.lobby { margin-top: 20px; display: grid; gap: 16px; }
+.room-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.eyebrow { color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+.room-code { font-size: 32px; font-weight: 800; letter-spacing: .14em; }
+.badge { background: #374151; width: fit-content; }
+.players { display: grid; gap: 12px; }
+.player { background: #111827; border: 1px solid #334155; border-radius: 12px; padding: 14px; }
+.player.you { border-color: #22c55e; }
+.player-meta { display: flex; justify-content: space-between; gap: 12px; }
+.player-state { color: #cbd5e1; margin-top: 8px; }
