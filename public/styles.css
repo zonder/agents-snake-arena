@@ -419,6 +419,21 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 }
 .panel[data-layout-mode="mobile-landscape"] .touch-controls { width: min(100%, 320px); gap: 8px; }
 .panel[data-layout-mode="mobile-landscape"] .touch-control { min-height: 48px; }
+.panel[data-layout-mode="mobile-landscape"] .game-center { gap: 8px; }
+.panel[data-layout-mode="mobile-landscape"] .post-game-banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: min(calc(100% - 16px), 420px);
+  padding: 12px;
+  gap: 8px;
+  margin-bottom: 0;
+}
+.panel[data-layout-mode="mobile-landscape"] .post-game-title { font-size: clamp(1.15rem, 3.8vw, 1.55rem); }
+.panel[data-layout-mode="mobile-landscape"] .post-game-copy { font-size: 0.82rem; }
+.panel[data-layout-mode="mobile-landscape"] .post-game-button { min-height: 44px; }
 .panel[data-layout-mode^="mobile"] .post-game-banner {
   position: relative;
   top: auto;
@@ -555,6 +570,21 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   }
   .panel[data-layout-mode="mobile-landscape"] .touch-controls { width: min(100%, 320px); gap: 8px; }
   .panel[data-layout-mode="mobile-landscape"] .touch-control { min-height: 48px; }
+  .panel[data-layout-mode="mobile-landscape"] .game-center { gap: 8px; }
+  .panel[data-layout-mode="mobile-landscape"] .post-game-banner {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    width: min(calc(100% - 16px), 420px);
+    padding: 12px;
+    gap: 8px;
+    margin-bottom: 0;
+  }
+  .panel[data-layout-mode="mobile-landscape"] .post-game-title { font-size: clamp(1.15rem, 3.8vw, 1.55rem); }
+  .panel[data-layout-mode="mobile-landscape"] .post-game-copy { font-size: 0.82rem; }
+  .panel[data-layout-mode="mobile-landscape"] .post-game-button { min-height: 44px; }
   .panel[data-layout-mode^="mobile"] .post-game-banner {
     position: relative;
     top: auto;

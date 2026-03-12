@@ -7,6 +7,7 @@
 - Kept sound behavior client-side and unchanged in principle; touch interactions now also attempt audio unlock.
 - QA mobile overflow follow-up: phone gameplay now keeps phone-sized devices in explicit mobile modes even after rotation, resets scroll when entering the gameplay screen, and constrains phone-landscape board sizing by viewport height so the board remains visible and usable in both portrait and landscape.
 - QA blocker fix: mobile layout styling now keys off the runtime `data-layout-mode` itself instead of also depending on `max-width: 768px`, so rotated phones like `844x390` still get the compact single-column, viewport-height-capped landscape board treatment.
+- QA blocker follow-up (round 2): phone-landscape result/rematch now keeps the post-game banner as a compact overlay instead of a stacked block above the board, which prevents the banner from pushing the gameplay stage below the viewport on short landscape phones.
 
 ## Implementation details
 - Follow-up defect fix: room-code copy previously depended only on `navigator.clipboard.writeText`, which can fail in insecure contexts, embedded browsers, or permission-blocked sessions even when the UI is otherwise functional. The client now falls back to a hidden textarea + `document.execCommand('copy')` path and shows a manual-copy hint if both approaches fail.
@@ -19,6 +20,7 @@
 - Updated `showScreen('gameplay')` to reset window/panel scroll so the board returns to the top of the active viewport after readying up instead of inheriting lobby scroll position.
 - Reduced `mobile-landscape` gameplay padding and capped the board stage with `100dvh`-based sizing so surrounding HUD/cards compress before the board overflows upward.
 - Root-caused the failed rerun: `mobile-landscape` was detected correctly in JS, but the compact landscape CSS only existed inside `@media (max-width: 768px)`, so an `844x390` rotated phone still rendered the desktop-width board. The fix promotes the mobile layout-mode rules so phone portrait/landscape shells activate whenever the panel is marked mobile, regardless of rotated viewport width.
+- Root-caused the remaining QA failure: after the prior CSS activation fix, the `mobile-landscape` board itself was correctly capped, but the mobile post-game banner had been moved into normal document flow for all mobile layouts, so in landscape result/rematch states it still shoved the stage down by ~250px. The follow-up fix restores a compact absolute overlay specifically for `mobile-landscape`, keeping result/rematch actions accessible without sacrificing board-first visibility.
 
 ## Verification
 - `node --check public/app.js`
