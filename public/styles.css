@@ -311,9 +311,14 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-primary);
-  text-shadow: 0 0 18px rgba(124, 255, 107, 0.35), 0 0 42px rgba(73, 215, 255, 0.24);
+  background: radial-gradient(circle at center, rgba(124, 255, 107, 0.12), rgba(73, 215, 255, 0.04) 45%, transparent 72%);
+  text-shadow: 0 0 18px rgba(124, 255, 107, 0.38), 0 0 48px rgba(73, 215, 255, 0.28);
 }
-.countdown-overlay.is-active { animation: countdownPulse 500ms var(--ease-arcade); }
+.countdown-overlay[data-countdown-value='GO'] {
+  color: #fff2b3;
+  text-shadow: 0 0 20px rgba(255, 210, 103, 0.48), 0 0 54px rgba(255, 123, 84, 0.26);
+}
+.countdown-overlay.is-active { animation: countdownPulse 620ms var(--ease-arcade); }
 .game-message {
   margin: 0;
   text-align: center;
@@ -451,17 +456,17 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 .panel[data-layout-mode^="mobile"] .score-card { min-height: auto; }
 .panel[data-layout-mode^="mobile"] .game-message { max-width: 100%; font-size: 0.95rem; }
 .panel[data-layout-mode^="mobile"] .touch-controls { width: min(100%, 360px); }
-.panel.phase-countdown .game-stage { box-shadow: 0 0 0 1px rgba(124, 255, 107, 0.18), 0 22px 42px rgba(0,0,0,0.28), 0 0 40px rgba(124,255,107,0.08); }
+.panel.phase-countdown .game-stage { box-shadow: 0 0 0 1px rgba(124, 255, 107, 0.22), 0 22px 42px rgba(0,0,0,0.28), 0 0 52px rgba(124,255,107,0.12); }
 .panel.phase-result[data-outcome="win"] .game-stage { box-shadow: 0 0 0 1px rgba(124,255,107,0.24), 0 22px 42px rgba(0,0,0,0.28), 0 0 46px rgba(124,255,107,0.12); }
 .panel.phase-result[data-outcome="lose"] .game-stage { box-shadow: 0 0 0 1px rgba(255,93,122,0.24), 0 22px 42px rgba(0,0,0,0.28), 0 0 42px rgba(255,93,122,0.10); }
 .panel.phase-result[data-outcome="draw"] .game-stage { box-shadow: 0 0 0 1px rgba(73,215,255,0.24), 0 22px 42px rgba(0,0,0,0.28), 0 0 42px rgba(73,215,255,0.10); }
 .sound-toggle.is-confirmed, .secondary-button.is-confirmed { box-shadow: var(--glow-secondary); }
 
 @keyframes countdownPulse {
-  0% { opacity: 0; transform: scale(0.76); }
-  20% { opacity: 1; }
-  65% { opacity: 1; transform: scale(1); }
-  100% { opacity: 0.15; transform: scale(1.08); }
+  0% { opacity: 0; transform: scale(0.68); filter: saturate(0.8); }
+  18% { opacity: 1; }
+  52% { opacity: 1; transform: scale(1.02); filter: saturate(1.18); }
+  100% { opacity: 0.12; transform: scale(1.14); filter: saturate(1); }
 }
 @keyframes scorePop {
   0% { transform: translateY(0); box-shadow: none; }
