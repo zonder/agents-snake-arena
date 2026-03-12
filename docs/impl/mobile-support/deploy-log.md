@@ -85,15 +85,24 @@ pm2 save
 - Verified live via `http://20.106.185.110:8081/build-info.json` and matching served `/app.js` SHA-256
 - Result: `SUCCESS`
 
+## QA-unblock refresh redeploy — 2026-03-12T15:10:49Z
+- Trigger: redeploy latest branch head so the latest mobile-landscape overflow fix commit is live for QA
+- Previous dev commit: `e9b8c7157867fdacfff6655e00f89ddb9680a1d4` (`e9b8c71`)
+- Requested fix commit: `043c2c98985139d6f5befbf7eb64c6f192a0fad9` (`043c2c9`)
+- Deployed commit: `043c2c98985139d6f5befbf7eb64c6f192a0fad9` (`043c2c9`)
+- Verified live via `http://20.106.185.110:8081/build-info.json` returning `v0.1.0+043c2c9`
+- Verified served `/app.js` SHA-256 matched deployed file SHA-256: `e7ba62e25d7f1fa8c26d296aa20fda0c524e6941d838b0653935f59ecb08bbbe`
+- Result: `SUCCESS`
+
 ### Latest deployment record
 
 | Field | Value |
 |-------|-------|
-| Commit | `2510a99cb22a34abdf57a7f070301ba91f644e45` |
-| Short | `2510a99` |
+| Commit | `043c2c98985139d6f5befbf7eb64c6f192a0fad9` |
+| Short | `043c2c9` |
 | Branch | `feature/issue-40` |
 | Environment | `dev` |
 | PM2 Process | `app-dev` |
 | URL | `http://20.106.185.110:8081/` |
-| Timestamp | `2026-03-12T14:09:26Z` |
+| Timestamp | `2026-03-12T15:10:49Z` |
 | Status | `SUCCESS` |
