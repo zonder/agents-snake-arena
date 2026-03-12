@@ -121,13 +121,13 @@ Issue #13 architecture design
    Rationale: Keeps client and QA visibility explicit without replacing existing socket flows.
 
 ## Actions Taken
-1. Prepared architect checkout on  and reviewed the current room/gameplay implementation. → Confirmed current forced post-game teardown is the main behavior to change.
-2. Wrote . → Captured state transitions, reset semantics, leave behavior, and implementation order.
-3. Wrote . → Defined rematch socket events, payload additions, semantics, and test assertions.
+1. Prepared architect checkout on `feature/issue-13` and reviewed the current room/gameplay implementation. → Confirmed current forced post-game teardown is the main behavior to change.
+2. Wrote `docs/impl/replay-rematch-flow/design.md`. → Captured state transitions, reset semantics, leave behavior, and implementation order.
+3. Wrote `docs/impl/replay-rematch-flow/api-contracts.md`. → Defined rematch socket events, payload additions, semantics, and test assertions.
 
 ## Outputs
-- : architecture design for same-room rematch flow
-- : socket contracts and payload semantics for rematch
+- `docs/impl/replay-rematch-flow/design.md`: architecture design for same-room rematch flow
+- `docs/impl/replay-rematch-flow/api-contracts.md`: socket contracts and payload semantics for rematch
 
 ## Handoff
 - Next agent: fullstack-dev
