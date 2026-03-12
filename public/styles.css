@@ -54,7 +54,7 @@ body::before {
   padding: var(--app-padding);
 }
 .panel {
-  width: min(100%, 920px);
+  width: min(100%, 960px);
   padding: var(--panel-padding);
   background: var(--bg-panel);
   border: 1px solid var(--border-subtle);
@@ -199,9 +199,13 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 .game-shell {
   display: grid;
   grid-template-columns: minmax(200px, 244px) minmax(0, 1fr) minmax(200px, 244px);
+  grid-template-areas: "left center right";
   align-items: start;
   gap: 18px;
 }
+.game-side-left { grid-area: left; }
+.game-center { grid-area: center; }
+.game-side-right { grid-area: right; }
 .game-center {
   position: relative;
   justify-items: center;
@@ -316,6 +320,38 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   max-width: min(100%, 760px);
   min-height: 24px;
 }
+.touch-controls {
+  width: min(100%, 420px);
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.touch-controls-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.touch-control {
+  width: 100%;
+  min-height: 56px;
+  font-size: 1.4rem;
+  font-weight: 800;
+  touch-action: manipulation;
+}
+.touch-control-up {
+  width: min(44%, 140px);
+}
+.game-stage.is-touch-active {
+  touch-action: none;
+}
+.panel[data-layout-mode^="mobile"] .controls-hint,
+.panel[data-touch="true"] .controls-hint {
+  font-size: 0.95rem;
+}
+.panel[data-layout-mode^="mobile"] .controls-hint {
+  margin-top: 10px;
+}
 .build-marker, .inline-build-marker {
   padding: 8px 10px;
   border-radius: 999px;
@@ -385,15 +421,28 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 
 @media (max-width: 1100px) {
   .game-shell { grid-template-columns: minmax(170px, 210px) minmax(0, 1fr) minmax(170px, 210px); gap: 14px; }
+  .panel[data-layout-mode="tablet"] .game-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "center"
+      "left"
+      "right";
+  }
+  .panel[data-layout-mode="tablet"] .game-side-left,
+  .panel[data-layout-mode="tablet"] .game-side-right {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 860px) {
-  .game-shell { grid-template-columns: 1fr; }
-  .game-center { order: 1; }
+  .game-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "center"
+      "left"
+      "right";
+  }
   .game-side-left, .game-side-right { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .game-side-left { order: 2; }
-  .game-side-right { order: 3; }
   .post-game-banner {
-    order: initial;
     top: 12px;
     width: min(calc(100% - 16px), 680px);
   }
@@ -401,10 +450,67 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 @media (max-width: 720px) {
   .panel-top, .room-header, .lobby-meta-row, .topbar-actions { flex-direction: column; align-items: flex-start; }
   .join-row { flex-direction: column; }
+  .hero-card, .player, .info-card, .post-game-banner { padding: 16px; }
   .game-side-left, .game-side-right { grid-template-columns: 1fr; }
   .panel { padding: 16px; }
-  .game-stage { padding: 10px; }
+  .room-code-hero, .room-info-card { width: 100%; }
+  .primary-button, .secondary-button, input { min-height: 48px; }
+  .game-stage { padding: 10px; width: min(100%, 100vw - 32px); }
   .board-fx-layer, .countdown-overlay { inset: 10px; }
+}
+@media (max-width: 768px) {
+  .app { padding: 10px; place-items: start center; }
+  .panel, .panel.gameplay-active { width: 100%; min-height: calc(100dvh - 20px); }
+  .panel[data-layout-mode="mobile-portrait"] { --panel-padding: 14px; }
+  .panel[data-layout-mode^="mobile"] .status,
+  .panel[data-layout-mode^="mobile"] .error,
+  .panel[data-layout-mode^="mobile"] .badge { margin-top: 10px; }
+  .panel[data-layout-mode="mobile-portrait"] .game-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "center"
+      "right"
+      "left";
+    gap: 14px;
+  }
+  .panel[data-layout-mode="mobile-portrait"] .game-side-left,
+  .panel[data-layout-mode="mobile-portrait"] .game-side-right {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .panel[data-layout-mode="mobile-portrait"] .room-info-card { order: -2; }
+  .panel[data-layout-mode="mobile-portrait"] .game-meta-stack { order: -1; }
+  .panel[data-layout-mode="mobile-portrait"] .gameplay-summary-card { min-height: unset; }
+  .panel[data-layout-mode="mobile-portrait"] .game-stage { width: min(100%, 520px); }
+  .panel[data-layout-mode="mobile-landscape"] .game-shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "center"
+      "right"
+      "left";
+    gap: 12px;
+  }
+  .panel[data-layout-mode="mobile-landscape"] .game-side-left,
+  .panel[data-layout-mode="mobile-landscape"] .game-side-right {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .panel[data-layout-mode="mobile-landscape"] .game-stage { width: min(100%, 62vh); max-height: 62vh; }
+  .panel[data-layout-mode^="mobile"] .post-game-banner {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    width: 100%;
+    margin-bottom: 4px;
+  }
+  .panel[data-layout-mode^="mobile"] .room-code,
+  .panel[data-layout-mode^="mobile"] .game-room-code { font-size: clamp(1.35rem, 7vw, 2.1rem); }
+  .panel[data-layout-mode^="mobile"] .player-card-head,
+  .panel[data-layout-mode^="mobile"] .room-header { align-items: center; }
+  .panel[data-layout-mode^="mobile"] .score-card { min-height: auto; }
+  .panel[data-layout-mode^="mobile"] .game-message { max-width: 100%; font-size: 0.95rem; }
+  .panel[data-layout-mode^="mobile"] .touch-controls { width: min(100%, 360px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
