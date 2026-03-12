@@ -417,9 +417,11 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   max-height: calc(100dvh - 120px);
   margin-inline: auto;
 }
-.panel[data-layout-mode="mobile-landscape"] .touch-controls { width: min(100%, 320px); gap: 8px; }
-.panel[data-layout-mode="mobile-landscape"] .touch-control { min-height: 48px; }
-.panel[data-layout-mode="mobile-landscape"] .game-center { gap: 8px; }
+.panel[data-layout-mode="mobile-landscape"] .touch-controls { width: min(100%, 320px); gap: 6px; }
+.panel[data-layout-mode="mobile-landscape"] .touch-controls-row { gap: 6px; }
+.panel[data-layout-mode="mobile-landscape"] .touch-control { min-height: 44px; padding: 10px 12px; }
+.panel[data-layout-mode="mobile-landscape"] .touch-control-up { width: min(42%, 124px); }
+.panel[data-layout-mode="mobile-landscape"] .game-center { gap: 6px; }
 .panel[data-layout-mode="mobile-landscape"] .post-game-banner {
   position: absolute;
   top: 8px;
@@ -434,7 +436,7 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 .panel[data-layout-mode="mobile-landscape"] .post-game-title { font-size: clamp(1.15rem, 3.8vw, 1.55rem); }
 .panel[data-layout-mode="mobile-landscape"] .post-game-copy { font-size: 0.82rem; }
 .panel[data-layout-mode="mobile-landscape"] .post-game-button { min-height: 44px; }
-.panel[data-layout-mode^="mobile"] .post-game-banner {
+.panel[data-layout-mode^="mobile"]:not([data-layout-mode="mobile-landscape"]) .post-game-banner {
   position: relative;
   top: auto;
   left: auto;
@@ -568,9 +570,11 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
     max-height: calc(100dvh - 120px);
     margin-inline: auto;
   }
-  .panel[data-layout-mode="mobile-landscape"] .touch-controls { width: min(100%, 320px); gap: 8px; }
-  .panel[data-layout-mode="mobile-landscape"] .touch-control { min-height: 48px; }
-  .panel[data-layout-mode="mobile-landscape"] .game-center { gap: 8px; }
+  .panel[data-layout-mode="mobile-landscape"] .touch-controls { width: min(100%, 320px); gap: 6px; }
+  .panel[data-layout-mode="mobile-landscape"] .touch-controls-row { gap: 6px; }
+  .panel[data-layout-mode="mobile-landscape"] .touch-control { min-height: 44px; padding: 10px 12px; }
+  .panel[data-layout-mode="mobile-landscape"] .touch-control-up { width: min(42%, 124px); }
+  .panel[data-layout-mode="mobile-landscape"] .game-center { gap: 6px; }
   .panel[data-layout-mode="mobile-landscape"] .post-game-banner {
     position: absolute;
     top: 8px;
@@ -585,7 +589,7 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   .panel[data-layout-mode="mobile-landscape"] .post-game-title { font-size: clamp(1.15rem, 3.8vw, 1.55rem); }
   .panel[data-layout-mode="mobile-landscape"] .post-game-copy { font-size: 0.82rem; }
   .panel[data-layout-mode="mobile-landscape"] .post-game-button { min-height: 44px; }
-  .panel[data-layout-mode^="mobile"] .post-game-banner {
+  .panel[data-layout-mode^="mobile"]:not([data-layout-mode="mobile-landscape"]) .post-game-banner {
     position: relative;
     top: auto;
     left: auto;
