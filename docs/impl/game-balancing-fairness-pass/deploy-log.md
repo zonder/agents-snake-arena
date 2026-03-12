@@ -50,3 +50,48 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-12T23:13:18Z` |
 | Status | `SUCCESS` |
+
+
+## Production deployment update — 2026-03-12T23:35:26Z
+- Environment: `prod`
+- Trigger: deploy merged PR #87 / parent issue #83 from `main`
+- Previous prod commit: `13288ac3ec87a3cd3903e7c935064cb3045243c2` (`13288ac`)
+- Deployed commit: `3582c9149eb5f6bb7f3a8ca571b4bacffb4f1100` (`3582c91`)
+- Production URL: `http://20.106.185.110/`
+- Runtime: `pm2` process `app-prod` behind nginx on port `80`, forwarding to local app on port `3000`
+
+### Production deployment actions
+```bash
+cd /home/rootagent/deployments/prod
+git fetch origin main
+git checkout main
+git reset --hard origin/main
+npm ci
+npm run build
+pm2 startOrRestart /home/rootagent/deployments/ecosystem.config.js --only app-prod
+pm2 save
+```
+
+### Production health-check results
+- `git -C /home/rootagent/deployments/prod rev-parse HEAD` now resolves to `3582c9149eb5f6bb7f3a8ca571b4bacffb4f1100`.
+- `pm2 list` shows `app-prod` online after restart.
+- `curl -I http://127.0.0.1:3000/` returned `HTTP/1.1 200 OK`.
+- `curl -I http://20.106.185.110/` returned `HTTP/1.1 200 OK` via nginx.
+- `curl http://20.106.185.110/build-info.json` returned `{"version":"0.1.0","commit":"3582c91","builtAt":"2026-03-12T23:35:13.703Z","displayVersion":"v0.1.0+3582c91"}`.
+- `pm2 logs app-prod --lines 20 --nostream` shows the active startup line: `Room lobby server listening on http://localhost:3000 (v0.1.0+3582c91)`.
+- Served `index.html` contains the expected build-marker placeholders (`#buildMarker`, `#gameBuildMarker`) plus the fairness-pass rematch / countdown shell.
+- Served `app.js` contains the fairness-pass gameplay copy and rematch/countdown wiring, including `Countdown: GO`, `Ready for the rematch?`, `Accept rematch now`, and build-marker hydration from `/build-info.json`.
+- Served `styles.css` contains the stronger countdown / result / rematch visual treatment, including `.countdown-overlay`, `@keyframes countdownPulse`, `.rematch-card.highlighted`, and the build-marker styles.
+
+### Production deployment record
+
+| Field | Value |
+|-------|-------|
+| Commit | `3582c9149eb5f6bb7f3a8ca571b4bacffb4f1100` |
+| Short | `3582c91` |
+| Branch | `main` |
+| Environment | `prod` |
+| PM2 Process | `app-prod` |
+| URL | `http://20.106.185.110/` |
+| Timestamp | `2026-03-12T23:35:26Z` |
+| Status | `SUCCESS` |
