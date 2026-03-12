@@ -9,6 +9,8 @@
 - Allowed replacement players to rejoin the same room after a post-game leave and return through the normal lobby ready flow.
 - Added browser UI for rematch acceptance and waiting/accepted messaging on the game-over screen.
 
+- Follow-up review fixes: duplicate `game:rematch-request` accepts are now a no-op, and duplicated rematch payloads stay viewer-consistent across `lobby:state`, `game:state`, and `game:rematch-state`.
+
 ## Notes / Deviations
 - `game:rematch-state` is emitted alongside updated `lobby:state` and `game:state` so the client can render a focused rematch panel without inferring post-game state from multiple payload shapes.
 - After a disconnect during active play, the service still ends the match immediately, but it no longer force-closes the room afterward; the remaining player can keep the room code and wait for a replacement.
