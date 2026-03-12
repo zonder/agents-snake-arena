@@ -123,3 +123,43 @@ pm2 save
 - Live /build-info.json returned:       {"version":"0.1.0","commit":"d006d26","builtAt":"2026-03-11T23:56:25.465Z","displayVersion":"v0.1.0+d006d26"}
 - Live /app.js contains gameplay-focused screen switching:   yes
 - Live /app.js contains transient message helper:   no
+
+---
+
+## Production deployment update
+- Environment: `prod`
+- Parent issue: `#10`
+- PR: `#12`
+- Branch: `main`
+- Production URL: `http://20.106.185.110/`
+- Previous prod commit: `f739a5a`
+- Deployed commit:
+  - full: `78f050b434597c234072e17d20d5ef27109cbd30`
+  - short: `78f050b`
+- Deployed at (UTC): `2026-03-12 00:07`
+- Runtime: `pm2` process `app-prod` behind nginx on port 80, forwarding to local app on port 3000
+
+### Production deployment actions
+```bash
+cd /home/rootagent/deployments/prod
+git fetch origin main
+git checkout main
+git reset --hard origin/main
+npm ci
+npm test
+npm run build
+pm2 startOrRestart /home/rootagent/deployments/ecosystem.config.js --only app-prod
+pm2 save
+```
+
+### Production health-check results
+- `pm2 list` shows `app-prod` online after restart.
+- `curl -I http://127.0.0.1:3000/` returned `HTTP/1.1 200 OK`.
+- `curl -I http://20.106.185.110/` returned `HTTP/1.1 200 OK` via nginx.
+- `curl http://20.106.185.110/build-info.json` returned `{"version":"0.1.0","commit":"78f050b","builtAt":"2026-03-12T00:07:52.698Z","displayVersion":"v0.1.0+78f050b"}`.
+- `curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
+- PM2 app output now reports: `Room lobby server listening on http://localhost:3000 (v0.1.0+78f050b)`.
+
+### Notes
+- Deployment succeeded without code changes.
+- The `build-info.json` marker confirms production is serving the merged PR #12 commit rather than the previous prod commit.
