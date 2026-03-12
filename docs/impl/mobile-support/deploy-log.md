@@ -47,3 +47,23 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-12T10:45:53Z` |
 | Status | `SUCCESS` |
+
+## Stakeholder review refresh redeploy — 2026-03-12T11:02:43Z
+- Trigger: redeploy latest branch head so the room-code copy fallback fix is live for stakeholder review
+- Requested target commit: `060c6ee15bc3f95f52015ff9be1b62a84c82e434` (`060c6ee`)
+- Verified live commit: `060c6ee15bc3f95f52015ff9be1b62a84c82e434` (`060c6ee`)
+- Verified at (UTC): `2026-03-12T11:02:43Z`
+- Result: `SUCCESS`
+
+### Latest deployment record
+
+| Field | Value |
+|-------|-------|
+| Commit | `060c6ee15bc3f95f52015ff9be1b62a84c82e434` |
+| Short | `060c6ee` |
+| Branch | `feature/issue-40` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-12T11:02:43Z` |
+| Status | `SUCCESS` |
