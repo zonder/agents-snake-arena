@@ -42,34 +42,9 @@ const OPPOSITE: Record<Direction, Direction> = {
 };
 
 export function createInitialMatchState(roomCode: string, random: () => number = Math.random): MatchState {
-  const snakes: [SnakeState, SnakeState] = [
-    {
-      slotIndex: 0,
-      direction: 'right',
-      pendingDirection: null,
-      body: [
-        { x: 7, y: 15 },
-        { x: 6, y: 15 },
-        { x: 5, y: 15 },
-      ],
-      alive: true,
-      score: 0,
-    },
-    {
-      slotIndex: 1,
-      direction: 'left',
-      pendingDirection: null,
-      body: [
-        { x: 22, y: 15 },
-        { x: 23, y: 15 },
-        { x: 24, y: 15 },
-      ],
-      alive: true,
-      score: 0,
-    },
-  ];
+  const snakes = createInitialSnakes(random);
 
-  const initialFood = spawnFood(BOARD, snakes, random);
+  const initialFood = spawnFood(BOARD, snakes, random, { phase: 'initial' });
   if (!initialFood) {
     throw new Error('Unable to spawn initial food on the board.');
   }
@@ -101,9 +76,9 @@ export function queueDirectionInput(snake: SnakeState, direction: Direction): bo
 }
 
 export function computeSpeedInterval(foodsEaten: number): number {
-  if (foodsEaten >= 9) return 120;
-  if (foodsEaten >= 6) return 140;
-  if (foodsEaten >= 3) return 170;
+  if (foodsEaten >= 9) return 150;
+  if (foodsEaten >= 6) return 165;
+  if (foodsEaten >= 3) return 180;
   return 200;
 }
 
@@ -192,7 +167,7 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
   }
 
   if (!result && (consumers[0] || consumers[1])) {
-    const spawned = spawnFood(match.board, snakes, random);
+    const spawned = spawnFood(match.board, snakes, random, { phase: 'replacement' });
     if (spawned) {
       food = spawned;
     } else {
@@ -249,6 +224,7 @@ export function spawnFood(
   board: { width: number; height: number },
   snakes: Array<Pick<SnakeState, 'body'>>,
   random: () => number = Math.random,
+  options: { phase?: 'initial' | 'replacement' } = {},
 ): GridPoint | null {
   const occupied = new Set(snakes.flatMap((snake) => snake.body.map((segment) => `${segment.x},${segment.y}`)));
   const emptyCells: GridPoint[] = [];
@@ -261,7 +237,114 @@ export function spawnFood(
   }
 
   if (!emptyCells.length) return null;
-  return emptyCells[Math.floor(random() * emptyCells.length)] ?? null;
+  if (snakes.length < 2) return pickRandomCell(emptyCells, random);
+
+  const heads = snakes.map((snake) => snake.body[0]);
+  if (options.phase === 'initial') {
+    const fairCell = pickInitialFairFoodCell(emptyCells, heads, random);
+    if (fairCell) return fairCell;
+  }
+
+  const replacementCell = pickReplacementFoodCell(emptyCells, heads, random);
+  return replacementCell ?? pickRandomCell(emptyCells, random);
+}
+
+function createInitialSnakes(_random: () => number): [SnakeState, SnakeState] {
+  return [
+    {
+      slotIndex: 0,
+      direction: 'right',
+      pendingDirection: null,
+      body: [
+        { x: 7, y: 15 },
+        { x: 6, y: 15 },
+        { x: 5, y: 15 },
+      ],
+      alive: true,
+      score: 0,
+    },
+    {
+      slotIndex: 1,
+      direction: 'left',
+      pendingDirection: null,
+      body: [
+        { x: 22, y: 15 },
+        { x: 23, y: 15 },
+        { x: 24, y: 15 },
+      ],
+      alive: true,
+      score: 0,
+    },
+  ];
+}
+
+function pickInitialFairFoodCell(cells: GridPoint[], heads: GridPoint[], random: () => number): GridPoint | null {
+  const fairnessProfiles = [
+    { enforceLaneBias: true, maxDelta: 2 },
+    { enforceLaneBias: false, maxDelta: 2 },
+    { enforceLaneBias: false, maxDelta: 3 },
+  ] as const;
+
+  for (const profile of fairnessProfiles) {
+    const filtered = cells.filter((cell) => isInitialFoodCandidateFair(cell, heads, profile));
+    if (filtered.length > 0) {
+      return pickRandomCell(filtered, random);
+    }
+  }
+
+  return null;
+}
+
+function isInitialFoodCandidateFair(
+  cell: GridPoint,
+  heads: GridPoint[],
+  profile: { enforceLaneBias: boolean; maxDelta: number },
+): boolean {
+  const [head0, head1] = heads;
+  const distance0 = manhattanDistance(cell, head0);
+  const distance1 = manhattanDistance(cell, head1);
+
+  if (distance0 < 4 || distance1 < 4) {
+    return false;
+  }
+
+  if (Math.abs(distance0 - distance1) > profile.maxDelta) {
+    return false;
+  }
+
+  if (!profile.enforceLaneBias) {
+    return true;
+  }
+
+  const projected0 = movePoint(head0, 'right');
+  const projected1 = movePoint(head1, 'left');
+  const ahead0 = cell.x >= head0.x;
+  const ahead1 = cell.x <= head1.x;
+  const onForwardLane0 = ahead0 && cell.y === head0.y && manhattanDistance(cell, projected0) <= 4;
+  const onForwardLane1 = ahead1 && cell.y === head1.y && manhattanDistance(cell, projected1) <= 4;
+
+  if (onForwardLane0 && distance1 - distance0 >= 2) {
+    return false;
+  }
+  if (onForwardLane1 && distance0 - distance1 >= 2) {
+    return false;
+  }
+
+  return true;
+}
+
+function pickReplacementFoodCell(cells: GridPoint[], heads: GridPoint[], random: () => number): GridPoint | null {
+  const filtered = cells.filter((cell) => heads.every((head) => manhattanDistance(cell, head) > 1));
+  if (!filtered.length) return null;
+  return pickRandomCell(filtered, random);
+}
+
+function pickRandomCell(cells: GridPoint[], random: () => number): GridPoint | null {
+  return cells[Math.floor(random() * cells.length)] ?? null;
+}
+
+function manhattanDistance(a: GridPoint, b: GridPoint): number {
+  return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 
 function movePoint(point: GridPoint, direction: Direction): GridPoint {

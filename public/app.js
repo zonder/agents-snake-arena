@@ -174,7 +174,7 @@ socket.on('game:start', (payload) => {
   gameStatusInlineEl.textContent = 'Game live.';
   countdownLabel.textContent = 'Countdown: GO';
   speedLabel.textContent = `Speed: ${payload.tickIntervalMs}ms`;
-  gameMessageEl.textContent = 'Gameplay screen active. Lobby is fully hidden during the match.';
+  gameMessageEl.textContent = 'Gameplay screen active. Opening speed stays familiar while fairness tuning handles the first scramble.';
   triggerCountdownStep(0);
   applyPhaseTheme('live', 'neutral');
   showScreen('gameplay');
@@ -559,7 +559,7 @@ function renderRematch(rematch, phase, message) {
 
   const players = latestGameState?.players || latestLobbyState?.players || latestRematchState?.players || [];
   const opponent = players.find((player) => player.slotIndex !== yourSlotIndex);
-  let statusText = message || 'Want another round? Accept rematch to stay in this room.';
+  let statusText = message || 'Want another round? Rematch is ready as soon as both players accept.';
   let buttonText = 'Accept rematch';
   let buttonDisabled = true;
   let bannerTitle = 'Rematch ready';
@@ -569,12 +569,12 @@ function renderRematch(rematch, phase, message) {
     buttonText = 'Rematch unavailable';
     bannerTitle = 'Waiting for both players';
   } else if (rematch.bothAccepted) {
-    statusText = 'Both players accepted. Starting a fresh countdown…';
+    statusText = 'Both players accepted. Fresh round loading now…';
     buttonText = 'Rematch starting…';
     bannerTitle = 'Countdown loading';
     postGameBannerButton.classList.add('accepted');
   } else if (rematch.waitingForOtherPlayer) {
-    statusText = 'Rematch requested. Waiting for the other player.';
+    statusText = 'Rematch requested. Waiting on the other player now.';
     buttonText = 'Waiting for other player';
     buttonDisabled = true;
     bannerTitle = 'Request sent';
@@ -588,7 +588,7 @@ function renderRematch(rematch, phase, message) {
     bannerTitle = 'Opponent wants another round';
     rematchPanelEl.classList.add('highlighted');
   } else {
-    statusText = message || 'Want another round? Accept rematch to stay in this room.';
+    statusText = message || 'Want another round? Rematch is ready as soon as both players accept.';
     buttonText = 'Accept rematch now';
     buttonDisabled = false;
     bannerTitle = 'Play again';
@@ -625,9 +625,9 @@ function renderGame(state, perSlotResult) {
 
   if (state.phase === 'starting') {
     gamePhaseLabel.textContent = 'Countdown';
-    gameStatusInlineEl.textContent = 'Match starts in moments.';
+    gameStatusInlineEl.textContent = 'Match starts in moments. Queue your opener now.';
     countdownLabel.textContent = `Countdown: ${state.countdownSecondsRemaining ?? 3}`;
-    gameMessageEl.textContent = 'Queue your opening turn now. Snakes stay still until the countdown ends.';
+    gameMessageEl.textContent = 'Queue your opening turn now. Opening food is filtered for a fairer race.';
     applyPhaseTheme('countdown', 'neutral');
   } else if (state.phase === 'in-progress') {
     gamePhaseLabel.textContent = 'In progress';
@@ -637,10 +637,10 @@ function renderGame(state, perSlotResult) {
     applyPhaseTheme('live', 'neutral');
   } else {
     gamePhaseLabel.textContent = 'Game over';
-    countdownLabel.textContent = 'Countdown: closed soon';
+    countdownLabel.textContent = 'Rematch: ready now';
     const yourOutcome = getYourOutcome(perSlotResult);
     gameStatusInlineEl.textContent = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
-    gameMessageEl.textContent = yourOutcome === 'win' ? 'Result: you win.' : yourOutcome === 'lose' ? 'Result: you lose.' : 'Result: draw.';
+    gameMessageEl.textContent = yourOutcome === 'win' ? 'Result: you win. Rematch is available immediately.' : yourOutcome === 'lose' ? 'Result: you lose. Rematch is available immediately.' : 'Result: draw. Rematch is available immediately.';
     applyPhaseTheme('result', yourOutcome);
   }
 
@@ -806,8 +806,9 @@ function triggerCountdownStep(nextValue) {
 
   const label = nextValue === 0 ? 'GO' : String(nextValue);
   countdownOverlayEl.textContent = label;
+  countdownOverlayEl.dataset.countdownValue = label;
   countdownOverlayEl.classList.remove('hidden');
-  pulseTransientClass(countdownOverlayEl, 'is-active', MOTION_REDUCED() ? 40 : 520);
+  pulseTransientClass(countdownOverlayEl, 'is-active', MOTION_REDUCED() ? 40 : 640);
   audioManager.play(nextValue === 0 ? 'countdown.go' : 'countdown.tick');
 }
 
