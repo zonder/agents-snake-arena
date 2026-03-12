@@ -27,3 +27,20 @@
 ## Known follow-up considerations
 - If the project later standardizes on React/Vite, the current server-side room service and shared contracts can be reused while replacing the static client.
 - Real leave events beyond socket disconnect are not yet exposed as a dedicated client action because the approved scope only required leave/disconnect handling before match start.
+
+## Follow-up Adjustment: Hide lobby during non-lobby phases
+- Updated the browser UI to use distinct screen containers for entry, lobby, and gameplay states instead of always rendering the lobby block.
+- The client now shows the lobby only for `waiting-for-players` and `lobby` phases.
+- When the server reports `starting` or `in-progress`, the gameplay screen replaces the lobby visually and keeps only essential room info (room code + phase badge) visible.
+- Added a defensive fallback so any future non-lobby phase (for example a later game-over phase) will continue to hide the lobby screen by default.
+## Follow-up Adjustment: Hide lobby during non-lobby phases
+- Updated the browser UI to use distinct screen containers for entry, lobby, and gameplay states instead of always rendering the lobby block.
+- The client now shows the lobby only for `waiting-for-players` and `lobby` phases.
+- When the server reports `starting` or `in-progress`, the gameplay screen replaces the lobby visually and keeps only essential room info (room code + phase badge) visible.
+- Added a defensive fallback so any future non-lobby phase (for example a later game-over phase) will continue to hide the lobby screen by default.
+
+## Build/version marker
+- Added a small visible `Build: ...` pill in the top-right of the main lobby panel so reviewers can confirm which deployment they are looking at without affecting gameplay flow.
+- The client fetches `/build-info.json` with `cache: 'no-store'` and a timestamp query param, which helps avoid stale browser-cached metadata during review.
+- The server resolves build info at startup from `package.json` version plus the current short git commit SHA, producing a display value like `v0.1.0+abc1234`.
+- The build marker tooltip also includes the full app version, commit SHA, and startup timestamp for extra debugging context during deployment checks.
