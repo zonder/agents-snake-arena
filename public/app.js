@@ -43,6 +43,7 @@ let latestLobbyState = null;
 let latestGameState = null;
 let latestRematchState = null;
 let latestCountdownState = null;
+let lastCountdownFxKey = null;
 let yourSlotIndex = null;
 let boardReady = false;
 let buildMarkerText = 'Build: loading…';
@@ -111,7 +112,7 @@ socket.on('game:countdown', (payload) => {
   gameStatusInlineEl.textContent = `Match starts in ${payload.secondsRemaining}...`;
   applyPhaseTheme('countdown', 'neutral');
   showScreen('gameplay');
-  triggerCountdownStep(previousCountdown?.secondsRemaining, payload.secondsRemaining);
+  triggerCountdownStep(payload.secondsRemaining);
 });
 
 socket.on('game:start', (payload) => {
@@ -121,10 +122,9 @@ socket.on('game:start', (payload) => {
   countdownLabel.textContent = 'Countdown: GO';
   speedLabel.textContent = `Speed: ${payload.tickIntervalMs}ms`;
   gameMessageEl.textContent = 'Gameplay screen active. Lobby is fully hidden during the match.';
-  clearCountdownOverlay();
+  triggerCountdownStep(0);
   applyPhaseTheme('live', 'neutral');
   showScreen('gameplay');
-  audioManager.play('countdown.go');
 });
 
 socket.on('game:state', (payload) => {
@@ -497,10 +497,9 @@ function applyLobbyEffects(previousLobbyState, nextLobbyState) {
 function applyGameTransitionEffects(previousGameState, nextGameState, perSlotResult = nextGameState.result?.bySlot) {
   if (!nextGameState) return;
 
-  const previousCountdown = previousGameState?.countdownSecondsRemaining;
   const nextCountdown = nextGameState.countdownSecondsRemaining;
-  if (nextGameState.phase === 'starting' && previousCountdown !== nextCountdown && nextCountdown !== undefined) {
-    triggerCountdownStep(previousCountdown, nextCountdown);
+  if (nextGameState.phase === 'starting' && nextCountdown !== undefined) {
+    triggerCountdownStep(nextCountdown);
   }
 
   if (previousGameState) {
@@ -544,8 +543,12 @@ function applyRematchEffects(previousPayload, nextPayload) {
   }
 }
 
-function triggerCountdownStep(previousValue, nextValue) {
-  if (previousValue === nextValue || nextValue === undefined || nextValue === null) return;
+function triggerCountdownStep(nextValue) {
+  if (nextValue === undefined || nextValue === null) return;
+  const fxKey = `countdown:${nextValue === 0 ? 'go' : nextValue}`;
+  if (lastCountdownFxKey === fxKey) return;
+  lastCountdownFxKey = fxKey;
+
   const label = nextValue === 0 ? 'GO' : String(nextValue);
   countdownOverlayEl.textContent = label;
   countdownOverlayEl.classList.remove('hidden');
@@ -554,6 +557,7 @@ function triggerCountdownStep(previousValue, nextValue) {
 }
 
 function clearCountdownOverlay() {
+  lastCountdownFxKey = null;
   countdownOverlayEl.classList.add('hidden');
   countdownOverlayEl.classList.remove('is-active');
   countdownOverlayEl.textContent = '';

@@ -16,3 +16,4 @@
 ## Minor deviations from architecture notes
 - Added the sound toggle in the top bar instead of the gameplay HUD so the control stays available before and during matches.
 - Reused existing status and card surfaces for acknowledgements rather than introducing a separate toast region.
+- Review fix: centralized countdown FX de-duplication behind one global countdown effect key so `game:countdown`, `game:state`, and `game:start` cannot replay the same `3 / 2 / 1 / GO` pulse/audio step twice.
