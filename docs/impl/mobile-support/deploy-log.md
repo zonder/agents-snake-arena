@@ -69,9 +69,10 @@ pm2 save
 | Timestamp | `2026-03-12T11:03:20Z` |
 | Status | `SUCCESS` |
 
-## QA-unblock refresh redeploy — 2026-03-12T12:45:37Z
-- Trigger: redeploy latest branch head for mobile layout fix verification
-- Branch head at deploy time:  ()
-- Verified live before artifact commit via : 
-- Dev URL: 
-- Result before artifact commit: 
+
+## QA-unblock refresh redeploy correction — 2026-03-12T12:46:56Z
+- Trigger: repair malformed deploy record and confirm latest mobile layout fix refresh deploy
+- Branch head before correction commit: 8051c918e699b6861e45b5d42619b695b87468b5 (8051c91)
+- Verified live before correction commit via /build-info.json: 8051c91
+- Dev URL: http://20.106.185.110:8081/
+- Result before correction commit: SUCCESS
