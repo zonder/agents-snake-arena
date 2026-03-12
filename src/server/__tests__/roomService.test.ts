@@ -331,4 +331,37 @@ describe("RoomService", () => {
     expect(resumedLobby.players[1].name).toBe("Alex");
   });
 
+
+  test("builds duplicate-safe reconnect messaging for gameplay and rematch states", () => {
+    const service = new RoomService();
+    const created = service.createRoom("socket-a", "Alex");
+    const roomCode = payloads(created, "room:created")[0].roomCode;
+    const joined = service.joinRoom("socket-b", roomCode, "Alex");
+    const guestSession = payloads(joined, "session:issued")[0];
+
+    service.setReady("socket-a", true);
+    const readyResult = service.setReady("socket-b", true);
+    expect(payloads(readyResult, "game:state")[0].phase).toBe("starting");
+
+    const disconnectResult = service.disconnect("socket-b");
+    const pausedGameStates = payloads(disconnectResult, "game:state");
+    expect(pausedGameStates).toHaveLength(1);
+    expect(pausedGameStates[0].reconnect.disconnectedPlayerName).toBe("Alex");
+    expect(pausedGameStates[0].reconnect.disconnectedPlayerDisplayName).toBe("Alex (Player 2)");
+
+    const resumeResult = service.resumeSession("socket-b-2", { roomCode, reconnectToken: guestSession.reconnectToken });
+    const resumedGameStates = payloads(resumeResult, "game:state");
+    expect(resumedGameStates).toHaveLength(2);
+    expect(resumedGameStates[0].reconnect.status).toBe("resume-countdown");
+    expect(resumedGameStates[0].reconnect.disconnectedPlayerDisplayName).toBe("Alex (Player 2)");
+
+    vi.advanceTimersByTime(3000);
+    finishGame(service);
+
+    const rematchDisconnectResult = service.disconnect("socket-b-2");
+    const rematchStates = payloads(rematchDisconnectResult, "game:rematch-state");
+    expect(rematchStates).toHaveLength(1);
+    expect(rematchStates[0].reconnect.disconnectedPlayerDisplayName).toBe("Alex (Player 2)");
+  });
+
 });

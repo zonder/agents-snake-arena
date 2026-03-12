@@ -39,6 +39,7 @@ export interface ReconnectView {
   status: ReconnectStatus;
   disconnectedSlotIndex: 0 | 1 | null;
   disconnectedPlayerName?: string | null;
+  disconnectedPlayerDisplayName?: string | null;
   reservedUntil: number | null;
   secondsRemaining: number | null;
   affectedPhase: RoomPhase | null;

@@ -16,3 +16,5 @@
 ## Verification
 - `npm test`
 - `npm run build`
+
+- Review fix: extended reconnect payloads with a server-authoritative duplicate-safe display name so gameplay and rematch disconnect/reconnect banners stay unambiguous when both players choose the same name.

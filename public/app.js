@@ -292,7 +292,7 @@ function tryResumeStoredSession() {
 function describeReconnect(state) {
   const reconnect = state?.reconnect;
   if (!reconnect?.active) return '';
-  const label = reconnect.disconnectedPlayerName || (reconnect.disconnectedSlotIndex === null || reconnect.disconnectedSlotIndex === undefined
+  const label = reconnect.disconnectedPlayerDisplayName || reconnect.disconnectedPlayerName || (reconnect.disconnectedSlotIndex === null || reconnect.disconnectedSlotIndex === undefined
     ? 'Player'
     : `Player ${reconnect.disconnectedSlotIndex + 1}`);
   const seconds = reconnect.secondsRemaining ?? 0;
