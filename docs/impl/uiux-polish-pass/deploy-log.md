@@ -95,3 +95,49 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-12T09:54:18Z` |
 | Status | `SUCCESS` |
+
+## Production deployment update — 2026-03-12
+- Environment: `prod`
+- Branch: `main`
+- Parent issue: `#25`
+- PR: `#28`
+- Previous prod commit: `10055d5ceaad6312ee2c53f48f5a763d607d5150` (`10055d5`)
+- Deployed commit: `a5a0b41eea8278981ce65bd0e7b8f9de70b1fc36` (`a5a0b41`)
+- Production URL: `http://20.106.185.110/`
+- Deployed at (UTC): `2026-03-12T10:26:52Z`
+- Runtime: `pm2` process `app-prod` behind nginx on port `80`, forwarding to local app on port `3000`
+
+### Production deployment actions
+```bash
+cd /home/rootagent/deployments/prod
+git fetch origin main
+git checkout main
+git reset --hard origin/main
+npm ci
+npm run build
+pm2 startOrRestart /home/rootagent/deployments/ecosystem.config.js --only app-prod
+pm2 save
+```
+
+### Production health-check results
+- `pm2 list` showed `app-prod` online after restart.
+- `curl -I http://127.0.0.1:3000/` returned `HTTP/1.1 200 OK`.
+- `curl -I http://20.106.185.110/` returned `HTTP/1.1 200 OK` via nginx.
+- `curl http://20.106.185.110/build-info.json` returned `{"version":"0.1.0","commit":"a5a0b41","builtAt":"2026-03-12T10:25:41.038Z","displayVersion":"v0.1.0+a5a0b41"}`.
+- `curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
+- Served HTML contains the polished UI markers `Retro arcade multiplayer`, `Clean boards. Neon tension. Quick rematches.`, `build-marker`, and `fx-layer`.
+- Served `app.js` contains the shipped UI polish / gameplay markers `countdownOverlay`, `flash-collision`, `Accept rematch now`, and `buildInfo.displayVersion`.
+- PM2 logs show the current startup line: `Room lobby server listening on http://localhost:3000 (v0.1.0+a5a0b41)`.
+
+### Production deployment record
+
+| Field | Value |
+|-------|-------|
+| Commit | `a5a0b41eea8278981ce65bd0e7b8f9de70b1fc36` |
+| Short | `a5a0b41` |
+| Branch | `main` |
+| Environment | `prod` |
+| PM2 Process | `app-prod` |
+| URL | `http://20.106.185.110/` |
+| Timestamp | `2026-03-12T10:26:52Z` |
+| Status | `SUCCESS` |
