@@ -182,9 +182,6 @@ export class RoomService {
     const room = this.rooms.get(roomCode);
     if (!room) return { events: [this.error(socketId, 'ROOM_NOT_FOUND')] };
     if (room.phase === 'starting' || room.phase === 'in-progress') return { events: [this.error(socketId, 'GAME_ALREADY_STARTED')] };
-    if (room.phase === 'game-over' && room.players.every((player) => player.playerId)) {
-      return { events: [this.error(socketId, 'GAME_ALREADY_STARTED')] };
-    }
 
     const emptySlot = room.players.find((player) => !player.playerId);
     if (!emptySlot) return { events: [this.error(socketId, 'ROOM_FULL')] };

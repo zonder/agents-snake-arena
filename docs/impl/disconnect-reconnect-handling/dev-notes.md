@@ -11,3 +11,4 @@
 ## Notes / deviations
 - Resume after a paused countdown or live game currently uses a fresh server-driven 3-second resume countdown rather than restoring sub-second timer precision from the exact interrupted countdown tick. This keeps the flow authoritative and predictable while staying within the approved UX intent.
 - The repository did not have `subtask` / `agent:fullstack-dev` labels configured, so the implementation subtask was created and linked without those labels.
+- Review fix: `room:join` no longer treats `game-over` rooms with a reserved reconnect slot as mid-match; post-game join attempts now fall through to the occupancy check and return `ROOM_FULL`, with regression coverage updated to lock in the API-contract behavior.

@@ -235,7 +235,7 @@ describe("RoomService", () => {
     const joinResult = service.joinRoom("socket-c", roomCode);
     const error = payloads(joinResult, "room:error")[0];
 
-    expect(error.reason).toBe("GAME_ALREADY_STARTED");
+    expect(error.reason).toBe("ROOM_FULL");
   });
 
   test("disconnect during gameplay pauses first, then awards forfeit after timeout", () => {
