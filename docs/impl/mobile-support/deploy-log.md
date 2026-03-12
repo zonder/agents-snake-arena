@@ -106,3 +106,25 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-12T15:10:49Z` |
 | Status | `SUCCESS` |
+
+## QA-unblock refresh redeploy — 2026-03-12T15:27:35Z
+- Trigger: redeploy latest branch head so the latest phone-landscape fix is live for QA
+- Previous dev commit: `4109c81cddc6e8fe7dcd1df581b2fbb55477c8c2` (`4109c81`)
+- Requested fix commit: `6d384f0c1cd1221a542fcd34ca755ccf0a239667` (`6d384f0`)
+- Deployed commit: `6d384f0c1cd1221a542fcd34ca755ccf0a239667` (`6d384f0`)
+- Verified live via `http://20.106.185.110:8081/build-info.json` returning `v0.1.0+6d384f0`
+- Verified served `/app.js` SHA-256 matched deployed file SHA-256: `e7ba62e25d7f1fa8c26d296aa20fda0c524e6941d838b0653935f59ecb08bbbe`
+- Result: `SUCCESS`
+
+### Latest deployment record
+
+| Field | Value |
+|-------|-------|
+| Commit | `6d384f0c1cd1221a542fcd34ca755ccf0a239667` |
+| Short | `6d384f0` |
+| Branch | `feature/issue-40` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-12T15:27:35Z` |
+| Status | `SUCCESS` |
