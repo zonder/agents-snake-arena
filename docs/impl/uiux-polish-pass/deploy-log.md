@@ -75,3 +75,23 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-12T09:07:45Z` |
 | Status | `SUCCESS` |
+
+## QA-unblock redeploy refresh — 2026-03-12T09:53Z
+- Trigger: redeploy latest branch head for board-displacement fix verification
+- Requested target commit: `72735311fcd46e33848600122fa9a0323b477531` (`7273531`)
+- Verified live commit: `72735311fcd46e33848600122fa9a0323b477531` (`7273531`)
+- Verified at (UTC): `2026-03-12T09:54:18Z`
+- Result: `SUCCESS`
+
+### Latest deployment record
+
+| Field | Value |
+|-------|-------|
+| Commit | `72735311fcd46e33848600122fa9a0323b477531` |
+| Short | `7273531` |
+| Branch | `feature/issue-25` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-12T09:54:18Z` |
+| Status | `SUCCESS` |
