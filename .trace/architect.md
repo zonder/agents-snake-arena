@@ -111,13 +111,13 @@ Issue #13 architecture design
 - Key artifacts read: GitHub issue #13, docs/impl/replay-rematch-flow/spec.md, src/shared/contracts.ts, src/server/roomService.ts, existing docs under docs/impl/room-lobby-autostart/ and docs/impl/core-gameplay-loop/
 
 ## Decisions
-1. Decision: Keep  as the top-level room phase and represent rematch with a dedicated rematch sub-state.
+1. Decision: Keep `game-over` as the top-level room phase and represent rematch with a dedicated rematch sub-state.
    Rationale: Minimizes churn and avoids inventing a parallel lifecycle for post-game flow.
 2. Decision: Remove automatic room teardown after normal round completion and keep the room open for same-room replay.
    Rationale: The feature requires rematch in the same room with the same code.
 3. Decision: Clear both rematch acceptances whenever room membership changes after game over.
    Rationale: Prevents stale dual-acceptance state from carrying across disconnect/leave or replacement-player scenarios.
-4. Decision: Use a dedicated  intent and  snapshot while allowing rematch state to also appear in authoritative room/game payloads.
+4. Decision: Use a dedicated `game:rematch-request` intent and `game:rematch-state` snapshot while allowing rematch state to also appear in authoritative room/game payloads.
    Rationale: Keeps client and QA visibility explicit without replacing existing socket flows.
 
 ## Actions Taken
@@ -132,7 +132,7 @@ Issue #13 architecture design
 ## Handoff
 - Next agent: fullstack-dev
 - Trigger: Architecture design complete
-- Context needed: Read , , , plus current , , and result-screen client handling in 
+- Context needed: Read `docs/impl/replay-rematch-flow/spec.md`, `design.md`, `api-contracts.md`, plus current `src/server/roomService.ts`, `src/shared/contracts.ts`, and result-screen client handling in `public/app.js`
 
 ## Resume Point
 If resuming this agent from branch state:
