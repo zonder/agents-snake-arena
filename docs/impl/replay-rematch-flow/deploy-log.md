@@ -65,3 +65,35 @@ Verification result: **PASS**
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-12T00:44:35Z` |
 | Status | `SUCCESS` |
+
+## Redeploy refresh — 2026-03-12
+- Trigger: stakeholder review refresh after rematch CTA visibility fix
+- Source commit: `dc5e3b6ed2eeb8f86afbd9d298627243882bc28f` (`dc5e3b6`)
+- Redeployed at (UTC): `2026-03-12T01:00:26Z`
+- Result: `SUCCESS`
+
+### Refresh verification
+- `~/deployments/dev` reset to `origin/feature/issue-13` at `dc5e3b6ed2eeb8f86afbd9d298627243882bc28f`
+- `npm ci && npm run build` completed successfully
+- `pm2 restart app-dev --update-env` completed successfully
+- `curl http://127.0.0.1:3001/` returned `200`
+- `curl http://20.106.185.110:8081/` returned `200`
+- Served `/app.js` SHA-256 matched the deployed file SHA-256: `e7f4149980ef5fece49e86cb86448c70855c634b79d76f7365da02a4dd618815`
+- Served asset contains the rematch CTA visibility fix strings:
+  - `Accept rematch now`
+  - `Your opponent wants a rematch. Accept to restart in the same room.`
+  - highlighted rematch card state
+
+### Latest deployment record
+
+| Field | Value |
+|-------|-------|
+| Commit | `dc5e3b6ed2eeb8f86afbd9d298627243882bc28f` |
+| Short | `dc5e3b6` |
+| Branch | `feature/issue-13` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-12T01:00:26Z` |
+| Status | `SUCCESS` |
+
