@@ -7,8 +7,8 @@
 - Feature slug: `player-names-identity`
 - Environment: dev
 - Dev URL: `http://20.106.185.110:8081/`
-- Deployed commit: `9a06002777e5eb52884b18a912883ccc3282a3a2` (`9a06002`)
-- Deployed at (UTC): `2026-03-12T18:48:04Z`
+- Deployed commit: `aa97a7e0112f1f1f328687a79d2aeab1de5ab98a` (`aa97a7e`)
+- Deployed at (UTC): `2026-03-12T18:48:41Z`
 - Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
 
 ## Deployment actions
@@ -25,7 +25,7 @@ pm2 save
 
 ## Health verification
 - `curl -I http://20.106.185.110:8081/` returned HTTP 200.
-- `curl http://20.106.185.110:8081/build-info.json` returned build marker `v0.1.0+9a06002` after the final artifact-refresh redeploy.
+- `curl http://20.106.185.110:8081/build-info.json` returned build marker `v0.1.0+aa97a7e` after the final artifact-refresh redeploy.
 - Deployed HTML contains visible build-marker placeholders:
   - `#buildMarker` with text `Build: loading…` before hydration.
   - `#gameBuildMarker` with text `Build: loading…` before hydration.
@@ -40,11 +40,11 @@ pm2 save
 
 | Field | Value |
 |-------|-------|
-| Commit | `9a06002777e5eb52884b18a912883ccc3282a3a2` |
-| Short | `9a06002` |
+| Commit | `aa97a7e0112f1f1f328687a79d2aeab1de5ab98a` |
+| Short | `aa97a7e` |
 | Branch | `feature/issue-73` |
 | Environment | dev |
 | PM2 Process | `app-dev` |
 | URL | `http://20.106.185.110:8081/` |
-| Timestamp | `2026-03-12T18:48:04Z` |
+| Timestamp | `2026-03-12T18:48:41Z` |
 | Status | SUCCESS |
