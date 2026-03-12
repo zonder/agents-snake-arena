@@ -68,6 +68,12 @@
             </aside>
 
             <div class="game-center">
+              <div id="postGameBanner" class="post-game-banner hidden" aria-live="polite">
+                <div class="eyebrow">Play again</div>
+                <h2 class="post-game-title">Rematch ready</h2>
+                <p id="postGameBannerStatus" class="info-copy post-game-copy">Want another round? Accept rematch to stay in this room.</p>
+                <button id="postGameBannerButton" class="post-game-button" type="button">Accept rematch</button>
+              </div>
               <div id="board" class="board" aria-label="Game board"></div>
               <p id="gameMessage" class="message game-message"></p>
             </div>

@@ -27,6 +27,9 @@ const gameBuildMarkerEl = document.getElementById('gameBuildMarker');
 const rematchPanelEl = document.getElementById('rematchPanel');
 const rematchStatusEl = document.getElementById('rematchStatus');
 const rematchButton = document.getElementById('rematchButton');
+const postGameBannerEl = document.getElementById('postGameBanner');
+const postGameBannerStatusEl = document.getElementById('postGameBannerStatus');
+const postGameBannerButton = document.getElementById('postGameBannerButton');
 
 let latestLobbyState = null;
 let latestGameState = null;
@@ -148,10 +151,13 @@ async function copyActiveRoomCode() {
 
 document.getElementById('copyRoomCodeButton').addEventListener('click', copyActiveRoomCode);
 document.getElementById('copyGameRoomCodeButton').addEventListener('click', copyActiveRoomCode);
-rematchButton.addEventListener('click', () => {
+function requestRematch() {
   if (!latestRematchState?.rematch?.available || latestRematchState.rematch.requestedByYou) return;
   socket.emit('game:rematch-request');
-});
+}
+
+rematchButton.addEventListener('click', requestRematch);
+postGameBannerButton.addEventListener('click', requestRematch);
 
 readyButton.addEventListener('click', () => {
   if (!latestLobbyState) return;
@@ -239,27 +245,52 @@ function renderLobby(state) {
 function renderRematch(rematch, phase, message) {
   const isPostGame = phase === 'game-over';
   rematchPanelEl.classList.toggle('hidden', !isPostGame);
+  postGameBannerEl.classList.toggle('hidden', !isPostGame);
+  rematchPanelEl.classList.remove('highlighted');
+  postGameBannerButton.classList.remove('waiting', 'accepted');
   if (!isPostGame) return;
 
+  let statusText = message || 'Want another round? Accept rematch to stay in this room.';
+  let buttonText = 'Accept rematch';
+  let buttonDisabled = true;
+
   if (!rematch?.available) {
-    rematchStatusEl.textContent = message || 'Rematch unavailable until both players are present.';
-    rematchButton.textContent = 'Rematch unavailable';
-    rematchButton.disabled = true;
-    return;
-  }
-
-  if (rematch.bothAccepted) {
-    rematchStatusEl.textContent = 'Both players accepted. Starting a fresh countdown…';
+    statusText = message || 'Rematch unavailable until both players are present.';
+    buttonText = 'Rematch unavailable';
+  } else if (rematch.bothAccepted) {
+    statusText = 'Both players accepted. Starting a fresh countdown…';
+    buttonText = 'Rematch starting…';
+    postGameBannerButton.classList.add('accepted');
   } else if (rematch.waitingForOtherPlayer) {
-    rematchStatusEl.textContent = 'Rematch requested. Waiting for the other player.';
+    statusText = 'Rematch requested. Waiting for the other player.';
+    buttonText = 'Waiting for other player';
+    buttonDisabled = true;
+    rematchPanelEl.classList.add('highlighted');
+    postGameBannerButton.classList.add('waiting');
   } else if (rematch.requestedBySlot[0] || rematch.requestedBySlot[1]) {
-    rematchStatusEl.textContent = 'Your opponent wants a rematch. Accept to restart in the same room.';
+    statusText = 'Your opponent wants a rematch. Accept to restart in the same room.';
+    buttonText = 'Accept rematch now';
+    buttonDisabled = false;
+    rematchPanelEl.classList.add('highlighted');
   } else {
-    rematchStatusEl.textContent = message || 'Want another round? Accept rematch to stay in this room.';
+    statusText = message || 'Want another round? Accept rematch to stay in this room.';
+    buttonText = 'Accept rematch now';
+    buttonDisabled = false;
+    rematchPanelEl.classList.add('highlighted');
   }
 
-  rematchButton.textContent = rematch.requestedByYou ? 'Rematch requested' : 'Accept rematch';
-  rematchButton.disabled = rematch.requestedByYou || rematch.bothAccepted || !rematch.available;
+  if (rematch?.requestedByYou) {
+    buttonText = 'Rematch requested';
+    buttonDisabled = true;
+    postGameBannerButton.classList.add('waiting');
+  }
+
+  rematchStatusEl.textContent = statusText;
+  postGameBannerStatusEl.textContent = statusText;
+  rematchButton.textContent = buttonText;
+  postGameBannerButton.textContent = buttonText;
+  rematchButton.disabled = buttonDisabled;
+  postGameBannerButton.disabled = buttonDisabled;
 }
 
 function renderGame(state, perSlotResult) {
