@@ -55,3 +55,23 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-12T09:07:04Z` |
 | Status | `SUCCESS` |
+
+
+## Redeploy refresh — 2026-03-12
+- Trigger: sync live dev environment to branch head after committing deployment artifact
+- Redeployed commit: `5c2bde1f262e4f487bcaec4b4bb50bf7eb6b3320` (`5c2bde1`)
+- Redeployed at (UTC): `2026-03-12T09:07:45Z`
+- Result: `SUCCESS`
+
+### Latest deployment record
+
+| Field | Value |
+|-------|-------|
+| Commit | `5c2bde1f262e4f487bcaec4b4bb50bf7eb6b3320` |
+| Short | `5c2bde1` |
+| Branch | `feature/issue-25` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-12T09:07:45Z` |
+| Status | `SUCCESS` |
