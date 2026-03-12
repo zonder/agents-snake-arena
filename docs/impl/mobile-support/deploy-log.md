@@ -128,3 +128,48 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-12T15:27:35Z` |
 | Status | `SUCCESS` |
+
+## Production deployment update — 2026-03-12T15:38:47Z
+- Environment: `prod`
+- Trigger: deploy merged PR #43 / parent issue #40 from `main`
+- Previous prod commit: `a5a0b41eea8278981ce65bd0e7b8f9de70b1fc36` (`a5a0b41`)
+- Deployed commit: `9c3181e` (served build marker), repo HEAD `9c3181ee2668f6fe7c6f631f405f151e0e9072c8` (`9c3181e`)
+- Production URL: `http://20.106.185.110/`
+- Runtime: `pm2` process `app-prod` behind nginx on port `80`, forwarding to local app on port `3000`
+
+### Production deployment actions
+```bash
+cd /home/rootagent/deployments/prod
+git fetch origin main
+git checkout main
+git reset --hard origin/main
+npm ci
+npm run build
+pm2 startOrRestart /home/rootagent/deployments/ecosystem.config.js --only app-prod
+pm2 save
+```
+
+### Production health-check results
+- `curl -I http://20.106.185.110/` returned `HTTP/1.1 200 OK`.
+- `curl http://20.106.185.110/build-info.json` returned `{"version": "0.1.0", "commit": "9c3181e", "builtAt": "2026-03-12T15:38:19.609Z", "displayVersion": "v0.1.0+9c3181e"}`.
+- `curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
+- Served HTML still contains the visible build marker and mobile touch controls markup.
+- Served `/app.js` still contains `mobile-portrait` / `mobile-landscape` layout handling.
+- `pm2` reports `app-prod` online after restart.
+
+### Notes
+- Prod advanced from `a5a0b41` to merged `main` commit `9c3181e`.
+- Mobile-specific verification in prod was feasible at the asset/build-marker level from this headless environment; browser-level mobile flow had already been covered in QA on the dev deployment before merge.
+
+### Production deployment record
+| Field | Value |
+|-------|-------|
+| Commit | `9c3181ee2668f6fe7c6f631f405f151e0e9072c8` |
+| Short | `9c3181e` |
+| Branch | `main` |
+| Environment | `prod` |
+| PM2 Process | `app-prod` |
+| URL | `http://20.106.185.110/` |
+| Timestamp | `2026-03-12T15:38:47Z` |
+| Status | `SUCCESS` |
+
