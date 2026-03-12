@@ -4,6 +4,7 @@ import { createServer } from 'node:http';
 import { extname, join } from 'node:path';
 import { Server } from 'socket.io';
 import { EVENTS, type Direction } from '../shared/contracts.js';
+import { normalizePlayerName } from '../shared/playerName.js';
 import { RoomService, type ClientEvent } from './roomService.js';
 
 const publicDir = join(process.cwd(), 'public');
@@ -48,12 +49,12 @@ const io = new Server(httpServer, { cors: { origin: '*' } });
 roomService.setEventSink(emitEvents);
 
 io.on('connection', (socket) => {
-  socket.on(EVENTS.roomCreate, () => {
-    emitEvents(roomService.createRoom(socket.id).events);
+  socket.on(EVENTS.roomCreate, (payload: { name?: string }) => {
+    emitEvents(roomService.createRoom(socket.id, normalizePlayerName(payload?.name ?? '')).events);
   });
 
-  socket.on(EVENTS.roomJoin, (payload: { roomCode?: string }) => {
-    emitEvents(roomService.joinRoom(socket.id, payload?.roomCode ?? '').events);
+  socket.on(EVENTS.roomJoin, (payload: { roomCode?: string; name?: string }) => {
+    emitEvents(roomService.joinRoom(socket.id, payload?.roomCode ?? '', normalizePlayerName(payload?.name ?? '')).events);
   });
 
   socket.on(EVENTS.playerReadySet, (payload: { ready?: boolean }) => {

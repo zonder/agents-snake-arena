@@ -32,6 +32,8 @@
               <p>Spin up a room in one tap or punch in a code to jump straight into the arena.</p>
             </div>
             <div class="actions arcade-actions">
+              <input id="playerNameInput" maxlength="24" placeholder="Your name" />
+              <p id="nameHelp" class="message">Enter a name up to 12 characters. Spaces are fine; emoji are not.</p>
               <button id="createRoomButton" class="primary-button">Create room</button>
               <div class="join-row">
                 <input id="roomCodeInput" maxlength="6" placeholder="ROOM" />
@@ -73,7 +75,7 @@
               </div>
               <div id="scoreCard0" class="info-card compact-score-card player-card" data-player="0">
                 <div class="player-card-head">
-                  <div class="eyebrow">Player 1</div>
+                  <div id="scoreLabel0" class="eyebrow">Player 1</div>
                   <span id="playerState0" class="player-chip">Waiting</span>
                 </div>
                 <div class="score-card player-one solo-score-card">
@@ -121,7 +123,7 @@
               </div>
               <div id="scoreCard1" class="info-card compact-score-card player-card" data-player="1">
                 <div class="player-card-head">
-                  <div class="eyebrow">Player 2</div>
+                  <div id="scoreLabel1" class="eyebrow">Player 2</div>
                   <span id="playerState1" class="player-chip">Waiting</span>
                 </div>
                 <div class="score-card player-two solo-score-card">

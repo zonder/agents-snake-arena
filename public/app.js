@@ -8,6 +8,8 @@ const entryEl = document.getElementById('entry');
 const lobbyEl = document.getElementById('lobby');
 const gamePanelEl = document.getElementById('gamePanel');
 const roomCodeInput = document.getElementById('roomCodeInput');
+const playerNameInput = document.getElementById('playerNameInput');
+const nameHelpEl = document.getElementById('nameHelp');
 const roomCodeDisplay = document.getElementById('roomCodeDisplay');
 const gameRoomCodeEl = document.getElementById('gameRoomCode');
 const playersEl = document.getElementById('players');
@@ -27,7 +29,9 @@ const score1El = document.getElementById('score1');
 const scoreCard0El = document.getElementById('scoreCard0');
 const scoreCard1El = document.getElementById('scoreCard1');
 const playerState0El = document.getElementById('playerState0');
+const scoreLabel0El = document.getElementById('scoreLabel0');
 const playerState1El = document.getElementById('playerState1');
+const scoreLabel1El = document.getElementById('scoreLabel1');
 const gameMessageEl = document.getElementById('gameMessage');
 const buildMarkerEl = document.getElementById('buildMarker');
 const gameBuildMarkerEl = document.getElementById('gameBuildMarker');
@@ -53,6 +57,7 @@ let buildMarkerText = 'Build: loading…';
 let buildMarkerTitle = 'Build metadata is loading.';
 let pendingDirection = null;
 let latestSession = null;
+const PLAYER_NAME_STORAGE_KEY = 'snake:player-name';
 
 const viewportState = {
   layoutMode: 'desktop',
@@ -226,13 +231,19 @@ socket.on('room:closed', (payload) => {
 });
 
 document.getElementById('createRoomButton').addEventListener('click', () => {
+  const name = getValidPlayerNameOrShowError();
+  if (!name) return;
   audioManager.play('ui.click');
-  socket.emit('room:create');
+  persistPlayerName(name);
+  socket.emit('room:create', { name });
 });
 
 document.getElementById('joinRoomButton').addEventListener('click', () => {
+  const name = getValidPlayerNameOrShowError();
+  if (!name) return;
   audioManager.play('ui.click');
-  socket.emit('room:join', { roomCode: roomCodeInput.value });
+  persistPlayerName(name);
+  socket.emit('room:join', { roomCode: roomCodeInput.value, name });
 });
 
 function sessionStorageKey(roomCode) {
@@ -281,9 +292,9 @@ function tryResumeStoredSession() {
 function describeReconnect(state) {
   const reconnect = state?.reconnect;
   if (!reconnect?.active) return '';
-  const label = reconnect.disconnectedSlotIndex === null || reconnect.disconnectedSlotIndex === undefined
+  const label = reconnect.disconnectedPlayerName || (reconnect.disconnectedSlotIndex === null || reconnect.disconnectedSlotIndex === undefined
     ? 'Player'
-    : `Player ${reconnect.disconnectedSlotIndex + 1}`;
+    : `Player ${reconnect.disconnectedSlotIndex + 1}`);
   const seconds = reconnect.secondsRemaining ?? 0;
   if (reconnect.status === 'resume-countdown') return `${label} reconnected. Resuming in ${seconds}s.`;
   return reconnect.yourSlotReserved
@@ -440,6 +451,57 @@ function syncBuildMarkers() {
   gameBuildMarkerEl.title = buildMarkerTitle;
 }
 
+hydrateStoredPlayerName();
+
+function normalizePlayerName(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ');
+}
+
+function validatePlayerName(value) {
+  const normalized = normalizePlayerName(value);
+  if (!normalized) return { valid: false, message: 'Enter a name up to 12 characters without emoji.' };
+  if (normalized.length > 12) return { valid: false, message: 'Enter a name up to 12 characters without emoji.' };
+  if (/(?:\p{Extended_Pictographic}|\p{Emoji_Presentation})/u.test(normalized)) return { valid: false, message: 'Enter a name up to 12 characters without emoji.' };
+  return { valid: true, normalized };
+}
+
+function hydrateStoredPlayerName() {
+  const stored = window.localStorage.getItem(PLAYER_NAME_STORAGE_KEY);
+  if (!stored) return;
+  const result = validatePlayerName(stored);
+  if (result.valid) playerNameInput.value = result.normalized;
+  else window.localStorage.removeItem(PLAYER_NAME_STORAGE_KEY);
+}
+
+function persistPlayerName(name) {
+  window.localStorage.setItem(PLAYER_NAME_STORAGE_KEY, name);
+  playerNameInput.value = name;
+}
+
+function setNameHelp(message, isError = false) {
+  nameHelpEl.textContent = message;
+  nameHelpEl.style.color = isError ? 'var(--accent-danger)' : '';
+}
+
+function getValidPlayerNameOrShowError() {
+  const result = validatePlayerName(playerNameInput.value);
+  if (!result.valid) {
+    errorEl.textContent = result.message;
+    errorEl.classList.remove('hidden');
+    setNameHelp(result.message, true);
+    playerNameInput.focus();
+    return null;
+  }
+  errorEl.classList.add('hidden');
+  setNameHelp('Enter a name up to 12 characters. Spaces are fine; emoji are not.');
+  return result.normalized;
+}
+
+playerNameInput.addEventListener('input', () => {
+  const result = validatePlayerName(playerNameInput.value);
+  setNameHelp(result.valid ? `Ready as ${result.normalized}.` : 'Enter a name up to 12 characters. Spaces are fine; emoji are not.', !result.valid && playerNameInput.value.length > 0);
+});
+
 function renderLobby(state) {
   roomCodeDisplay.textContent = state.roomCode;
   gameRoomCodeEl.textContent = state.roomCode;
@@ -456,8 +518,8 @@ function renderLobby(state) {
     card.className = `player ${player.isYou ? 'you' : ''} ${player.isReady ? 'ready' : ''} ${player.isOccupied ? '' : 'waiting'}`;
     card.innerHTML = `
       <div class="player-meta">
-        <strong>${player.label}${player.isYou ? ' (You)' : ''}</strong>
-        <span>${player.isOccupied ? (player.isReserved ? 'Reserved' : player.isConnected ? 'Joined' : 'Disconnected') : 'Waiting'}</span>
+        <strong>${player.displayName}${player.isYou ? ' (You)' : ''}</strong>
+        <span>${player.label} · ${player.isOccupied ? (player.isReserved ? 'Reserved' : player.isConnected ? 'Joined' : 'Disconnected') : 'Waiting'}</span>
       </div>
       <div class="player-state">${player.isOccupied ? (player.isReserved ? 'Reconnect window active' : player.isConnected ? (player.isReady ? 'Ready to launch' : 'Not ready yet') : 'Temporarily offline') : 'Open slot'}</div>
     `;
@@ -495,6 +557,8 @@ function renderRematch(rematch, phase, message) {
   postGameBannerButton.classList.remove('waiting', 'accepted');
   if (!isPostGame) return;
 
+  const players = latestGameState?.players || latestLobbyState?.players || latestRematchState?.players || [];
+  const opponent = players.find((player) => player.slotIndex !== yourSlotIndex);
   let statusText = message || 'Want another round? Accept rematch to stay in this room.';
   let buttonText = 'Accept rematch';
   let buttonDisabled = true;
@@ -518,7 +582,7 @@ function renderRematch(rematch, phase, message) {
     rematchButton.classList.add('is-waiting');
     postGameBannerButton.classList.add('waiting');
   } else if (rematch.requestedBySlot[0] || rematch.requestedBySlot[1]) {
-    statusText = 'Your opponent wants a rematch. Accept to restart in the same room.';
+    statusText = `${opponent?.displayName || 'Your opponent'} wants a rematch. Accept to restart in the same room.`;
     buttonText = 'Accept rematch now';
     buttonDisabled = false;
     bannerTitle = 'Opponent wants another round';
@@ -552,7 +616,9 @@ function renderGame(state, perSlotResult) {
   gameRoomCodeEl.textContent = state.roomCode;
   ensureBoard(state.board.width, state.board.height);
   score0El.textContent = String(state.snakes[0].score);
+  scoreLabel0El.textContent = `${state.players[0].displayName} · ${state.players[0].label}`;
   score1El.textContent = String(state.snakes[1].score);
+  scoreLabel1El.textContent = `${state.players[1].displayName} · ${state.players[1].label}`;
   speedLabel.textContent = `Speed: ${state.tickIntervalMs}ms`;
 
   updateScoreCards(state, perSlotResult);
@@ -672,7 +738,7 @@ function applyLobbyEffects(previousLobbyState, nextLobbyState) {
   const previousOpponent = previousLobbyState.players.find((player) => !player.isYou);
   const nextOpponent = nextLobbyState.players.find((player) => !player.isYou);
   if (previousOpponent && nextOpponent && !previousOpponent.isOccupied && nextOpponent.isOccupied) {
-    statusEl.textContent = `${nextOpponent.label} joined the room.`;
+    statusEl.textContent = `${nextOpponent.displayName} joined the room.`;
   }
 
   const youBefore = previousLobbyState.players.find((player) => player.isYou);
