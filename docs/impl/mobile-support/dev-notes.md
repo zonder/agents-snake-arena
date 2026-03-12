@@ -6,6 +6,7 @@
 - Added gameplay-only touch controls and scoped swipe handling on the game stage so touch input reuses the existing `player:direction:set` transport.
 - Kept sound behavior client-side and unchanged in principle; touch interactions now also attempt audio unlock.
 - QA mobile overflow follow-up: phone gameplay now keeps phone-sized devices in explicit mobile modes even after rotation, resets scroll when entering the gameplay screen, and constrains phone-landscape board sizing by viewport height so the board remains visible and usable in both portrait and landscape.
+- QA blocker fix: mobile layout styling now keys off the runtime `data-layout-mode` itself instead of also depending on `max-width: 768px`, so rotated phones like `844x390` still get the compact single-column, viewport-height-capped landscape board treatment.
 
 ## Implementation details
 - Follow-up defect fix: room-code copy previously depended only on `navigator.clipboard.writeText`, which can fail in insecure contexts, embedded browsers, or permission-blocked sessions even when the UI is otherwise functional. The client now falls back to a hidden textarea + `document.execCommand('copy')` path and shows a manual-copy hint if both approaches fail.
@@ -17,6 +18,7 @@
 - Tightened `getLayoutMode()` to classify touch-first phone-sized devices by short-edge/long-edge instead of raw width alone, which prevents rotated phones like `844x390` from falling into the oversized tablet treatment.
 - Updated `showScreen('gameplay')` to reset window/panel scroll so the board returns to the top of the active viewport after readying up instead of inheriting lobby scroll position.
 - Reduced `mobile-landscape` gameplay padding and capped the board stage with `100dvh`-based sizing so surrounding HUD/cards compress before the board overflows upward.
+- Root-caused the failed rerun: `mobile-landscape` was detected correctly in JS, but the compact landscape CSS only existed inside `@media (max-width: 768px)`, so an `844x390` rotated phone still rendered the desktop-width board. The fix promotes the mobile layout-mode rules so phone portrait/landscape shells activate whenever the panel is marked mobile, regardless of rotated viewport width.
 
 ## Verification
 - `node --check public/app.js`
@@ -25,4 +27,3 @@
 
 ## Deviations from architecture notes
 - Touch controls are shown in `game-over` for touch-preferred/gameplay layouts so the layout stays stable through rematch/result states, but the directional buttons are disabled unless the phase is `starting` or `in-progress`.
-- Subtask linking via the documented REST endpoint was not accepted by the GitHub API/token in this environment, so the implementation subtask tracks the parent in its body/title instead of a nested GitHub sub-issue relationship.
