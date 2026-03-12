@@ -24,11 +24,18 @@ const score1El = document.getElementById('score1');
 const gameMessageEl = document.getElementById('gameMessage');
 const buildMarkerEl = document.getElementById('buildMarker');
 const gameBuildMarkerEl = document.getElementById('gameBuildMarker');
+const rematchPanelEl = document.getElementById('rematchPanel');
+const rematchStatusEl = document.getElementById('rematchStatus');
+const rematchButton = document.getElementById('rematchButton');
+const postGameBannerEl = document.getElementById('postGameBanner');
+const postGameBannerStatusEl = document.getElementById('postGameBannerStatus');
+const postGameBannerButton = document.getElementById('postGameBannerButton');
 
 let latestLobbyState = null;
 let latestGameState = null;
 let yourSlotIndex = null;
 let boardReady = false;
+let latestRematchState = null;
 let buildMarkerText = 'Build: loading…';
 let buildMarkerTitle = 'Build metadata is loading.';
 
@@ -59,6 +66,7 @@ socket.on('room:joined', (payload) => {
 socket.on('player:left', () => {
   statusEl.textContent = 'A player left. Waiting for a replacement.';
   gameStatusInlineEl.textContent = 'A player left. Waiting for a replacement.';
+  rematchStatusEl.textContent = 'Rematch cleared. Waiting for a replacement player.';
 });
 
 socket.on('lobby:state', (payload) => {
@@ -87,16 +95,25 @@ socket.on('game:start', (payload) => {
 
 socket.on('game:state', (payload) => {
   latestGameState = payload;
+  latestRematchState = { roomCode: payload.roomCode, phase: payload.phase, rematch: payload.rematch, version: payload.version };
   renderGame(payload);
+  renderRematch(payload.rematch, payload.phase);
 });
 
 socket.on('game:ended', (payload) => {
   latestGameState = payload.finalState;
+  latestRematchState = { roomCode: payload.roomCode, phase: payload.phase, rematch: payload.finalState.rematch, version: payload.version };
   renderGame(payload.finalState, payload.result.bySlot);
+  renderRematch(payload.finalState.rematch, payload.phase);
   const yourOutcome = yourSlotIndex === null ? 'draw' : payload.result.bySlot[yourSlotIndex];
   const statusText = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
   statusEl.textContent = statusText;
   gameStatusInlineEl.textContent = statusText;
+});
+
+socket.on('game:rematch-state', (payload) => {
+  latestRematchState = payload;
+  renderRematch(payload.rematch, payload.phase, payload.message);
 });
 
 socket.on('room:closed', (payload) => {
@@ -134,6 +151,13 @@ async function copyActiveRoomCode() {
 
 document.getElementById('copyRoomCodeButton').addEventListener('click', copyActiveRoomCode);
 document.getElementById('copyGameRoomCodeButton').addEventListener('click', copyActiveRoomCode);
+function requestRematch() {
+  if (!latestRematchState?.rematch?.available || latestRematchState.rematch.requestedByYou) return;
+  socket.emit('game:rematch-request');
+}
+
+rematchButton.addEventListener('click', requestRematch);
+postGameBannerButton.addEventListener('click', requestRematch);
 
 readyButton.addEventListener('click', () => {
   if (!latestLobbyState) return;
@@ -211,9 +235,62 @@ function renderLobby(state) {
     gameMessageEl.textContent = state.phase === 'starting'
       ? 'Both players are ready. Transitioning into gameplay.'
       : state.phase === 'game-over'
-        ? 'Round finished. Lobby remains hidden while the result screen is shown.'
+        ? 'Round finished. Choose rematch or wait for room changes.'
         : 'Gameplay screen active. Lobby is fully hidden during the match.';
   }
+
+  renderRematch(state.rematch, state.phase);
+}
+
+function renderRematch(rematch, phase, message) {
+  const isPostGame = phase === 'game-over';
+  rematchPanelEl.classList.toggle('hidden', !isPostGame);
+  postGameBannerEl.classList.toggle('hidden', !isPostGame);
+  rematchPanelEl.classList.remove('highlighted');
+  postGameBannerButton.classList.remove('waiting', 'accepted');
+  if (!isPostGame) return;
+
+  let statusText = message || 'Want another round? Accept rematch to stay in this room.';
+  let buttonText = 'Accept rematch';
+  let buttonDisabled = true;
+
+  if (!rematch?.available) {
+    statusText = message || 'Rematch unavailable until both players are present.';
+    buttonText = 'Rematch unavailable';
+  } else if (rematch.bothAccepted) {
+    statusText = 'Both players accepted. Starting a fresh countdown…';
+    buttonText = 'Rematch starting…';
+    postGameBannerButton.classList.add('accepted');
+  } else if (rematch.waitingForOtherPlayer) {
+    statusText = 'Rematch requested. Waiting for the other player.';
+    buttonText = 'Waiting for other player';
+    buttonDisabled = true;
+    rematchPanelEl.classList.add('highlighted');
+    postGameBannerButton.classList.add('waiting');
+  } else if (rematch.requestedBySlot[0] || rematch.requestedBySlot[1]) {
+    statusText = 'Your opponent wants a rematch. Accept to restart in the same room.';
+    buttonText = 'Accept rematch now';
+    buttonDisabled = false;
+    rematchPanelEl.classList.add('highlighted');
+  } else {
+    statusText = message || 'Want another round? Accept rematch to stay in this room.';
+    buttonText = 'Accept rematch now';
+    buttonDisabled = false;
+    rematchPanelEl.classList.add('highlighted');
+  }
+
+  if (rematch?.requestedByYou) {
+    buttonText = 'Rematch requested';
+    buttonDisabled = true;
+    postGameBannerButton.classList.add('waiting');
+  }
+
+  rematchStatusEl.textContent = statusText;
+  postGameBannerStatusEl.textContent = statusText;
+  rematchButton.textContent = buttonText;
+  postGameBannerButton.textContent = buttonText;
+  rematchButton.disabled = buttonDisabled;
+  postGameBannerButton.disabled = buttonDisabled;
 }
 
 function renderGame(state, perSlotResult) {

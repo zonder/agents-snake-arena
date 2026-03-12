@@ -96,3 +96,47 @@ If resuming this agent from branch state:
 - Check issue labels for current workflow state.
 - Read the latest PR comments for context.
 - Do NOT reload the full codebase — only files referenced in this trace.
+
+# Architect Trace
+
+## Phase
+Issue #13 architecture design
+
+## Timestamp
+2026-03-12T00:20:34Z
+
+## Input
+- Issue: #13
+- Trigger: PM handoff for architecture phase
+- Key artifacts read: GitHub issue #13, docs/impl/replay-rematch-flow/spec.md, src/shared/contracts.ts, src/server/roomService.ts, existing docs under docs/impl/room-lobby-autostart/ and docs/impl/core-gameplay-loop/
+
+## Decisions
+1. Decision: Keep `game-over` as the top-level room phase and represent rematch with a dedicated rematch sub-state.
+   Rationale: Minimizes churn and avoids inventing a parallel lifecycle for post-game flow.
+2. Decision: Remove automatic room teardown after normal round completion and keep the room open for same-room replay.
+   Rationale: The feature requires rematch in the same room with the same code.
+3. Decision: Clear both rematch acceptances whenever room membership changes after game over.
+   Rationale: Prevents stale dual-acceptance state from carrying across disconnect/leave or replacement-player scenarios.
+4. Decision: Use a dedicated `game:rematch-request` intent and `game:rematch-state` snapshot while allowing rematch state to also appear in authoritative room/game payloads.
+   Rationale: Keeps client and QA visibility explicit without replacing existing socket flows.
+
+## Actions Taken
+1. Prepared architect checkout on `feature/issue-13` and reviewed the current room/gameplay implementation. → Confirmed current forced post-game teardown is the main behavior to change.
+2. Wrote `docs/impl/replay-rematch-flow/design.md`. → Captured state transitions, reset semantics, leave behavior, and implementation order.
+3. Wrote `docs/impl/replay-rematch-flow/api-contracts.md`. → Defined rematch socket events, payload additions, semantics, and test assertions.
+
+## Outputs
+- `docs/impl/replay-rematch-flow/design.md`: architecture design for same-room rematch flow
+- `docs/impl/replay-rematch-flow/api-contracts.md`: socket contracts and payload semantics for rematch
+
+## Handoff
+- Next agent: fullstack-dev
+- Trigger: Architecture design complete
+- Context needed: Read `docs/impl/replay-rematch-flow/spec.md`, `design.md`, `api-contracts.md`, plus current `src/server/roomService.ts`, `src/shared/contracts.ts`, and result-screen client handling in `public/app.js`
+
+## Resume Point
+If resuming this agent from branch state:
+- Read this trace file first.
+- Check issue labels for current workflow state.
+- Read the latest PR comments for context.
+- Do NOT reload the full codebase — only files referenced in this trace.

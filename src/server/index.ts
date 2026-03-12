@@ -66,6 +66,10 @@ io.on('connection', (socket) => {
     emitEvents(roomService.setDirection(socket.id, payload.direction));
   });
 
+  socket.on(EVENTS.gameRematchRequest, () => {
+    emitEvents(roomService.requestRematch(socket.id).events);
+  });
+
   socket.on('disconnect', () => {
     emitEvents(roomService.disconnect(socket.id).events);
   });
