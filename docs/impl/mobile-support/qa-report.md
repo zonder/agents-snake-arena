@@ -1,112 +1,105 @@
-# QA Report — Mobile support
+# QA Report — Mobile support rerun
 
-- Parent issue: `#40`
-- PR: `#43`
+- Parent issue: #40
+- PR: #43
 - Branch: `feature/issue-40`
 - Feature slug: `mobile-support`
-- Dev URL: http://20.106.185.110:8081/
-- QA rerun date (UTC): 2026-03-12
-- Verified live build: `e9b8c71` (`v0.1.0+e9b8c71`)
-- Fix under test on branch: `2510a99`
+- QA rerun date: 2026-03-12
 - Verdict: **FAIL**
+- Final verified live build: `4109c81` (`v0.1.0+4109c81`)
+- Requested landscape-fix code commit: `043c2c9`
 
 ## Summary
-I re-ran QA in a real headless Chromium browser session after confirming the dev URL had refreshed to the current `feature/issue-40` branch build `e9b8c71`, which includes the mobile-landscape fix commit `2510a99` plus the follow-up redeploy docs commit.
+I re-ran browser QA against the refreshed dev deployment after the latest phone-landscape fix was deployed.
 
-The rerun still **fails**. The requested build refresh happened, portrait mode remains usable, touch controls and desktop behavior remain intact, and `data-layout-mode` selection is correct — but **phone landscape gameplay is still not board-first and still overflows beyond the viewport height** on the live build.
+The live environment advanced during verification from `043c2c9` to `4109c81` (a deploy-log/docs commit on the same feature branch), so the final rerun evidence reflects the current live build `4109c81`, which still includes the requested fix commit `043c2c9`.
+
+Result: **phone portrait remains usable, layout-mode selection is correct, on-screen buttons and swipe dispatch still work on mobile, and desktop behavior remains intact — but phone landscape gameplay is still not board-first and still extends below the viewport.**
 
 ## Build verification
-Live deployment metadata at rerun time:
+- Initial deploy check observed `/build-info.json` at `043c2c9`.
+- During the browser rerun, the live deployment refreshed again to `4109c81`.
+- Final verified live build under test: `v0.1.0+4109c81`.
+- Because `4109c81` is the current head/deploy record for `feature/issue-40`, the final QA evidence is valid for the latest deployed build.
 
-- `commit`: `e9b8c71`
-- `displayVersion`: `v0.1.0+e9b8c71`
-- `builtAt`: `2026-03-12T14:10:44.015Z`
+## Scope covered in this rerun
+- phone portrait gameplay usability
+- phone landscape gameplay usability
+- runtime layout-mode selection (`mobile-portrait`, `mobile-landscape`, `desktop`)
+- board-first visibility and viewport fit
+- mobile touch controls (on-screen button + swipe dispatch)
+- desktop regression sanity
 
-Evidence:
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/build-info-check.json`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/summary.json`
-
-## Browser rerun coverage
-Using Playwright + Chromium, I verified:
-- mobile phone portrait entry/lobby/game/rematch flow
-- mobile phone landscape gameplay/result layout
-- root layout-mode selection (`mobile-portrait`, `mobile-landscape`, `desktop`)
-- board/stage geometry against the live viewport
-- touch controls visibility and interactive direction queueing on mobile
-- desktop layout sanity with touch controls hidden and keyboard input preserved
-
-## Acceptance criteria status
-| # | Acceptance criterion | Status | Notes |
+## Acceptance criteria
+| # | Acceptance criterion | Result | Evidence |
 |---|---|---|---|
-| 1 | The game is usable on phones and tablets | **FAIL** | Phone portrait remained usable, but phone landscape gameplay still exceeds the viewport and is not practically usable board-first. |
-| 2 | The game supports both portrait and landscape orientations | **FAIL** | Orientation switching works and layout mode changes correctly, but landscape gameplay usability still fails because the game stage extends below the viewport. |
-| 3 | Portrait provides the preferred mobile experience | **PASS** | Portrait rendered as `mobile-portrait` with a visible board, enabled touch controls, and readable board-first gameplay UI. |
-| 4 | The full product flow works on mobile: create/join, lobby, game, result, and rematch | **PASS** | I completed create room, join room, ready-up, gameplay/result, and rematch restart in the live browser rerun. |
-| 5 | Players can control the snake via swipe input | **PASS** | A real swipe gesture on the mobile game stage queued `pendingDirection: "up"` in countdown state. See `touch-input-check.json`. |
-| 6 | Players can control the snake via on-screen directional controls | **PASS** | Clicking the mobile touch-control up button queued `pendingDirection: "up"` in countdown state. See `touch-input-check.json`. |
-| 7 | Mobile layouts preserve readable UI and a board-first presentation | **FAIL** | Portrait passed, but landscape failed: the board and stage still extend below the viewport on a phone-sized landscape screen. |
-| 8 | Mobile support preserves current sound behavior and current gameplay rules | **PASS** | No gameplay-rule regression was observed during the rerun flow; countdown, result, and rematch behavior remained consistent. |
-| 9 | Desktop behavior remains intact after the mobile support changes | **PASS** | Desktop rerun resolved to `desktop` layout, kept touch controls hidden, and preserved keyboard input handling. |
+| 1 | The game is usable on phones and tablets | **FAIL** | Portrait remains usable, but phone landscape gameplay still overflows below the viewport and is not practically board-first. |
+| 2 | The game supports both portrait and landscape orientations | **FAIL** | Orientation/layout switching works, but landscape gameplay usability still fails because the stage extends beyond the viewport. |
+| 3 | Portrait provides the preferred mobile experience | **PASS** | Portrait renders as `mobile-portrait` with the board fully visible and touch controls shown. |
+| 4 | The full product flow works on mobile: create/join, lobby, game, result, and rematch | **PASS** | The rerun covered room create/join, ready-up, gameplay, game-over, and rematch on the live build. |
+| 5 | Players can control the snake via swipe input | **PASS** | Synthetic touch-pointer swipe on the live mobile gameplay surface emitted `player:direction:set` on the websocket. See `touch-input-check.json`. |
+| 6 | Players can control the snake via on-screen directional controls | **PASS** | Tapping the on-screen Up control emitted `player:direction:set` on the websocket. See `touch-input-check.json`. |
+| 7 | Mobile layouts preserve readable UI and a board-first presentation | **FAIL** | Portrait passes, but landscape still fails: board bottom `449px` and stage bottom `462px` exceed the `390px` viewport height. |
+| 8 | Mobile support preserves current sound behavior and current gameplay rules | **PASS** | No gameplay-rule regression was observed during the live rerun; countdown/gameplay/rematch flow remained functional on the refreshed build. |
+| 9 | Desktop behavior remains intact after the mobile support changes | **PASS** | Desktop rerun resolved to `desktop`, hid touch controls, and still emitted keyboard direction input. |
 
 ## Key findings
-### PASS — refreshed build is live
-The dev URL is now serving the refreshed branch build `e9b8c71`, so this rerun is a valid post-fix verification pass.
 
-### PASS — portrait mode remains usable and board-first
-From `summary.json` / portrait screenshots:
-- viewport: `390 x 664`
-- layout mode: `mobile-portrait`
-- board rect: `314 x 314`
-- board bottom: `352` within viewport height `664`
-- touch controls visible and enabled in countdown/gameplay flow
+### PASS — correct layout mode selection still works
+- Phone portrait resolved to `mobile-portrait`.
+- Phone landscape resolved to `mobile-landscape`.
+- Desktop resolved to `desktop`.
 
-### FAIL — phone landscape still overflows vertically
-From `summary.json` / landscape screenshots:
-- viewport: `844 x 390`
+### PASS — portrait remains usable
+From `summary.json`:
+- portrait board bottom: `352px`
+- portrait viewport height: `664px`
+- touch controls visible: yes
+
+Portrait remains the better mobile experience and keeps the game board fully visible.
+
+### FAIL — phone landscape gameplay still is not board-first
+From `summary.json` and landscape screenshots:
 - layout mode: `mobile-landscape`
-- board rect: `244 x 244`
-- stage rect: `270 x 270`
-- board bottom: `506`
-- stage bottom: `519`
+- landscape board bottom: `449px`
+- landscape stage bottom: `462px`
+- landscape viewport height: `390px`
 
-Even after the fix, the game surface still sits too low and extends well below the available `390px` viewport height in phone landscape. That means the gameplay view is still not board-first / fully visible on the target orientation.
+The live phone-landscape gameplay surface still extends below the viewport by roughly `59–72px`, so the board is not fully visible in the target landscape phone viewport.
 
-### PASS — touch controls still work on mobile
-From `touch-input-check.json`:
-- touch-button interaction queued `pendingDirection: "up"`
-- swipe interaction queued `pendingDirection: "up"`
-- both checks were captured while the panel was in `countdown` / `mobile-portrait`
+### PASS — touch controls still dispatch input
+From `touch-input-check.json` on live build `4109c81`:
+- on-screen Up button emitted `42["player:direction:set",{"direction":"up"}]`
+- synthetic touch-pointer swipe on `#gameStage` emitted `42["player:direction:set",{"direction":"up"}]`
 
-### PASS — desktop behavior preserved
-Desktop verification on the same live build showed:
-- `data-layout-mode="desktop"`
-- touch controls hidden
-- keyboard direction input path still functioning
+### PASS — desktop behavior remains intact
+From the desktop portion of `summary.json`:
+- layout mode: `desktop`
+- touch controls visible: `false`
+- keyboard direction frame observed: yes
 
-## Evidence
-Artifacts captured in:
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/build-info-check.json`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/summary.json`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/touch-input-check.json`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/01-mobile-entry-host.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/02-mobile-lobby-host.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/03-mobile-lobby-guest.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/04-mobile-game-portrait-host.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/05-mobile-game-portrait-guest.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/06-mobile-game-landscape-host.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/07-mobile-game-landscape-guest.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/08-mobile-gameover-host.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/09-mobile-gameover-guest.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/10-mobile-rematch-host.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/11-mobile-rematch-guest.png`
-- `docs/impl/mobile-support/artifacts/rerun-20260312-2510a99/12-desktop-game-host.png`
+## Evidence committed
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/build-info-check.json`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/summary.json`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/touch-input-check.json`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/01-mobile-entry-host.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/02-mobile-lobby-host.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/03-mobile-lobby-guest.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/04-mobile-game-portrait-host.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/05-mobile-game-portrait-guest.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/06-mobile-game-landscape-host.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/07-mobile-game-landscape-guest.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/08-mobile-gameover-host.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/09-mobile-gameover-guest.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/10-mobile-rematch-host.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/11-mobile-rematch-guest.png`
+- `docs/impl/mobile-support/artifacts/rerun-20260312-043c2c9/12-desktop-game-host.png`
 
-## Remaining defect / blocker
-**Defect:** `mobile-landscape` gameplay layout still positions/sizes the game stage so it extends below the viewport on a phone-sized landscape screen.
+## Remaining blocker
+**FAIL** — parent issue `#40` still has a blocking defect on the latest deployed build.
 
-**Observed on live build:** `e9b8c71`
+**Defect:** phone `mobile-landscape` gameplay still sizes/positions the board and game stage below the viewport after the post-game/rematch overflow fix.
 
-**Impact:** Board-first visibility and practical phone-landscape gameplay are still broken, so issue `#40` cannot be approved.
+**Observed on live build:** `4109c81`
 
-## Final verdict
-**FAIL** — parent issue `#40` still has a remaining blocker: phone landscape gameplay usability is not fixed on the refreshed live build.
+**Impact:** board-first visibility and practical phone-landscape gameplay are still not fixed, so issue `#40` is not yet QA-passable.

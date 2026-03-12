@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-03-12T15:17:58.148Z",
+  "baseUrl": "http://20.106.185.110:8081/",
+  "hostFrames": [
+    "2probe",
+    "5",
+    "42[\"room:create\"]",
+    "42[\"player:ready:set\",{\"ready\":true}]",
+    "42[\"player:direction:set\",{\"direction\":\"up\"}]"
+  ],
+  "guestFrames": [
+    "2probe",
+    "5",
+    "42[\"room:join\",{\"roomCode\":\"LEFO\"}]",
+    "42[\"player:ready:set\",{\"ready\":true}]",
+    "42[\"player:direction:set\",{\"direction\":\"up\"}]"
+  ],
+  "before": {
+    "buildMarker": "Build: v0.1.0+4109c81",
+    "phase": "in-progress",
+    "currentDirection": "left",
+    "touchControlsVisible": true
+  },
+  "buttonFrames": [
+    "42[\"player:direction:set\",{\"direction\":\"up\"}]"
+  ],
+  "swipeFrames": [
+    "42[\"player:direction:set\",{\"direction\":\"up\"}]"
+  ],
+  "pass": true
+}
