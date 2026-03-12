@@ -11,7 +11,7 @@ function payloads(
 }
 
 function startGame(service: RoomService, roomCode: string) {
-  service.joinRoom("socket-b", roomCode);
+  service.joinRoom("socket-b", roomCode, "Sam");
   service.setReady("socket-a", true);
   service.setReady("socket-b", true);
   vi.advanceTimersByTime(3000);
@@ -34,7 +34,7 @@ describe("RoomService", () => {
 
   test("creates a room and sends an authoritative one-player lobby state", () => {
     const service = new RoomService();
-    const result = service.createRoom("socket-a");
+    const result = service.createRoom("socket-a", "Alex");
 
     const created = payloads(result, "room:created")[0];
     const lobbyState = payloads(result, "lobby:state")[0];
@@ -44,6 +44,8 @@ describe("RoomService", () => {
     expect(lobbyState.phase).toBe("waiting-for-players");
     expect(lobbyState.players[0].isOccupied).toBe(true);
     expect(lobbyState.players[1].isOccupied).toBe(false);
+    expect(lobbyState.players[0].name).toBe("Alex");
+    expect(lobbyState.players[0].displayName).toBe("Alex");
   });
 
   test("starts with a real countdown before emitting game start", () => {
@@ -51,10 +53,10 @@ describe("RoomService", () => {
     const service = new RoomService();
     service.setEventSink((events) => emitted.push(...events));
 
-    const created = service.createRoom("socket-a");
+    const created = service.createRoom("socket-a", "Alex");
     const roomCode = payloads(created, "room:created")[0].roomCode;
 
-    service.joinRoom("socket-b", roomCode.toLowerCase());
+    service.joinRoom("socket-b", roomCode.toLowerCase(), "Sam");
     expect(
       payloads(service.setReady("socket-a", true), "game:start"),
     ).toHaveLength(0);
@@ -92,7 +94,7 @@ describe("RoomService", () => {
 
   test("one-player rematch waiting state is authoritative", () => {
     const service = new RoomService();
-    const roomCode = payloads(service.createRoom("socket-a"), "room:created")[0]
+    const roomCode = payloads(service.createRoom("socket-a", "Alex"), "room:created")[0]
       .roomCode;
     startGame(service, roomCode);
     finishGame(service);
@@ -109,7 +111,7 @@ describe("RoomService", () => {
 
   test("duplicate rematch requests from the same player are a no-op", () => {
     const service = new RoomService();
-    const roomCode = payloads(service.createRoom("socket-a"), "room:created")[0]
+    const roomCode = payloads(service.createRoom("socket-a", "Alex"), "room:created")[0]
       .roomCode;
     startGame(service, roomCode);
     finishGame(service);
@@ -125,7 +127,7 @@ describe("RoomService", () => {
 
   test("rematch payload stays viewer-consistent across lobby, game, and rematch events", () => {
     const service = new RoomService();
-    const roomCode = payloads(service.createRoom("socket-a"), "room:created")[0]
+    const roomCode = payloads(service.createRoom("socket-a", "Alex"), "room:created")[0]
       .roomCode;
     startGame(service, roomCode);
     finishGame(service);
@@ -171,7 +173,7 @@ describe("RoomService", () => {
 
   test("both-player acceptance starts a fresh countdown in the same room with a reset match state", () => {
     const service = new RoomService();
-    const roomCode = payloads(service.createRoom("socket-a"), "room:created")[0]
+    const roomCode = payloads(service.createRoom("socket-a", "Alex"), "room:created")[0]
       .roomCode;
     startGame(service, roomCode);
     finishGame(service);
@@ -207,7 +209,7 @@ describe("RoomService", () => {
 
   test("post-game disconnect reserves the slot and keeps rematch unavailable", () => {
     const service = new RoomService();
-    const roomCode = payloads(service.createRoom("socket-a"), "room:created")[0]
+    const roomCode = payloads(service.createRoom("socket-a", "Alex"), "room:created")[0]
       .roomCode;
     startGame(service, roomCode);
     finishGame(service);
@@ -226,13 +228,13 @@ describe("RoomService", () => {
 
   test("replacement join is blocked while a post-game slot is reserved", () => {
     const service = new RoomService();
-    const roomCode = payloads(service.createRoom("socket-a"), "room:created")[0]
+    const roomCode = payloads(service.createRoom("socket-a", "Alex"), "room:created")[0]
       .roomCode;
     startGame(service, roomCode);
     finishGame(service);
     service.disconnect("socket-b");
 
-    const joinResult = service.joinRoom("socket-c", roomCode);
+    const joinResult = service.joinRoom("socket-c", roomCode, "Taylor");
     const error = payloads(joinResult, "room:error")[0];
 
     expect(error.reason).toBe("ROOM_FULL");
@@ -243,9 +245,9 @@ describe("RoomService", () => {
     const service = new RoomService();
     service.setEventSink((events) => emitted.push(...events));
 
-    const roomCode = payloads(service.createRoom("socket-a"), "room:created")[0]
+    const roomCode = payloads(service.createRoom("socket-a", "Alex"), "room:created")[0]
       .roomCode;
-    service.joinRoom("socket-b", roomCode);
+    service.joinRoom("socket-b", roomCode, "Sam");
     service.setReady("socket-a", true);
     service.setReady("socket-b", true);
     vi.advanceTimersByTime(3000);
@@ -265,10 +267,10 @@ describe("RoomService", () => {
 
   test("resume succeeds during lobby and restores the same slot", () => {
     const service = new RoomService();
-    const created = service.createRoom("socket-a");
+    const created = service.createRoom("socket-a", "Alex");
     const roomCode = payloads(created, "room:created")[0].roomCode;
     const hostSession = payloads(created, "session:issued")[0];
-    service.joinRoom("socket-b", roomCode);
+    service.joinRoom("socket-b", roomCode, "Sam");
     const disconnectResult = service.disconnect("socket-a");
     expect(payloads(disconnectResult, "lobby:state")[0].reconnect.active).toBe(true);
 
@@ -282,9 +284,9 @@ describe("RoomService", () => {
 
   test("resume during gameplay starts a server-driven resume countdown", () => {
     const service = new RoomService();
-    const created = service.createRoom("socket-a");
+    const created = service.createRoom("socket-a", "Alex");
     const roomCode = payloads(created, "room:created")[0].roomCode;
-    const joined = service.joinRoom("socket-b", roomCode);
+    const joined = service.joinRoom("socket-b", roomCode, "Sam");
     const guestSession = payloads(joined, "session:issued")[0];
     service.setReady("socket-a", true);
     service.setReady("socket-b", true);
@@ -301,4 +303,65 @@ describe("RoomService", () => {
     const gameStates = payloads(resumeResult, "game:state");
     expect(gameStates[0].reconnect.status).toBe("resume-countdown");
   });
+
+  test("rejects invalid player names on create and join", () => {
+    const service = new RoomService();
+    const invalidCreate = service.createRoom("socket-a", "🙂");
+    expect(payloads(invalidCreate, "room:error")[0].reason).toBe("INVALID_PLAYER_NAME");
+
+    const created = service.createRoom("socket-a", "Alex");
+    const roomCode = payloads(created, "room:created")[0].roomCode;
+    const invalidJoin = service.joinRoom("socket-b", roomCode, "            ");
+    expect(payloads(invalidJoin, "room:error")[0].reason).toBe("INVALID_PLAYER_NAME");
+  });
+
+  test("preserves normalized names across join and reconnect, including duplicates", () => {
+    const service = new RoomService();
+    const created = service.createRoom("socket-a", "  Alex   ");
+    const roomCode = payloads(created, "room:created")[0].roomCode;
+    const joined = service.joinRoom("socket-b", roomCode, "Alex");
+    const guestSession = payloads(joined, "session:issued")[0];
+    const lobby = payloads(joined, "lobby:state").find((payload) => payload.yourSlotIndex === 0);
+    expect(lobby.players[0].name).toBe("Alex");
+    expect(lobby.players[1].name).toBe("Alex");
+
+    service.disconnect("socket-b");
+    const resumed = service.resumeSession("socket-b-2", { roomCode, reconnectToken: guestSession.reconnectToken });
+    const resumedLobby = payloads(resumed, "lobby:state")[0];
+    expect(resumedLobby.players[1].name).toBe("Alex");
+  });
+
+
+  test("builds duplicate-safe reconnect messaging for gameplay and rematch states", () => {
+    const service = new RoomService();
+    const created = service.createRoom("socket-a", "Alex");
+    const roomCode = payloads(created, "room:created")[0].roomCode;
+    const joined = service.joinRoom("socket-b", roomCode, "Alex");
+    const guestSession = payloads(joined, "session:issued")[0];
+
+    service.setReady("socket-a", true);
+    const readyResult = service.setReady("socket-b", true);
+    expect(payloads(readyResult, "game:state")[0].phase).toBe("starting");
+
+    const disconnectResult = service.disconnect("socket-b");
+    const pausedGameStates = payloads(disconnectResult, "game:state");
+    expect(pausedGameStates).toHaveLength(1);
+    expect(pausedGameStates[0].reconnect.disconnectedPlayerName).toBe("Alex");
+    expect(pausedGameStates[0].reconnect.disconnectedPlayerDisplayName).toBe("Alex (Player 2)");
+
+    const resumeResult = service.resumeSession("socket-b-2", { roomCode, reconnectToken: guestSession.reconnectToken });
+    const resumedGameStates = payloads(resumeResult, "game:state");
+    expect(resumedGameStates).toHaveLength(2);
+    expect(resumedGameStates[0].reconnect.status).toBe("resume-countdown");
+    expect(resumedGameStates[0].reconnect.disconnectedPlayerDisplayName).toBe("Alex (Player 2)");
+
+    vi.advanceTimersByTime(3000);
+    finishGame(service);
+
+    const rematchDisconnectResult = service.disconnect("socket-b-2");
+    const rematchStates = payloads(rematchDisconnectResult, "game:rematch-state");
+    expect(rematchStates).toHaveLength(1);
+    expect(rematchStates[0].reconnect.disconnectedPlayerDisplayName).toBe("Alex (Player 2)");
+  });
+
 });
