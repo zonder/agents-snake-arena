@@ -8,41 +8,54 @@
   </head>
   <body>
     <main class="app">
-      <section class="panel">
+      <section class="panel phase-entry" data-phase="entry" data-outcome="neutral">
         <div id="panelTop" class="panel-top">
           <div>
+            <p class="kicker">Retro arcade multiplayer</p>
             <h1>Multiplayer Snake</h1>
             <p class="subtitle">Create a room, share the code, ready up, then survive the round.</p>
           </div>
-          <div id="buildMarker" class="build-marker" aria-live="polite">Build: loading…</div>
+          <div class="topbar-actions">
+            <button id="soundToggleButton" class="secondary-button sound-toggle" type="button" aria-pressed="false">Sound: on</button>
+            <div id="buildMarker" class="build-marker" aria-live="polite">Build: loading…</div>
+          </div>
         </div>
 
         <div id="status" class="status">Connecting…</div>
         <div id="error" class="error hidden"></div>
 
         <div id="entry" class="screen entry-screen">
-          <div class="actions">
-            <button id="createRoomButton">Create room</button>
-            <div class="join-row">
-              <input id="roomCodeInput" maxlength="6" placeholder="ROOM" />
-              <button id="joinRoomButton">Join room</button>
+          <div class="hero-card">
+            <div class="hero-copy">
+              <div class="eyebrow">2-player showdown</div>
+              <h2>Clean boards. Neon tension. Quick rematches.</h2>
+              <p>Spin up a room in one tap or punch in a code to jump straight into the arena.</p>
+            </div>
+            <div class="actions arcade-actions">
+              <button id="createRoomButton" class="primary-button">Create room</button>
+              <div class="join-row">
+                <input id="roomCodeInput" maxlength="6" placeholder="ROOM" />
+                <button id="joinRoomButton" class="secondary-button">Join room</button>
+              </div>
             </div>
           </div>
         </div>
 
         <div id="lobby" class="screen lobby hidden">
-          <div class="room-header">
+          <div class="room-header room-code-hero">
             <div>
               <div class="eyebrow">Room code</div>
               <div id="roomCodeDisplay" class="room-code">----</div>
             </div>
-            <button id="copyRoomCodeButton">Copy</button>
+            <button id="copyRoomCodeButton" class="secondary-button" type="button">Copy</button>
           </div>
 
-          <div id="phaseBadge" class="badge">Lobby</div>
+          <div class="lobby-meta-row">
+            <div id="phaseBadge" class="badge status-chip">Lobby</div>
+            <p id="lobbyMessage" class="message lobby-message"></p>
+          </div>
           <div id="players" class="players"></div>
-          <button id="readyButton">Ready</button>
-          <p id="lobbyMessage" class="message"></p>
+          <button id="readyButton" class="primary-button ready-button" type="button">Ready</button>
         </div>
 
         <section id="gamePanel" class="screen game hidden">
@@ -56,10 +69,13 @@
               <div id="rematchPanel" class="info-card rematch-card hidden">
                 <div class="eyebrow">Rematch</div>
                 <p id="rematchStatus" class="info-copy">Want another round? Accept rematch to stay in this room.</p>
-                <button id="rematchButton" type="button">Accept rematch</button>
+                <button id="rematchButton" class="primary-button" type="button">Accept rematch</button>
               </div>
-              <div class="info-card compact-score-card">
-                <div class="eyebrow">Player 1</div>
+              <div id="scoreCard0" class="info-card compact-score-card player-card" data-player="0">
+                <div class="player-card-head">
+                  <div class="eyebrow">Player 1</div>
+                  <span id="playerState0" class="player-chip">Waiting</span>
+                </div>
                 <div class="score-card player-one solo-score-card">
                   <span>Score</span>
                   <strong id="score0">0</strong>
@@ -70,11 +86,15 @@
             <div class="game-center">
               <div id="postGameBanner" class="post-game-banner hidden" aria-live="polite">
                 <div class="eyebrow">Play again</div>
-                <h2 class="post-game-title">Rematch ready</h2>
+                <h2 id="postGameBannerTitle" class="post-game-title">Rematch ready</h2>
                 <p id="postGameBannerStatus" class="info-copy post-game-copy">Want another round? Accept rematch to stay in this room.</p>
-                <button id="postGameBannerButton" class="post-game-button" type="button">Accept rematch</button>
+                <button id="postGameBannerButton" class="post-game-button primary-button" type="button">Accept rematch</button>
               </div>
-              <div id="board" class="board" aria-label="Game board"></div>
+              <div id="gameStage" class="game-stage">
+                <div id="boardFxLayer" class="board-fx-layer" aria-hidden="true"></div>
+                <div id="countdownOverlay" class="countdown-overlay hidden" aria-hidden="true"></div>
+                <div id="board" class="board" aria-label="Game board"></div>
+              </div>
               <p id="gameMessage" class="message game-message"></p>
             </div>
 
@@ -91,8 +111,11 @@
                 <span id="speedLabel">Speed: --</span>
                 <span id="gameBuildMarker" class="inline-build-marker" aria-live="polite">Build: loading…</span>
               </div>
-              <div class="info-card compact-score-card">
-                <div class="eyebrow">Player 2</div>
+              <div id="scoreCard1" class="info-card compact-score-card player-card" data-player="1">
+                <div class="player-card-head">
+                  <div class="eyebrow">Player 2</div>
+                  <span id="playerState1" class="player-chip">Waiting</span>
+                </div>
                 <div class="score-card player-two solo-score-card">
                   <span>Score</span>
                   <strong id="score1">0</strong>
