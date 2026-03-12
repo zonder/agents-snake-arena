@@ -1,0 +1,17 @@
+{
+  "roomCode": "ANAW",
+  "page1": {
+    "oscillators": 12,
+    "gains": 12,
+    "resumes": 0,
+    "contexts": 1
+  },
+  "page2": {
+    "oscillators": 12,
+    "gains": 12,
+    "resumes": 0,
+    "contexts": 1
+  },
+  "soundText1": "Sound: on",
+  "soundText2": "Sound: on"
+}
