@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-03-12T14:15:14.999Z",
+  "buildMarker": "Build: v0.1.0+e9b8c71",
+  "roomCode": "LTMT",
+  "touchButtonHost": {
+    "pendingDirection": "up",
+    "phase": "countdown",
+    "layoutMode": "mobile-portrait"
+  },
+  "swipeGuest": {
+    "pendingDirection": "up",
+    "phase": "countdown",
+    "layoutMode": "mobile-portrait"
+  }
+}
