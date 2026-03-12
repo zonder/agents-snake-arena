@@ -53,139 +53,54 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-12T17:35:08Z` |
 | Status | `SUCCESS` |
-
 ## Production deployment update — 2026-03-12
-- Environment: 
-- Branch: 
-- PR: 
-- Previous prod commit:  ()
-- Deployed commit:  ()
-- Production URL: 
-- Deployed at (UTC): 
-- Runtime: usage: pm2 [options] <command>
-
-pm2 -h, --help             all available commands and options
-pm2 examples               display pm2 usage examples
-pm2 <command> -h           help on a specific command
-
-Access pm2 files in ~/.pm2 process  behind nginx on port , forwarding to local app on port 
+- Environment: `prod`
+- Branch: `main`
+- PR: `#66`
+- Previous prod commit: `613861ff28e5e61b550e24d25eb0b714ce8bc942` (`613861f`)
+- Deployed app commit: `662b4b99c42dbc35dc51652bbc08aa3ef5c62545` (`662b4b9`)
+- Production URL: `http://20.106.185.110/`
+- Deployed at (UTC): `2026-03-12T17:50:08Z`
+- Runtime: `pm2` process `app-prod` behind nginx on port `80`, forwarding to local app on port `3000`
+- Docs artifact update commit: `091804f5f61f8b09fedb98d6fd397f3d2206c4f5` (`091804f`) on `main`
 
 ### Production deployment actions
-branch 'main' set up to track 'origin/main'.
-Your branch is up to date with 'origin/main'.
-HEAD is now at 662b4b9 Merge pull request #66 from zonder/feature/issue-63
-
-added 75 packages, and audited 76 packages in 2s
-
-18 packages are looking for funding
-  run `npm fund` for details
-
-found 0 vulnerabilities
-
-> my-test-startup@0.1.0 build
-> tsc -p tsconfig.json
-
-[PM2] Applying action restartProcessId on app [app-prod](ids: [ 0 ])
-[PM2] [app-prod](0) ✓
-┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
-│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
-├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 1  │ app-dev     │ default     │ N/A     │ fork    │ 104892   │ 15m    │ 25   │ online    │ 0%       │ 67.6mb   │ rootage… │ disabled │
-│ 0  │ app-prod    │ default     │ N/A     │ fork    │ 105961   │ 0s     │ 89   │ online    │ 0%       │ 21.9mb   │ rootage… │ disabled │
-└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
-[PM2] Saving current process list...
-[PM2] Successfully saved in /home/rootagent/.pm2/dump.pm2
+```bash
+cd /home/rootagent/deployments/prod
+git fetch origin
+git checkout -B main origin/main
+git reset --hard origin/main
+npm ci
+npm run build
+pm2 startOrRestart /home/rootagent/deployments/ecosystem.config.js --only app-prod
+pm2 save
+```
 
 ### Production health-check results
-- HTTP/1.1 502 Bad Gateway
-Server: nginx/1.24.0 (Ubuntu)
-Date: Thu, 12 Mar 2026 17:50:59 GMT
-Content-Type: text/html
-Content-Length: 166
-Connection: keep-alive
- returned  via nginx.
-- <html>
-<head><title>502 Bad Gateway</title></head>
-<body>
-<center><h1>502 Bad Gateway</h1></center>
-<hr><center>nginx/1.24.0 (Ubuntu)</center>
-</body>
-</html> returned .
-- <html>
-<head><title>502 Bad Gateway</title></head>
-<body>
-<center><h1>502 Bad Gateway</h1></center>
-<hr><center>nginx/1.24.0 (Ubuntu)</center>
-</body>
-</html> returned a valid Engine.IO / Socket.IO handshake payload.
-- Served HTML still exposes the build marker anchors:  and .
-- Served  includes reconnect/resume asset strings and build-marker hydration for:
-  - 
-  - 
-  - 
-  - 
-  - 
-  -  fetch with 
-- ┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
-│ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
-├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 1  │ app-dev     │ default     │ N/A     │ fork    │ 104892   │ 15m    │ 25   │ online    │ 0%       │ 67.6mb   │ rootage… │ disabled │
-│ 0  │ app-prod    │ default     │ N/A     │ fork    │ 105961   │ 0s     │ 89   │ online    │ 0%       │ 70.1mb   │ rootage… │ disabled │
-└────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘ showed  online after restart.
-- [TAILING] Tailing last 20 lines for [app-prod] process (change the value with --lines option)
-/home/rootagent/.pm2/logs/app-prod-error.log last 20 lines:
-0|app-prod | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/home/rootagent/deployments/prod/package.json'
-0|app-prod | npm error enoent This is related to npm not being able to find a file.
-0|app-prod | npm error enoent
-0|app-prod | npm error A complete log of this run can be found in: /home/rootagent/.npm/_logs/2026-03-11T18_55_57_500Z-debug-0.log
-0|app-prod | npm error code ENOENT
-0|app-prod | npm error syscall open
-0|app-prod | npm error path /home/rootagent/deployments/prod/package.json
-0|app-prod | npm error errno -2
-0|app-prod | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/home/rootagent/deployments/prod/package.json'
-0|app-prod | npm error enoent This is related to npm not being able to find a file.
-0|app-prod | npm error enoent
-0|app-prod | npm error A complete log of this run can be found in: /home/rootagent/.npm/_logs/2026-03-11T18_56_02_804Z-debug-0.log
-0|app-prod | npm error code ENOENT
-0|app-prod | npm error syscall open
-0|app-prod | npm error path /home/rootagent/deployments/prod/package.json
-0|app-prod | npm error errno -2
-0|app-prod | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/home/rootagent/deployments/prod/package.json'
-0|app-prod | npm error enoent This is related to npm not being able to find a file.
-0|app-prod | npm error enoent
-0|app-prod | npm error A complete log of this run can be found in: /home/rootagent/.npm/_logs/2026-03-11T18_56_08_084Z-debug-0.log
-
-/home/rootagent/.pm2/logs/app-prod-out.log last 20 lines:
-0|app-prod | Room lobby server listening on http://localhost:3000 (v0.1.0+a5a0b41)
-0|app-prod | 
-0|app-prod | > my-test-startup@0.1.0 start
-0|app-prod | > tsx src/server/index.ts
-0|app-prod | 
-0|app-prod | Room lobby server listening on http://localhost:3000 (v0.1.0+9c3181e)
-0|app-prod | 
-0|app-prod | > my-test-startup@0.1.0 start
-0|app-prod | > tsx src/server/index.ts
-0|app-prod | 
-0|app-prod | Room lobby server listening on http://localhost:3000 (v0.1.0+613861f)
-0|app-prod | 
-0|app-prod | > my-test-startup@0.1.0 start
-0|app-prod | > tsx src/server/index.ts
-0|app-prod | 
-0|app-prod | Room lobby server listening on http://localhost:3000 (v0.1.0+662b4b9)
-0|app-prod | 
-0|app-prod | > my-test-startup@0.1.0 start
-0|app-prod | > tsx src/server/index.ts
-0|app-prod |  showed the current startup line: .
+- `curl -I http://20.106.185.110/` returned `HTTP/1.1 200 OK` via nginx.
+- `curl http://20.106.185.110/build-info.json` returned `{"version":"0.1.0","commit":"662b4b9","builtAt":"2026-03-12T17:50:08.352Z","displayVersion":"v0.1.0+662b4b9"}`.
+- `curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
+- Served HTML exposes the build marker anchors `#buildMarker` and `#gameBuildMarker`.
+- Served `app.js` includes reconnect/resume and build-marker hydration strings for:
+  - `Connected. Trying to resume your room…`
+  - `session:resume:succeeded`
+  - `session:resume:failed`
+  - `Slot reserved for ${seconds}s.`
+  - `Resuming in ${seconds}s.`
+  - `/build-info.json` fetch with `cache: 'no-store'`
+- `pm2 list` showed `app-prod` online after restart.
+- `pm2 logs app-prod --lines 20 --nostream` showed the active startup line: `Room lobby server listening on http://localhost:3000 (v0.1.0+662b4b9)`.
+- Historical `app-prod` error log lines from 2026-03-11 are still present in PM2 logs, but they predate this deploy and the current process is healthy.
 
 ### Production deployment record
 
 | Field | Value |
 |---|---|
-| Commit |  |
-| Short |  |
-| Branch |  |
-| Environment |  |
-| PM2 Process |  |
-| URL |  |
-| Timestamp |  |
-| Status |  |
+| App Commit | `662b4b99c42dbc35dc51652bbc08aa3ef5c62545` |
+| Short | `662b4b9` |
+| Branch | `main` |
+| Environment | `prod` |
+| PM2 Process | `app-prod` |
+| URL | `http://20.106.185.110/` |
+| Timestamp | `2026-03-12T17:50:08Z` |
+| Status | `SUCCESS` |
