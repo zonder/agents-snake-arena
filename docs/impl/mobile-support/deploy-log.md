@@ -76,3 +76,24 @@ pm2 save
 - Verified live before correction commit via /build-info.json: 8051c91
 - Dev URL: http://20.106.185.110:8081/
 - Result before correction commit: SUCCESS
+
+## QA-unblock refresh redeploy — 2026-03-12T14:09:26Z
+- Trigger: redeploy latest branch head so the mobile-landscape overflow fix is live for QA
+- Previous dev commit: `e2215d39bcf0664a01ce5838f0fa495dd0823ba3` (`e2215d3`)
+- Requested fix commit: `2510a99cb22a34abdf57a7f070301ba91f644e45` (`2510a99`)
+- Deployed commit: `2510a99cb22a34abdf57a7f070301ba91f644e45` (`2510a99`)
+- Verified live via `http://20.106.185.110:8081/build-info.json` and matching served `/app.js` SHA-256
+- Result: `SUCCESS`
+
+### Latest deployment record
+
+| Field | Value |
+|-------|-------|
+| Commit | `2510a99cb22a34abdf57a7f070301ba91f644e45` |
+| Short | `2510a99` |
+| Branch | `feature/issue-40` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-12T14:09:26Z` |
+| Status | `SUCCESS` |
