@@ -48,22 +48,23 @@ pm2 save
 | Timestamp | `2026-03-12T10:45:53Z` |
 | Status | `SUCCESS` |
 
-## Stakeholder review refresh redeploy — 2026-03-12T11:02:43Z
+## Stakeholder review refresh redeploy — 2026-03-12T11:03:20Z
 - Trigger: redeploy latest branch head so the room-code copy fallback fix is live for stakeholder review
-- Requested target commit: `060c6ee15bc3f95f52015ff9be1b62a84c82e434` (`060c6ee`)
-- Verified live commit: `060c6ee15bc3f95f52015ff9be1b62a84c82e434` (`060c6ee`)
-- Verified at (UTC): `2026-03-12T11:02:43Z`
+- Code fix commit requested: `060c6ee15bc3f95f52015ff9be1b62a84c82e434` (`060c6ee`)
+- Deploy log artifact commit pushed: `214bb251e806b5c097c1ac119e39e763b1df8457` (`214bb25`)
+- Verified live commit: `214bb251e806b5c097c1ac119e39e763b1df8457` (`214bb25`)
+- Verified via: `/build-info.json` and served `app.js` markers for `copyRoomCode`, `navigator.clipboard`, and `execCommand`
 - Result: `SUCCESS`
 
 ### Latest deployment record
 
 | Field | Value |
 |-------|-------|
-| Commit | `060c6ee15bc3f95f52015ff9be1b62a84c82e434` |
-| Short | `060c6ee` |
+| Commit | `214bb251e806b5c097c1ac119e39e763b1df8457` |
+| Short | `214bb25` |
 | Branch | `feature/issue-40` |
 | Environment | `dev` |
 | PM2 Process | `app-dev` |
 | URL | `http://20.106.185.110:8081/` |
-| Timestamp | `2026-03-12T11:02:43Z` |
+| Timestamp | `2026-03-12T11:03:20Z` |
 | Status | `SUCCESS` |
