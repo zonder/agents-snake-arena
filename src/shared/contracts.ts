@@ -2,6 +2,7 @@ export type RoomPhase = 'waiting-for-players' | 'lobby' | 'starting' | 'in-progr
 export type Direction = 'up' | 'down' | 'left' | 'right';
 export type RoundResult = 'win' | 'lose' | 'draw';
 export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect';
+export type RematchStatus = 'unavailable' | 'idle' | 'waiting' | 'accepted';
 
 export type LobbyErrorReason =
   | 'INVALID_ROOM_CODE'
@@ -13,6 +14,16 @@ export type LobbyErrorReason =
 export interface GridPoint {
   x: number;
   y: number;
+}
+
+export interface RematchView {
+  available: boolean;
+  status: RematchStatus;
+  requestedBySlot: { 0: boolean; 1: boolean };
+  requestedByYou: boolean;
+  waitingForOtherPlayer: boolean;
+  bothAccepted: boolean;
+  eligiblePlayerCount: 0 | 1 | 2;
 }
 
 export interface LobbyPlayerView {
@@ -33,6 +44,7 @@ export interface LobbyStatePayload {
   canStart: boolean;
   version: number;
   message?: string;
+  rematch: RematchView;
 }
 
 export interface PublicSnakeState {
@@ -61,6 +73,7 @@ export interface PublicGameStatePayload {
     winnerSlotIndex: 0 | 1 | null;
     deathReasons: Array<{ slotIndex: 0 | 1; reason: DeathReason }>;
   };
+  rematch: RematchView;
   version: number;
 }
 
@@ -128,8 +141,16 @@ export interface GameEndedPayload {
     deathReasons: Array<{ slotIndex: 0 | 1; reason: DeathReason }>;
   };
   finalState: PublicGameStatePayload;
-  teardownAt: number;
+  teardownAt: number | null;
   version: number;
+}
+
+export interface GameRematchStatePayload {
+  roomCode: string;
+  phase: 'game-over' | 'waiting-for-players' | 'lobby' | 'starting';
+  rematch: RematchView;
+  version: number;
+  message?: string;
 }
 
 export interface RoomClosedPayload {
@@ -152,5 +173,7 @@ export const EVENTS = {
   gameStart: 'game:start',
   gameState: 'game:state',
   gameEnded: 'game:ended',
+  gameRematchRequest: 'game:rematch-request',
+  gameRematchState: 'game:rematch-state',
   roomClosed: 'room:closed',
 } as const;

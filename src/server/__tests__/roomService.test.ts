@@ -5,6 +5,22 @@ function payloads(result: { events: Array<{ type: string; payload: unknown }> },
   return result.events.filter((event) => event.type === type).map((event) => event.payload as any);
 }
 
+function startGame(service: RoomService, roomCode: string) {
+  service.joinRoom('socket-b', roomCode);
+  service.setReady('socket-a', true);
+  service.setReady('socket-b', true);
+  vi.advanceTimersByTime(3000);
+}
+
+function finishGame(service: RoomService) {
+  for (let step = 0; step < 25; step += 1) {
+    const result = service.setDirection('socket-a', 'up');
+    if (payloads(result, 'room:error').length === 0) break;
+    vi.advanceTimersByTime(200);
+  }
+  vi.advanceTimersByTime(3200);
+}
+
 describe('RoomService', () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -55,7 +71,95 @@ describe('RoomService', () => {
     expect(gameStarts[0].payload.phase).toBe('in-progress');
   });
 
-  test('disconnect during gameplay ends the round and closes the room', () => {
+  test('one-player rematch waiting state is authoritative', () => {
+    const service = new RoomService();
+    const roomCode = payloads(service.createRoom('socket-a'), 'room:created')[0].roomCode;
+    startGame(service, roomCode);
+    finishGame(service);
+
+    const rematchResult = service.requestRematch('socket-a');
+    const rematchState = payloads(rematchResult, 'game:rematch-state')[0];
+
+    expect(rematchState.phase).toBe('game-over');
+    expect(rematchState.rematch.status).toBe('waiting');
+    expect(rematchState.rematch.requestedBySlot[0]).toBe(true);
+    expect(rematchState.rematch.requestedBySlot[1]).toBe(false);
+    expect(rematchState.rematch.waitingForOtherPlayer).toBe(true);
+  });
+
+  test('both-player acceptance starts a fresh countdown in the same room with a reset match state', () => {
+    const service = new RoomService();
+    const roomCode = payloads(service.createRoom('socket-a'), 'room:created')[0].roomCode;
+    startGame(service, roomCode);
+    finishGame(service);
+
+    const firstAccept = service.requestRematch('socket-a');
+    const finalStateBefore = payloads(firstAccept, 'game:state').at(-1);
+    finalStateBefore.snakes[0].score = 9;
+
+    const secondAccept = service.requestRematch('socket-b');
+    const countdown = payloads(secondAccept, 'game:countdown');
+    const gameState = payloads(secondAccept, 'game:state').at(-1);
+
+    expect(countdown).toHaveLength(2);
+    expect(countdown[0].roomCode).toBe(roomCode);
+    expect(gameState.phase).toBe('starting');
+    expect(gameState.tickNumber).toBe(0);
+    expect(gameState.tickIntervalMs).toBe(200);
+    expect(gameState.foodsEaten).toBe(0);
+    expect(gameState.snakes[0].score).toBe(0);
+    expect(gameState.snakes[1].score).toBe(0);
+    expect(gameState.snakes[0].body).toEqual([
+      { x: 7, y: 15 },
+      { x: 6, y: 15 },
+      { x: 5, y: 15 },
+    ]);
+    expect(gameState.snakes[1].body).toEqual([
+      { x: 22, y: 15 },
+      { x: 23, y: 15 },
+      { x: 24, y: 15 },
+    ]);
+    expect(gameState.food).not.toBeNull();
+  });
+
+  test('post-game leave keeps the room open and clears stale rematch state', () => {
+    const service = new RoomService();
+    const roomCode = payloads(service.createRoom('socket-a'), 'room:created')[0].roomCode;
+    startGame(service, roomCode);
+    finishGame(service);
+    service.requestRematch('socket-a');
+
+    const leaveResult = service.disconnect('socket-b');
+    const left = payloads(leaveResult, 'player:left')[0];
+    const lobby = payloads(leaveResult, 'lobby:state')[0];
+    const rematch = payloads(leaveResult, 'game:rematch-state')[0];
+
+    expect(left.reason).toBe('disconnected');
+    expect(lobby.phase).toBe('waiting-for-players');
+    expect(lobby.roomCode).toBe(roomCode);
+    expect(rematch.rematch.available).toBe(false);
+    expect(rematch.rematch.requestedBySlot[0]).toBe(false);
+    expect(rematch.rematch.requestedBySlot[1]).toBe(false);
+  });
+
+  test('replacement join after post-game leave returns room to normal lobby flow', () => {
+    const service = new RoomService();
+    const roomCode = payloads(service.createRoom('socket-a'), 'room:created')[0].roomCode;
+    startGame(service, roomCode);
+    finishGame(service);
+    service.disconnect('socket-b');
+
+    const joinResult = service.joinRoom('socket-c', roomCode);
+    const lobby = payloads(joinResult, 'lobby:state').at(-1);
+
+    expect(lobby.phase).toBe('lobby');
+    expect(lobby.roomCode).toBe(roomCode);
+    expect(lobby.rematch.available).toBe(false);
+    expect(lobby.players[1].isOccupied).toBe(true);
+    expect(lobby.canStart).toBe(false);
+  });
+
+  test('disconnect during gameplay ends the round but does not close the room', () => {
     const emitted: Array<{ type: string; payload: any }> = [];
     const service = new RoomService();
     service.setEventSink((events) => emitted.push(...events));
@@ -75,7 +179,6 @@ describe('RoomService', () => {
 
     vi.advanceTimersByTime(3000);
     const roomClosed = emitted.filter((event) => event.type === 'room:closed');
-    expect(roomClosed).toHaveLength(1);
-    expect(roomClosed[0].payload.reason).toBe('player-disconnected');
+    expect(roomClosed).toHaveLength(0);
   });
 });

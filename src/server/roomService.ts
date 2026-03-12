@@ -2,11 +2,13 @@ import type {
   Direction,
   GameCountdownPayload,
   GameEndedPayload,
+  GameRematchStatePayload,
   GameStartPayload,
   GameStatePayload,
   LobbyErrorReason,
   LobbyStatePayload,
   PlayerLeftPayload,
+  RematchView,
   RoomClosedPayload,
   RoomCreatedPayload,
   RoomJoinedPayload,
@@ -29,6 +31,10 @@ interface PlayerSlot {
   ready: boolean;
 }
 
+interface RematchState {
+  requestedBySlot: { 0: boolean; 1: boolean };
+}
+
 interface RoomRecord {
   roomCode: string;
   phase: RoomPhase;
@@ -38,6 +44,7 @@ interface RoomRecord {
   match: MatchState | null;
   countdown: { startedAt: number; endsAt: number; secondsRemaining: 3 | 2 | 1 | 0 } | null;
   teardownAt: number | null;
+  rematch: RematchState;
 }
 
 export interface ClientEvent {
@@ -51,6 +58,7 @@ export interface ClientEvent {
     | 'game:start'
     | 'game:state'
     | 'game:ended'
+    | 'game:rematch-state'
     | 'room:closed';
   socketId: string;
   payload: unknown;
@@ -91,6 +99,7 @@ export class RoomService {
       match: null,
       countdown: null,
       teardownAt: null,
+      rematch: { requestedBySlot: { 0: false, 1: false } },
       players: [
         { slotIndex: 0, playerId, socketId, connected: true, ready: false },
         { slotIndex: 1, playerId: null, socketId: null, connected: false, ready: false },
@@ -117,7 +126,10 @@ export class RoomService {
 
     const room = this.rooms.get(roomCode);
     if (!room) return { events: [this.error(socketId, 'ROOM_NOT_FOUND')] };
-    if (room.phase === 'starting' || room.phase === 'in-progress' || room.phase === 'game-over') {
+    if (room.phase === 'starting' || room.phase === 'in-progress') {
+      return { events: [this.error(socketId, 'GAME_ALREADY_STARTED')] };
+    }
+    if (room.phase === 'game-over' && room.players.every((player) => player.playerId)) {
       return { events: [this.error(socketId, 'GAME_ALREADY_STARTED')] };
     }
 
@@ -131,6 +143,7 @@ export class RoomService {
     emptySlot.ready = false;
     this.socketToRoom.set(socketId, roomCode);
     this.socketToPlayer.set(socketId, playerId);
+    this.clearRematchState(room);
     room.version += 1;
     room.phase = this.computePhase(room);
 
@@ -156,6 +169,44 @@ export class RoomService {
     room.phase = this.computePhase(room);
 
     return { events: this.afterLobbyMutation(room) };
+  }
+
+  requestRematch(socketId: string): ServiceResult {
+    const room = this.getRoomForSocket(socketId);
+    if (!room || room.phase !== 'game-over') return { events: [this.error(socketId, 'ACTION_NOT_ALLOWED')] };
+
+    const player = room.players.find((slot) => slot.socketId === socketId);
+    if (!player) return { events: [this.error(socketId, 'ACTION_NOT_ALLOWED')] };
+
+    room.rematch.requestedBySlot[player.slotIndex] = true;
+    room.version += 1;
+
+    const events = [
+      ...this.buildLobbyStateEvents(room),
+      ...this.buildGameStateEvents(room),
+      ...this.buildRematchStateEvents(room),
+    ];
+
+    if (!this.areBothPlayersPresent(room) || !room.rematch.requestedBySlot[0] || !room.rematch.requestedBySlot[1]) {
+      return { events };
+    }
+
+    room.phase = 'starting';
+    room.version += 1;
+    room.match = createInitialMatchState(room.roomCode);
+    room.countdown = null;
+    room.teardownAt = null;
+    room.players.forEach((slot) => { slot.ready = false; });
+    this.clearRematchState(room);
+
+    const now = Date.now();
+    room.countdown = { startedAt: now, endsAt: now + 3000, secondsRemaining: 3 };
+    events.push(...this.buildLobbyStateEvents(room));
+    events.push(...this.buildGameStateEvents(room, 3));
+    events.push(...this.buildCountdownEvents(room, 3, now));
+    events.push(...this.buildRematchStateEvents(room));
+    this.startCountdown(room.roomCode);
+    return { events };
   }
 
   setDirection(socketId: string, direction: Direction): ServiceResult {
@@ -205,6 +256,12 @@ export class RoomService {
     }
 
     remainingPlayers[0].ready = false;
+    this.clearRematchState(room);
+    room.countdown = null;
+    if (room.phase === 'game-over') {
+      room.match = null;
+      room.teardownAt = null;
+    }
     room.version += 1;
     room.phase = 'waiting-for-players';
 
@@ -212,6 +269,7 @@ export class RoomService {
       { type: 'player:left', socketId: slot.socketId!, payload: { roomCode, slotIndex, reason } satisfies PlayerLeftPayload },
     ]);
     events.push(...this.buildLobbyStateEvents(room));
+    events.push(...this.buildRematchStateEvents(room));
     return { events };
   }
 
@@ -222,11 +280,14 @@ export class RoomService {
     room.phase = 'starting';
     room.version += 1;
     room.match = createInitialMatchState(room.roomCode);
+    room.countdown = null;
+    this.clearRematchState(room);
     const now = Date.now();
     room.countdown = { startedAt: now, endsAt: now + 3000, secondsRemaining: 3 };
     events.push(...this.buildLobbyStateEvents(room));
     events.push(...this.buildGameStateEvents(room, 3));
     events.push(...this.buildCountdownEvents(room, 3, now));
+    events.push(...this.buildRematchStateEvents(room));
 
     this.startCountdown(room.roomCode);
     return events;
@@ -249,6 +310,7 @@ export class RoomService {
           ...this.buildLobbyStateEvents(activeRoom),
           ...this.buildGameStateEvents(activeRoom, second),
           ...this.buildCountdownEvents(activeRoom, second, now),
+          ...this.buildRematchStateEvents(activeRoom),
         ];
         if (second === 0) {
           events.push(...this.beginActiveMatch(activeRoom, now));
@@ -309,7 +371,8 @@ export class RoomService {
     room.match = match;
     room.phase = 'game-over';
     room.version += 1;
-    room.teardownAt = Date.now() + 3000;
+    room.teardownAt = null;
+    this.clearRematchState(room);
     this.cancelRuntime(room.roomCode);
 
     const finalState = this.serializeGameState(room);
@@ -331,29 +394,10 @@ export class RoomService {
 
     const events = this.buildLobbyStateEvents(room);
     events.push(...this.buildGameStateEvents(room));
+    events.push(...this.buildRematchStateEvents(room, closeReason === 'player-disconnected' ? 'Opponent disconnected. Room stays open for another player.' : 'Round complete. Choose rematch to play again.'));
     for (const player of room.players) {
       if (player.socketId) events.push({ type: 'game:ended', socketId: player.socketId, payload });
     }
-
-    const runtime: RuntimeRecord = { countdownTimers: [], tickTimer: null, teardownTimer: null };
-    runtime.teardownTimer = setTimeout(() => {
-      const activeRoom = this.rooms.get(room.roomCode);
-      if (!activeRoom) return;
-      const closeEvents: ClientEvent[] = [];
-      for (const player of activeRoom.players) {
-        if (!player.socketId) continue;
-        closeEvents.push({
-          type: 'room:closed',
-          socketId: player.socketId,
-          payload: { roomCode: activeRoom.roomCode, reason: closeReason, version: activeRoom.version } satisfies RoomClosedPayload,
-        });
-        this.socketToRoom.delete(player.socketId);
-        this.socketToPlayer.delete(player.socketId);
-      }
-      this.disposeRoom(activeRoom.roomCode);
-      this.emitExternal(closeEvents);
-    }, 3000);
-    this.runtimes.set(room.roomCode, runtime);
 
     return events;
   }
@@ -376,6 +420,22 @@ export class RoomService {
     return room.players.flatMap((player) => {
       if (!player.socketId) return [];
       return [{ type: 'lobby:state' as const, socketId: player.socketId, payload: this.serializeLobbyState(room, player.socketId) }];
+    });
+  }
+
+  private buildRematchStateEvents(room: RoomRecord, message?: string): ClientEvent[] {
+    const phase = room.phase === 'in-progress' ? null : room.phase;
+    if (!phase) return [];
+    return room.players.flatMap((player) => {
+      if (!player.socketId) return [];
+      const payload: GameRematchStatePayload = {
+        roomCode: room.roomCode,
+        phase,
+        rematch: this.buildRematchView(room, player.socketId),
+        version: room.version,
+        message,
+      };
+      return [{ type: 'game:rematch-state' as const, socketId: player.socketId, payload }];
     });
   }
 
@@ -420,6 +480,7 @@ export class RoomService {
       canStart,
       version: room.version,
       message: this.getLobbyMessage(room),
+      rematch: this.buildRematchView(room, viewerSocketId),
     };
   }
 
@@ -448,14 +509,42 @@ export class RoomService {
             deathReasons: match.deathReasons,
           }
         : undefined,
+      rematch: this.buildRematchView(room),
       version: room.version,
+    };
+  }
+
+  private buildRematchView(room: RoomRecord, viewerSocketId?: string): RematchView {
+    const eligiblePlayerCount = room.players.filter((player) => player.playerId && player.connected).length as 0 | 1 | 2;
+    const bothAccepted = eligiblePlayerCount === 2 && room.rematch.requestedBySlot[0] && room.rematch.requestedBySlot[1];
+    const acceptedCount = Number(room.rematch.requestedBySlot[0]) + Number(room.rematch.requestedBySlot[1]);
+    const available = room.phase === 'game-over' && eligiblePlayerCount === 2;
+    const viewer = viewerSocketId ? room.players.find((slot) => slot.socketId === viewerSocketId) : null;
+    const requestedByYou = viewer ? room.rematch.requestedBySlot[viewer.slotIndex] : false;
+    const waitingForOtherPlayer = available && requestedByYou && !bothAccepted;
+    const status = !available
+      ? 'unavailable'
+      : bothAccepted
+        ? 'accepted'
+        : acceptedCount === 1
+          ? 'waiting'
+          : 'idle';
+
+    return {
+      available,
+      status,
+      requestedBySlot: { ...room.rematch.requestedBySlot },
+      requestedByYou,
+      waitingForOtherPlayer,
+      bothAccepted,
+      eligiblePlayerCount,
     };
   }
 
   private getLobbyMessage(room: RoomRecord): string {
     if (room.phase === 'starting' && room.countdown) return `Match starts in ${room.countdown.secondsRemaining}…`;
     if (room.phase === 'in-progress') return 'Match in progress.';
-    if (room.phase === 'game-over') return 'Round complete. Room will close shortly.';
+    if (room.phase === 'game-over') return this.buildRematchView(room).available ? 'Round complete. Choose rematch to play again.' : 'Round complete. Waiting for opponent status to change.';
     return room.players.filter((player) => player.playerId).length === 2
       ? 'Game starts automatically when both players are ready.'
       : 'Waiting for opponent.';
@@ -469,6 +558,15 @@ export class RoomService {
     const occupiedCount = room.players.filter((player) => player.playerId).length;
     if (occupiedCount < 2) return 'waiting-for-players';
     return 'lobby';
+  }
+
+  private areBothPlayersPresent(room: RoomRecord): boolean {
+    return room.players.every((player) => player.playerId && player.connected && player.socketId);
+  }
+
+  private clearRematchState(room: RoomRecord) {
+    room.rematch.requestedBySlot[0] = false;
+    room.rematch.requestedBySlot[1] = false;
   }
 
   private getRoomForSocket(socketId: string): RoomRecord | undefined {

@@ -211,3 +211,5 @@ button:disabled { opacity: .6; cursor: not-allowed; }
     width: fit-content;
   }
 }
+
+.rematch-card button { width: 100%; }
