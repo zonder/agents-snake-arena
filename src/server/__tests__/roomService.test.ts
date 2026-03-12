@@ -205,7 +205,7 @@ describe("RoomService", () => {
     expect(gameState.food).not.toBeNull();
   });
 
-  test("post-game leave keeps the room open and clears stale rematch state", () => {
+  test("post-game disconnect reserves the slot and keeps rematch unavailable", () => {
     const service = new RoomService();
     const roomCode = payloads(service.createRoom("socket-a"), "room:created")[0]
       .roomCode;
@@ -214,19 +214,17 @@ describe("RoomService", () => {
     service.requestRematch("socket-a");
 
     const leaveResult = service.disconnect("socket-b");
-    const left = payloads(leaveResult, "player:left")[0];
     const lobby = payloads(leaveResult, "lobby:state")[0];
     const rematch = payloads(leaveResult, "game:rematch-state")[0];
 
-    expect(left.reason).toBe("disconnected");
-    expect(lobby.phase).toBe("waiting-for-players");
-    expect(lobby.roomCode).toBe(roomCode);
+    expect(lobby.phase).toBe("game-over");
+    expect(lobby.reconnect.active).toBe(true);
+    expect(lobby.players[1].isReserved).toBe(true);
     expect(rematch.rematch.available).toBe(false);
-    expect(rematch.rematch.requestedBySlot[0]).toBe(false);
-    expect(rematch.rematch.requestedBySlot[1]).toBe(false);
+    expect(rematch.reconnect.active).toBe(true);
   });
 
-  test("replacement join after post-game leave returns room to normal lobby flow", () => {
+  test("replacement join is blocked while a post-game slot is reserved", () => {
     const service = new RoomService();
     const roomCode = payloads(service.createRoom("socket-a"), "room:created")[0]
       .roomCode;
@@ -235,16 +233,12 @@ describe("RoomService", () => {
     service.disconnect("socket-b");
 
     const joinResult = service.joinRoom("socket-c", roomCode);
-    const lobby = payloads(joinResult, "lobby:state").at(-1);
+    const error = payloads(joinResult, "room:error")[0];
 
-    expect(lobby.phase).toBe("lobby");
-    expect(lobby.roomCode).toBe(roomCode);
-    expect(lobby.rematch.available).toBe(false);
-    expect(lobby.players[1].isOccupied).toBe(true);
-    expect(lobby.canStart).toBe(false);
+    expect(error.reason).toBe("GAME_ALREADY_STARTED");
   });
 
-  test("disconnect during gameplay ends the round but does not close the room", () => {
+  test("disconnect during gameplay pauses first, then awards forfeit after timeout", () => {
     const emitted: Array<{ type: string; payload: any }> = [];
     const service = new RoomService();
     service.setEventSink((events) => emitted.push(...events));
@@ -257,14 +251,54 @@ describe("RoomService", () => {
     vi.advanceTimersByTime(3000);
 
     const disconnectResult = service.disconnect("socket-b");
-    const ended = payloads(disconnectResult, "game:ended");
+    const pausedState = payloads(disconnectResult, "game:state")[0];
+    expect(pausedState.paused).toBe(true);
+    expect(pausedState.reconnect.active).toBe(true);
+
+    vi.advanceTimersByTime(30000);
+    const ended = emitted.filter((event) => event.type === "game:ended").map((event) => event.payload as any);
     expect(ended).toHaveLength(1);
     expect(ended[0].result.winnerSlotIndex).toBe(0);
     expect(ended[0].result.bySlot[0]).toBe("win");
     expect(ended[0].result.bySlot[1]).toBe("lose");
+  });
 
+  test("resume succeeds during lobby and restores the same slot", () => {
+    const service = new RoomService();
+    const created = service.createRoom("socket-a");
+    const roomCode = payloads(created, "room:created")[0].roomCode;
+    const hostSession = payloads(created, "session:issued")[0];
+    service.joinRoom("socket-b", roomCode);
+    const disconnectResult = service.disconnect("socket-a");
+    expect(payloads(disconnectResult, "lobby:state")[0].reconnect.active).toBe(true);
+
+    const resumeResult = service.resumeSession("socket-a-2", { roomCode, reconnectToken: hostSession.reconnectToken });
+    const resumed = payloads(resumeResult, "session:resume:succeeded")[0];
+    const lobby = payloads(resumeResult, "lobby:state")[0];
+    expect(resumed.slotIndex).toBe(0);
+    expect(lobby.yourSlotIndex).toBe(0);
+    expect(lobby.reconnect.active).toBe(false);
+  });
+
+  test("resume during gameplay starts a server-driven resume countdown", () => {
+    const service = new RoomService();
+    const created = service.createRoom("socket-a");
+    const roomCode = payloads(created, "room:created")[0].roomCode;
+    const joined = service.joinRoom("socket-b", roomCode);
+    const guestSession = payloads(joined, "session:issued")[0];
+    service.setReady("socket-a", true);
+    service.setReady("socket-b", true);
     vi.advanceTimersByTime(3000);
-    const roomClosed = emitted.filter((event) => event.type === "room:closed");
-    expect(roomClosed).toHaveLength(0);
+
+    const disconnectResult = service.disconnect("socket-b");
+    expect(payloads(disconnectResult, "game:state")[0].paused).toBe(true);
+
+    const resumeResult = service.resumeSession("socket-b-2", { roomCode, reconnectToken: guestSession.reconnectToken });
+    expect(payloads(resumeResult, "session:resume:succeeded")[0].slotIndex).toBe(1);
+    const countdowns = payloads(resumeResult, "game:countdown");
+    expect(countdowns).toHaveLength(2);
+    expect(countdowns[0].secondsRemaining).toBe(3);
+    const gameStates = payloads(resumeResult, "game:state");
+    expect(gameStates[0].reconnect.status).toBe("resume-countdown");
   });
 });

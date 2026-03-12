@@ -3,6 +3,7 @@ export type Direction = 'up' | 'down' | 'left' | 'right';
 export type RoundResult = 'win' | 'lose' | 'draw';
 export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect';
 export type RematchStatus = 'unavailable' | 'idle' | 'waiting' | 'accepted';
+export type ReconnectStatus = 'none' | 'waiting-for-player' | 'resume-countdown';
 
 export type LobbyErrorReason =
   | 'INVALID_ROOM_CODE'
@@ -14,6 +15,17 @@ export type LobbyErrorReason =
 export interface GridPoint {
   x: number;
   y: number;
+}
+
+export interface ReconnectView {
+  active: boolean;
+  status: ReconnectStatus;
+  disconnectedSlotIndex: 0 | 1 | null;
+  reservedUntil: number | null;
+  secondsRemaining: number | null;
+  affectedPhase: RoomPhase | null;
+  yourSlotReserved: boolean;
+  canAutoResume: boolean;
 }
 
 export interface RematchView {
@@ -30,6 +42,8 @@ export interface LobbyPlayerView {
   slotIndex: 0 | 1;
   isOccupied: boolean;
   isReady: boolean;
+  isConnected: boolean;
+  isReserved: boolean;
   label: 'Player 1' | 'Player 2';
   isYou: boolean;
 }
@@ -37,6 +51,7 @@ export interface LobbyPlayerView {
 export interface LobbyStatePayload {
   roomCode: string;
   phase: RoomPhase;
+  yourSlotIndex: 0 | 1 | null;
   players: [LobbyPlayerView, LobbyPlayerView];
   occupiedCount: 0 | 1 | 2;
   allPlayersPresent: boolean;
@@ -45,6 +60,7 @@ export interface LobbyStatePayload {
   version: number;
   message?: string;
   rematch: RematchView;
+  reconnect: ReconnectView;
 }
 
 export interface PublicSnakeState {
@@ -58,6 +74,7 @@ export interface PublicSnakeState {
 export interface PublicGameStatePayload {
   roomCode: string;
   phase: 'starting' | 'in-progress' | 'game-over';
+  yourSlotIndex: 0 | 1 | null;
   tickNumber: number;
   board: {
     width: 30;
@@ -68,6 +85,8 @@ export interface PublicGameStatePayload {
   foodsEaten: number;
   tickIntervalMs: number;
   countdownSecondsRemaining?: 3 | 2 | 1 | 0;
+  paused?: boolean;
+  reconnect: ReconnectView;
   result?: {
     outcome: RoundResult;
     winnerSlotIndex: 0 | 1 | null;
@@ -75,6 +94,38 @@ export interface PublicGameStatePayload {
   };
   rematch: RematchView;
   version: number;
+}
+
+export interface PlayerSessionPayload {
+  roomCode: string;
+  slotIndex: 0 | 1;
+  reconnectToken: string;
+  issuedAt: number;
+  version: number;
+}
+
+export interface SessionResumeRequestPayload {
+  roomCode: string;
+  reconnectToken: string;
+}
+
+export interface SessionResumeSucceededPayload {
+  roomCode: string;
+  slotIndex: 0 | 1;
+  phase: RoomPhase;
+  resumedAt: number;
+  version: number;
+}
+
+export interface SessionResumeFailedPayload {
+  roomCode: string;
+  reason:
+    | 'ROOM_NOT_FOUND'
+    | 'RESERVATION_EXPIRED'
+    | 'TOKEN_MISMATCH'
+    | 'SLOT_NOT_RESERVED'
+    | 'SLOT_ALREADY_ACTIVE';
+  message: string;
 }
 
 export interface RoomCreatedPayload {
@@ -149,6 +200,8 @@ export interface GameRematchStatePayload {
   roomCode: string;
   phase: 'game-over' | 'waiting-for-players' | 'lobby' | 'starting';
   rematch: RematchView;
+  reconnect: ReconnectView;
+  yourSlotIndex: 0 | 1 | null;
   version: number;
   message?: string;
 }
@@ -176,4 +229,8 @@ export const EVENTS = {
   gameRematchRequest: 'game:rematch-request',
   gameRematchState: 'game:rematch-state',
   roomClosed: 'room:closed',
+  sessionIssued: 'session:issued',
+  sessionResume: 'session:resume',
+  sessionResumeSucceeded: 'session:resume:succeeded',
+  sessionResumeFailed: 'session:resume:failed',
 } as const;

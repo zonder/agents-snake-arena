@@ -66,6 +66,11 @@ io.on('connection', (socket) => {
     emitEvents(roomService.setDirection(socket.id, payload.direction));
   });
 
+  socket.on(EVENTS.sessionResume, (payload: { roomCode?: string; reconnectToken?: string }) => {
+    if (!payload?.roomCode || !payload?.reconnectToken) return;
+    emitEvents(roomService.resumeSession(socket.id, { roomCode: payload.roomCode, reconnectToken: payload.reconnectToken }).events);
+  });
+
   socket.on(EVENTS.gameRematchRequest, () => {
     emitEvents(roomService.requestRematch(socket.id).events);
   });

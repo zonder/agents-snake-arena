@@ -52,6 +52,7 @@ let boardReady = false;
 let buildMarkerText = 'Build: loading…';
 let buildMarkerTitle = 'Build metadata is loading.';
 let pendingDirection = null;
+let latestSession = null;
 
 const viewportState = {
   layoutMode: 'desktop',
@@ -90,9 +91,12 @@ window.addEventListener('orientationchange', updateViewportState);
 renderAudioToggle();
 
 socket.on('connect', () => {
-  statusEl.textContent = 'Connected. Create a room or join with a code.';
-  applyPhaseTheme('entry', 'neutral');
-  showScreen('entry');
+  const resumed = tryResumeStoredSession();
+  statusEl.textContent = resumed ? 'Connected. Trying to resume your room…' : 'Connected. Create a room or join with a code.';
+  if (!resumed) {
+    applyPhaseTheme('entry', 'neutral');
+    showScreen('entry');
+  }
 });
 
 socket.on('room:error', (payload) => {
@@ -112,6 +116,25 @@ socket.on('room:joined', (payload) => {
   errorEl.classList.add('hidden');
   statusEl.textContent = 'Joined room.';
   audioManager.play('ui.click');
+});
+
+socket.on('session:issued', (payload) => {
+  latestSession = payload;
+  storeSession(payload);
+});
+
+socket.on('session:resume:succeeded', (payload) => {
+  statusEl.textContent = 'Session restored.';
+  gameStatusInlineEl.textContent = payload.phase === 'in-progress' ? 'Reconnected. Waiting for server resume…' : 'Reconnected.';
+});
+
+socket.on('session:resume:failed', (payload) => {
+  clearStoredSession(payload.roomCode);
+  latestSession = null;
+  statusEl.textContent = 'Reconnect window expired. You can create or join a room again.';
+  gameStatusInlineEl.textContent = statusEl.textContent;
+  applyPhaseTheme('entry', 'neutral');
+  showScreen('entry');
 });
 
 socket.on('player:left', () => {
@@ -211,6 +234,62 @@ document.getElementById('joinRoomButton').addEventListener('click', () => {
   audioManager.play('ui.click');
   socket.emit('room:join', { roomCode: roomCodeInput.value });
 });
+
+function sessionStorageKey(roomCode) {
+  return `snake:session:${String(roomCode || '').toUpperCase()}`;
+}
+
+function storeSession(payload) {
+  if (!payload?.roomCode || !payload?.reconnectToken) return;
+  const record = {
+    roomCode: payload.roomCode,
+    reconnectToken: payload.reconnectToken,
+    slotIndex: payload.slotIndex,
+    issuedAt: payload.issuedAt,
+    version: payload.version,
+  };
+  localStorage.setItem(sessionStorageKey(payload.roomCode), JSON.stringify(record));
+}
+
+function clearStoredSession(roomCode) {
+  if (!roomCode) return;
+  localStorage.removeItem(sessionStorageKey(roomCode));
+}
+
+function getStoredSession() {
+  const roomCode = latestLobbyState?.roomCode || latestGameState?.roomCode || latestSession?.roomCode;
+  if (roomCode) {
+    const raw = localStorage.getItem(sessionStorageKey(roomCode));
+    if (raw) {
+      try { return JSON.parse(raw); } catch { return null; }
+    }
+  }
+
+  const key = Object.keys(localStorage).find((entry) => entry.startsWith('snake:session:'));
+  if (!key) return null;
+  try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+}
+
+function tryResumeStoredSession() {
+  const stored = getStoredSession();
+  if (!stored?.roomCode || !stored?.reconnectToken) return false;
+  latestSession = stored;
+  socket.emit('session:resume', { roomCode: stored.roomCode, reconnectToken: stored.reconnectToken });
+  return true;
+}
+
+function describeReconnect(state) {
+  const reconnect = state?.reconnect;
+  if (!reconnect?.active) return '';
+  const label = reconnect.disconnectedSlotIndex === null || reconnect.disconnectedSlotIndex === undefined
+    ? 'Player'
+    : `Player ${reconnect.disconnectedSlotIndex + 1}`;
+  const seconds = reconnect.secondsRemaining ?? 0;
+  if (reconnect.status === 'resume-countdown') return `${label} reconnected. Resuming in ${seconds}s.`;
+  return reconnect.yourSlotReserved
+    ? `Rejoining your reserved slot. ${seconds}s remaining.`
+    : `${label} disconnected. Slot reserved for ${seconds}s.`;
+}
 
 function focusWithoutScroll(element) {
   if (!element || typeof element.focus !== 'function') {
@@ -365,7 +444,7 @@ function renderLobby(state) {
   roomCodeDisplay.textContent = state.roomCode;
   gameRoomCodeEl.textContent = state.roomCode;
   phaseBadge.textContent = formatPhaseLabel(state.phase);
-  lobbyMessage.textContent = state.message || '';
+  lobbyMessage.textContent = describeReconnect(state) || state.message || '';
   playersEl.innerHTML = '';
 
   const gameplayFocused = state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
@@ -378,9 +457,9 @@ function renderLobby(state) {
     card.innerHTML = `
       <div class="player-meta">
         <strong>${player.label}${player.isYou ? ' (You)' : ''}</strong>
-        <span>${player.isOccupied ? 'Joined' : 'Waiting'}</span>
+        <span>${player.isOccupied ? (player.isReserved ? 'Reserved' : player.isConnected ? 'Joined' : 'Disconnected') : 'Waiting'}</span>
       </div>
-      <div class="player-state">${player.isOccupied ? (player.isReady ? 'Ready to launch' : 'Not ready yet') : 'Open slot'}</div>
+      <div class="player-state">${player.isOccupied ? (player.isReserved ? 'Reconnect window active' : player.isConnected ? (player.isReady ? 'Ready to launch' : 'Not ready yet') : 'Temporarily offline') : 'Open slot'}</div>
     `;
     playersEl.appendChild(card);
   }
@@ -392,16 +471,16 @@ function renderLobby(state) {
 
   if (gameplayFocused) {
     gamePhaseLabel.textContent = state.phase === 'starting' ? 'Countdown' : state.phase === 'game-over' ? 'Game over' : 'In progress';
-    gameStatusInlineEl.textContent = state.phase === 'starting'
+    gameStatusInlineEl.textContent = describeReconnect(state) || (state.phase === 'starting'
       ? 'Match starts in moments.'
       : state.phase === 'game-over'
         ? 'Round complete.'
-        : 'Game live.';
-    gameMessageEl.textContent = state.phase === 'starting'
+        : 'Game live.');
+    gameMessageEl.textContent = describeReconnect(state) || (state.phase === 'starting'
       ? 'Both players are ready. Transitioning into gameplay.'
       : state.phase === 'game-over'
         ? 'Round finished. Choose rematch or wait for room changes.'
-        : 'Gameplay screen active. Lobby is fully hidden during the match.';
+        : 'Gameplay screen active. Lobby is fully hidden during the match.');
   }
 
   renderRematch(state.rematch, state.phase);
@@ -486,9 +565,9 @@ function renderGame(state, perSlotResult) {
     applyPhaseTheme('countdown', 'neutral');
   } else if (state.phase === 'in-progress') {
     gamePhaseLabel.textContent = 'In progress';
-    gameStatusInlineEl.textContent = 'Game live.';
+    gameStatusInlineEl.textContent = describeReconnect(state) || 'Game live.';
     countdownLabel.textContent = `Tick: ${state.tickNumber}`;
-    gameMessageEl.textContent = 'Avoid walls, avoid bodies, and race for the shared food.';
+    gameMessageEl.textContent = describeReconnect(state) || 'Avoid walls, avoid bodies, and race for the shared food.';
     applyPhaseTheme('live', 'neutral');
   } else {
     gamePhaseLabel.textContent = 'Game over';
