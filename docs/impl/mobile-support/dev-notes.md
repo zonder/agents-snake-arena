@@ -7,6 +7,7 @@
 - Kept sound behavior client-side and unchanged in principle; touch interactions now also attempt audio unlock.
 
 ## Implementation details
+- Follow-up defect fix: room-code copy previously depended only on `navigator.clipboard.writeText`, which can fail in insecure contexts, embedded browsers, or permission-blocked sessions even when the UI is otherwise functional. The client now falls back to a hidden textarea + `document.execCommand('copy')` path and shows a manual-copy hint if both approaches fail.
 - Introduced `requestDirection(direction, source)` so keyboard, swipe, and on-screen buttons converge on one path.
 - Added a light local direction prefilter against the current/pending direction to avoid sending obvious instant-reverse inputs while still relying on server validation as the source of truth.
 - Applied `touch-action: none` only to `.game-stage` while touch controls are active, leaving the rest of the page scroll-friendly.

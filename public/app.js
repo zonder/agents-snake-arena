@@ -212,21 +212,94 @@ document.getElementById('joinRoomButton').addEventListener('click', () => {
   socket.emit('room:join', { roomCode: roomCodeInput.value });
 });
 
+function focusWithoutScroll(element) {
+  if (!element || typeof element.focus !== 'function') {
+    return;
+  }
+
+  try {
+    element.focus({ preventScroll: true });
+  } catch {
+    element.focus();
+  }
+}
+
+function copyTextWithExecCommand(text) {
+  if (!document.body || typeof document.execCommand !== 'function') {
+    return false;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.setAttribute('aria-hidden', 'true');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '-9999px';
+  textarea.style.opacity = '0';
+
+  const selection = document.getSelection();
+  const originalRange = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+  const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+  document.body.appendChild(textarea);
+  focusWithoutScroll(textarea);
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  let copied = false;
+  try {
+    copied = document.execCommand('copy');
+  } catch {
+    copied = false;
+  } finally {
+    textarea.remove();
+    if (selection) {
+      selection.removeAllRanges();
+      if (originalRange) {
+        selection.addRange(originalRange);
+      }
+    }
+    focusWithoutScroll(activeElement);
+  }
+
+  return copied;
+}
+
+async function writeTextToClipboard(text) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to the legacy copy path below. Some browsers expose the API
+      // but block it in embedded/insecure contexts or without the right permission.
+    }
+  }
+
+  return copyTextWithExecCommand(text);
+}
+
+function setCopyFeedback(message) {
+  statusEl.textContent = message;
+  if (!gamePanelEl.classList.contains('hidden')) {
+    gameStatusInlineEl.textContent = message;
+  }
+}
+
 async function copyActiveRoomCode() {
   const roomCode = latestLobbyState?.roomCode || latestGameState?.roomCode;
   if (!roomCode) return;
-  try {
-    await navigator.clipboard.writeText(roomCode);
-    const copiedText = 'Room code copied.';
-    statusEl.textContent = copiedText;
-    if (!gamePanelEl.classList.contains('hidden')) {
-      gameStatusInlineEl.textContent = copiedText;
-    }
+
+  const copied = await writeTextToClipboard(roomCode);
+  if (copied) {
+    setCopyFeedback('Room code copied.');
     audioManager.play('ui.copy');
     pulseConfirmation(soundToggleButton, false);
-  } catch {
-    statusEl.textContent = 'Could not copy room code in this browser.';
+    return;
   }
+
+  setCopyFeedback('Could not copy automatically. Select the room code and copy it manually.');
 }
 
 document.getElementById('copyRoomCodeButton').addEventListener('click', copyActiveRoomCode);
