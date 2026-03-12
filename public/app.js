@@ -504,6 +504,7 @@ function renderGame(state, perSlotResult) {
 
 function showScreen(screen) {
   const gameplayActive = screen === 'gameplay';
+  const screenChanged = uiState.screen !== screen;
   uiState.screen = screen;
   entryEl.classList.toggle('hidden', screen !== 'entry');
   lobbyEl.classList.toggle('hidden', screen !== 'lobby');
@@ -512,6 +513,13 @@ function showScreen(screen) {
   panelTopEl.classList.toggle('hidden', gameplayActive);
   statusEl.classList.toggle('hidden', gameplayActive);
   errorEl.classList.toggle('hidden', gameplayActive || !errorEl.textContent);
+
+  if (gameplayActive && screenChanged) {
+    panelEl.scrollTop = 0;
+    gamePanelEl.scrollTop = 0;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }
+
   syncResponsiveUi();
 }
 
@@ -723,8 +731,14 @@ function renderAudioToggle() {
 
 function getLayoutMode() {
   const width = window.innerWidth;
+  const height = window.innerHeight;
   const portrait = window.matchMedia('(orientation: portrait)').matches;
-  if (width <= 768) return portrait ? 'mobile-portrait' : 'mobile-landscape';
+  const shortEdge = Math.min(width, height);
+  const longEdge = Math.max(width, height);
+  const touchPreferred = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+
+  const phoneSized = shortEdge <= 480 || (touchPreferred && shortEdge <= 540 && longEdge <= 980);
+  if (phoneSized) return portrait ? 'mobile-portrait' : 'mobile-landscape';
   if (width <= 1100) return 'tablet';
   return 'desktop';
 }

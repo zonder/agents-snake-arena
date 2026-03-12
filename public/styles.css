@@ -462,6 +462,7 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   .app { padding: 10px; place-items: start center; }
   .panel, .panel.gameplay-active { width: 100%; min-height: calc(100dvh - 20px); }
   .panel[data-layout-mode="mobile-portrait"] { --panel-padding: 14px; }
+  .panel[data-layout-mode="mobile-landscape"] { --panel-padding: 12px; }
   .panel[data-layout-mode^="mobile"] .status,
   .panel[data-layout-mode^="mobile"] .error,
   .panel[data-layout-mode^="mobile"] .badge { margin-top: 10px; }
@@ -495,7 +496,13 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
   }
-  .panel[data-layout-mode="mobile-landscape"] .game-stage { width: min(100%, 62vh); max-height: 62vh; }
+  .panel[data-layout-mode="mobile-landscape"] .game-stage {
+    width: min(100%, calc(100dvh - 120px), 420px);
+    max-height: calc(100dvh - 120px);
+    margin-inline: auto;
+  }
+  .panel[data-layout-mode="mobile-landscape"] .touch-controls { width: min(100%, 320px); gap: 8px; }
+  .panel[data-layout-mode="mobile-landscape"] .touch-control { min-height: 48px; }
   .panel[data-layout-mode^="mobile"] .post-game-banner {
     position: relative;
     top: auto;
