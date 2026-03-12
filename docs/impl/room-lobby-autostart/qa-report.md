@@ -4,12 +4,12 @@
 - Parent issue: #3
 - PR: #7
 - Branch: `feature/issue-3`
-- Dev URL tested: `http://20.106.185.110:8081/`
+- Dev URL tested: `https://dev.snakearena.website/`
 - QA verdict: **PASS**
 - Test date: 2026-03-11 UTC
 
 ## Test approach
-- Exercised the deployed app over its live Socket.IO endpoint using direct Engine.IO / Socket.IO polling requests against `http://20.106.185.110:8081/socket.io/`.
+- Exercised the deployed app over its live Socket.IO endpoint using direct Engine.IO / Socket.IO polling requests against `https://dev.snakearena.website/socket.io/`.
 - Verified the deployed UI shell over HTTP for player-facing controls and lobby messaging.
 - Read the approved spec and implementation artifacts in `docs/impl/room-lobby-autostart/`.
 - Did **not** modify application source code.

@@ -5,7 +5,7 @@
 - PR: #16
 - Branch: `feature/issue-13`
 - Feature slug: `replay-rematch-flow`
-- Environment: dev (`http://20.106.185.110:8081/`)
+- Environment: dev (`https://dev.snakearena.website/`)
 - QA verdict: **PASS**
 - QA date (UTC): 2026-03-12
 
@@ -59,7 +59,7 @@
 cd /home/rootagent/openclaw-startup-factory/openclaw/state/checkouts/qa/current
 npm ci
 npm test -- src/server/__tests__/roomService.test.ts
-curl -fsSL http://20.106.185.110:8081/app.js | rg "Accept rematch now|Waiting for other player|Your opponent wants a rematch|Rematch starting"
+curl -fsSL https://dev.snakearena.website/app.js | rg "Accept rematch now|Waiting for other player|Your opponent wants a rematch|Rematch starting"
 node /tmp/qa13-live/live-rematch-check.mjs
 node /tmp/qa13-live/live-postgame-leave-check.mjs
 ```

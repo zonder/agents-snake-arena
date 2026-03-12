@@ -1,6 +1,6 @@
 {
   "checkedAt": "2026-03-12T15:30:06.985Z",
-  "baseUrl": "http://20.106.185.110:8081/",
+  "baseUrl": "https://dev.snakearena.website/",
   "roomCode": "YAHM",
   "before": {
     "buildMarker": "Build: v0.1.0+6d384f0",

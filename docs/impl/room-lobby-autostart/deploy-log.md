@@ -129,7 +129,7 @@ If a longer-lived or branded URL is needed later, the minimal follow-up would be
 ## Production deployment update (main)
 - Deployed branch: `main`
 - Deployed commit: `f739a5a` (`Merge pull request #7 from zonder/feature/issue-3`)
-- Production URL: `http://20.106.185.110/`
+- Production URL: `https://snakearena.website/`
 - Runtime: `pm2` process `app-prod` behind nginx on port 80, forwarding to local app on port 3000
 
 ### Production deployment actions
@@ -150,14 +150,14 @@ Checks:
 ```bash
 pm2 list
 curl -I http://127.0.0.1:3000/
-curl -I http://20.106.185.110/
-curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'
+curl -I https://snakearena.website/
+curl 'https://snakearena.website/socket.io/?EIO=4&transport=polling'
 ```
 
 Results:
 - `app-prod` is `online` in PM2 ✅
 - local app on `http://127.0.0.1:3000/` returned `HTTP/1.1 200 OK` ✅
-- public prod URL `http://20.106.185.110/` returned `HTTP/1.1 200 OK` via nginx ✅
+- public prod URL `https://snakearena.website/` returned `HTTP/1.1 200 OK` via nginx ✅
 - Socket.IO polling handshake returned a valid session payload ✅
 
 ### Production blocker resolved during deploy

@@ -5,7 +5,7 @@
 - **PR:** #66
 - **Branch:** `feature/issue-63`
 - **Feature slug:** `disconnect-reconnect-handling`
-- **Environment:** `http://20.106.185.110:8081/`
+- **Environment:** `https://dev.snakearena.website/`
 - **QA verdict:** **PASS**
 - **Test date (UTC):** 2026-03-12
 - **Method:** Live end-to-end socket-level validation against the deployed dev environment using real multi-client reconnect flows.

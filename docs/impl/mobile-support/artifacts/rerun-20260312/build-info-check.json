@@ -1,1 +1,1 @@
-{"checkedAt":"2026-03-12T12:42:30Z","url":"http://20.106.185.110:8081/build-info.json","expectedCommit":"6bc1a83","actualBuild":{"version":"0.1.0","commit":"da6c72f","builtAt":"2026-03-12T11:03:44.888Z","displayVersion":"v0.1.0+da6c72f"}}
+{"checkedAt":"2026-03-12T12:42:30Z","url":"https://dev.snakearena.website/build-info.json","expectedCommit":"6bc1a83","actualBuild":{"version":"0.1.0","commit":"da6c72f","builtAt":"2026-03-12T11:03:44.888Z","displayVersion":"v0.1.0+da6c72f"}}

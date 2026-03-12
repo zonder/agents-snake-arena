@@ -17,7 +17,7 @@ The dev environment was first verified via `/build-info.json`, which returned th
 Result: **phone portrait is usable, phone landscape is now board-first and fully within the viewport, layout-mode selection is correct, touch controls remain available, and desktop behavior remains intact.**
 
 ## Build verification
-- `http://20.106.185.110:8081/build-info.json` returned `v0.1.0+6d384f0` built at `2026-03-12T15:26:26.964Z`.
+- `https://dev.snakearena.website/build-info.json` returned `v0.1.0+6d384f0` built at `2026-03-12T15:26:26.964Z`.
 - The browser rerun evidence was captured against that live build.
 - Build verification artifact: `docs/impl/mobile-support/artifacts/rerun-20260312-6d384f0/build-info-check.json`
 

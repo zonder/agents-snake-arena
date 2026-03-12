@@ -1,6 +1,6 @@
 {
   "checkedAt": "2026-03-12T15:19:05Z",
-  "url": "http://20.106.185.110:8081/build-info.json",
+  "url": "https://dev.snakearena.website/build-info.json",
   "expectedFixCommit": "043c2c9",
   "actualBuild": {"version":"0.1.0","commit":"4109c81","builtAt":"2026-03-12T15:11:46.352Z","displayVersion":"v0.1.0+4109c81"}
 }

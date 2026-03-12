@@ -5,7 +5,7 @@
 - PR: #28
 - Branch: `feature/issue-25`
 - Feature slug: `uiux-polish-pass`
-- Dev URL: http://20.106.185.110:8081/
+- Dev URL: https://dev.snakearena.website/
 - QA date (UTC): 2026-03-12
 - Verdict: **PASS**
 

@@ -6,7 +6,7 @@
 - Branch: `feature/issue-40`
 - Feature slug: `mobile-support`
 - Environment: `dev`
-- Dev URL: `http://20.106.185.110:8081/`
+- Dev URL: `https://dev.snakearena.website/`
 - Deployed commit: `a82b2543e0a77e337c4c8ce5ec62becadef1e036` (`a82b254`)
 - Previous dev commit: `e0a69e1faa73db80ddecde945d0d92f1e22aa108` (`e0a69e1`)
 - Deployed at (UTC): `2026-03-12T10:45:53Z`
@@ -27,8 +27,8 @@ pm2 save
 ## Health verification
 - `pm2 list` showed `app-dev` online after restart.
 - `curl -I http://127.0.0.1:3001/` returned `HTTP/1.1 200 OK`.
-- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
-- `curl http://20.106.185.110:8081/build-info.json` returned build marker `v0.1.0+a82b254`.
+- `curl -I https://dev.snakearena.website/` returned `HTTP/1.1 200 OK`.
+- `curl https://dev.snakearena.website/build-info.json` returned build marker `v0.1.0+a82b254`.
 - The deployed HTML includes visible build marker elements:
   - `#buildMarker` with `Build: loading…`
   - `#gameBuildMarker` with `Build: loading…`
@@ -44,7 +44,7 @@ pm2 save
 | Branch | `feature/issue-40` |
 | Environment | `dev` |
 | PM2 Process | `app-dev` |
-| URL | `http://20.106.185.110:8081/` |
+| URL | `https://dev.snakearena.website/` |
 | Timestamp | `2026-03-12T10:45:53Z` |
 | Status | `SUCCESS` |
 
@@ -65,7 +65,7 @@ pm2 save
 | Branch | `feature/issue-40` |
 | Environment | `dev` |
 | PM2 Process | `app-dev` |
-| URL | `http://20.106.185.110:8081/` |
+| URL | `https://dev.snakearena.website/` |
 | Timestamp | `2026-03-12T11:03:20Z` |
 | Status | `SUCCESS` |
 
@@ -74,7 +74,7 @@ pm2 save
 - Trigger: repair malformed deploy record and confirm latest mobile layout fix refresh deploy
 - Branch head before correction commit: 8051c918e699b6861e45b5d42619b695b87468b5 (8051c91)
 - Verified live before correction commit via /build-info.json: 8051c91
-- Dev URL: http://20.106.185.110:8081/
+- Dev URL: https://dev.snakearena.website/
 - Result before correction commit: SUCCESS
 
 ## QA-unblock refresh redeploy — 2026-03-12T14:09:26Z
@@ -82,7 +82,7 @@ pm2 save
 - Previous dev commit: `e2215d39bcf0664a01ce5838f0fa495dd0823ba3` (`e2215d3`)
 - Requested fix commit: `2510a99cb22a34abdf57a7f070301ba91f644e45` (`2510a99`)
 - Deployed commit: `2510a99cb22a34abdf57a7f070301ba91f644e45` (`2510a99`)
-- Verified live via `http://20.106.185.110:8081/build-info.json` and matching served `/app.js` SHA-256
+- Verified live via `https://dev.snakearena.website/build-info.json` and matching served `/app.js` SHA-256
 - Result: `SUCCESS`
 
 ## QA-unblock refresh redeploy — 2026-03-12T15:10:49Z
@@ -90,7 +90,7 @@ pm2 save
 - Previous dev commit: `e9b8c7157867fdacfff6655e00f89ddb9680a1d4` (`e9b8c71`)
 - Requested fix commit: `043c2c98985139d6f5befbf7eb64c6f192a0fad9` (`043c2c9`)
 - Deployed commit: `043c2c98985139d6f5befbf7eb64c6f192a0fad9` (`043c2c9`)
-- Verified live via `http://20.106.185.110:8081/build-info.json` returning `v0.1.0+043c2c9`
+- Verified live via `https://dev.snakearena.website/build-info.json` returning `v0.1.0+043c2c9`
 - Verified served `/app.js` SHA-256 matched deployed file SHA-256: `e7ba62e25d7f1fa8c26d296aa20fda0c524e6941d838b0653935f59ecb08bbbe`
 - Result: `SUCCESS`
 
@@ -103,7 +103,7 @@ pm2 save
 | Branch | `feature/issue-40` |
 | Environment | `dev` |
 | PM2 Process | `app-dev` |
-| URL | `http://20.106.185.110:8081/` |
+| URL | `https://dev.snakearena.website/` |
 | Timestamp | `2026-03-12T15:10:49Z` |
 | Status | `SUCCESS` |
 
@@ -112,7 +112,7 @@ pm2 save
 - Previous dev commit: `4109c81cddc6e8fe7dcd1df581b2fbb55477c8c2` (`4109c81`)
 - Requested fix commit: `6d384f0c1cd1221a542fcd34ca755ccf0a239667` (`6d384f0`)
 - Deployed commit: `6d384f0c1cd1221a542fcd34ca755ccf0a239667` (`6d384f0`)
-- Verified live via `http://20.106.185.110:8081/build-info.json` returning `v0.1.0+6d384f0`
+- Verified live via `https://dev.snakearena.website/build-info.json` returning `v0.1.0+6d384f0`
 - Verified served `/app.js` SHA-256 matched deployed file SHA-256: `e7ba62e25d7f1fa8c26d296aa20fda0c524e6941d838b0653935f59ecb08bbbe`
 - Result: `SUCCESS`
 
@@ -125,7 +125,7 @@ pm2 save
 | Branch | `feature/issue-40` |
 | Environment | `dev` |
 | PM2 Process | `app-dev` |
-| URL | `http://20.106.185.110:8081/` |
+| URL | `https://dev.snakearena.website/` |
 | Timestamp | `2026-03-12T15:27:35Z` |
 | Status | `SUCCESS` |
 
@@ -134,7 +134,7 @@ pm2 save
 - Trigger: deploy merged PR #43 / parent issue #40 from `main`
 - Previous prod commit: `a5a0b41eea8278981ce65bd0e7b8f9de70b1fc36` (`a5a0b41`)
 - Deployed commit: `9c3181e` (served build marker), repo HEAD `9c3181ee2668f6fe7c6f631f405f151e0e9072c8` (`9c3181e`)
-- Production URL: `http://20.106.185.110/`
+- Production URL: `https://snakearena.website/`
 - Runtime: `pm2` process `app-prod` behind nginx on port `80`, forwarding to local app on port `3000`
 
 ### Production deployment actions
@@ -150,9 +150,9 @@ pm2 save
 ```
 
 ### Production health-check results
-- `curl -I http://20.106.185.110/` returned `HTTP/1.1 200 OK`.
-- `curl http://20.106.185.110/build-info.json` returned `{"version": "0.1.0", "commit": "9c3181e", "builtAt": "2026-03-12T15:38:19.609Z", "displayVersion": "v0.1.0+9c3181e"}`.
-- `curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
+- `curl -I https://snakearena.website/` returned `HTTP/1.1 200 OK`.
+- `curl https://snakearena.website/build-info.json` returned `{"version": "0.1.0", "commit": "9c3181e", "builtAt": "2026-03-12T15:38:19.609Z", "displayVersion": "v0.1.0+9c3181e"}`.
+- `curl 'https://snakearena.website/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
 - Served HTML still contains the visible build marker and mobile touch controls markup.
 - Served `/app.js` still contains `mobile-portrait` / `mobile-landscape` layout handling.
 - `pm2` reports `app-prod` online after restart.
@@ -169,7 +169,7 @@ pm2 save
 | Branch | `main` |
 | Environment | `prod` |
 | PM2 Process | `app-prod` |
-| URL | `http://20.106.185.110/` |
+| URL | `https://snakearena.website/` |
 | Timestamp | `2026-03-12T15:38:47Z` |
 | Status | `SUCCESS` |
 

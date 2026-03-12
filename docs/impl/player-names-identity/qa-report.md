@@ -4,7 +4,7 @@
 - PR: #76
 - Branch: `feature/issue-73`
 - Feature slug: `player-names-identity`
-- Environment: dev (`http://20.106.185.110:8081/`)
+- Environment: dev (`https://dev.snakearena.website/`)
 - QA date (UTC): 2026-03-12
 - Verdict: **PASS**
 

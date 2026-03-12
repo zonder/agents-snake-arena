@@ -1,6 +1,6 @@
 {
   "checkedAt": "2026-03-12T14:16:08Z",
-  "url": "http://20.106.185.110:8081/build-info.json",
+  "url": "https://dev.snakearena.website/build-info.json",
   "expectedBranch": "feature/issue-40",
   "expectedFixCommit": "2510a99",
   "actualBuild": {

@@ -8,8 +8,8 @@
 | prod | app-prod | 3000 | :80 | main | After final approval |
 
 ### URLs
-- Dev: http://20.106.185.110:8081
-- Prod: http://20.106.185.110
+- Dev: https://dev.snakearena.website
+- Prod: https://snakearena.website
 
 ## Infrastructure
 - VM: Azure Ubuntu 24.04, 2 vCPU, 8GB RAM

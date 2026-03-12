@@ -6,7 +6,7 @@
 - Branch: `feature/issue-10`
 - Feature slug: `core-gameplay-loop`
 - Environment: `dev`
-- Dev URL: `http://20.106.185.110:8081/`
+- Dev URL: `https://dev.snakearena.website/`
 - Deployed commit: `d9b11bb`
 - Deployed at (UTC): `2026-03-11 22:54`
 
@@ -38,8 +38,8 @@ Results:
 ```bash
 pm2 list
 curl -I http://127.0.0.1:3001/
-curl -I http://20.106.185.110:8081/
-curl 'http://20.106.185.110:8081/socket.io/?EIO=4&transport=polling'
+curl -I https://dev.snakearena.website/
+curl 'https://dev.snakearena.website/socket.io/?EIO=4&transport=polling'
 ```
 
 Results:
@@ -72,7 +72,7 @@ This confirms the deployed environment is serving both the app shell and the gam
 - Previous deployed commit found on server checkout: `d9b11bb`
 - Refreshed deployed commit: `e7397cb` (`Hide lobby UI during active game states`)
 - Refreshed at (UTC): `2026-03-11 23:33`
-- Dev URL: `http://20.106.185.110:8081/`
+- Dev URL: `https://dev.snakearena.website/`
 
 ### Refresh actions
 ```bash
@@ -93,8 +93,8 @@ pm2 save
 - `npm run build` passed.
 - `pm2 list` shows `app-dev` online after restart.
 - `curl -I http://127.0.0.1:3001/` returned `HTTP/1.1 200 OK` after warm-up.
-- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
-- Live `http://20.106.185.110:8081/app.js` now contains the updated gameplay-screen switch:
+- `curl -I https://dev.snakearena.website/` returned `HTTP/1.1 200 OK`.
+- Live `https://dev.snakearena.website/app.js` now contains the updated gameplay-screen switch:
   - `const gameplayFocused = state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';`
   - `showScreen(gameplayFocused ? 'gameplay' : 'lobby');`
 
@@ -110,7 +110,7 @@ pm2 save
 - Refreshed deployed commit:   - full:                                                                 d006d267a1a8bd1665b533ccedb200fbedcda739
   - short:     d006d26
 - Refreshed at (UTC):   2026-03-11 23:57
-- Dev URL:   http://20.106.185.110:8081/
+- Dev URL:   https://dev.snakearena.website/
 
 ### Refresh validation
 - Dev deploy checkout reset to       origin/feature/issue-10 at   d006d26.
@@ -118,7 +118,7 @@ pm2 save
 - npm run build passed.
 - pm2 restart completed with               app-dev online.
 - Local health check on http://127.0.0.1:3001/ returned HTTP 200.
-- Public health check on http://20.106.185.110:8081/ returned HTTP 200.
+- Public health check on https://dev.snakearena.website/ returned HTTP 200.
 - Socket.IO polling handshake succeeded on /socket.io/.
 - Live /build-info.json returned:       {"version":"0.1.0","commit":"d006d26","builtAt":"2026-03-11T23:56:25.465Z","displayVersion":"v0.1.0+d006d26"}
 - Live /app.js contains gameplay-focused screen switching:   yes
@@ -131,7 +131,7 @@ pm2 save
 - Parent issue: `#10`
 - PR: `#12`
 - Branch: `main`
-- Production URL: `http://20.106.185.110/`
+- Production URL: `https://snakearena.website/`
 - Previous prod commit: `f739a5a`
 - Deployed commit:
   - full: `78f050b434597c234072e17d20d5ef27109cbd30`
@@ -155,9 +155,9 @@ pm2 save
 ### Production health-check results
 - `pm2 list` shows `app-prod` online after restart.
 - `curl -I http://127.0.0.1:3000/` returned `HTTP/1.1 200 OK`.
-- `curl -I http://20.106.185.110/` returned `HTTP/1.1 200 OK` via nginx.
-- `curl http://20.106.185.110/build-info.json` returned `{"version":"0.1.0","commit":"78f050b","builtAt":"2026-03-12T00:07:52.698Z","displayVersion":"v0.1.0+78f050b"}`.
-- `curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
+- `curl -I https://snakearena.website/` returned `HTTP/1.1 200 OK` via nginx.
+- `curl https://snakearena.website/build-info.json` returned `{"version":"0.1.0","commit":"78f050b","builtAt":"2026-03-12T00:07:52.698Z","displayVersion":"v0.1.0+78f050b"}`.
+- `curl 'https://snakearena.website/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
 - PM2 app output now reports: `Room lobby server listening on http://localhost:3000 (v0.1.0+78f050b)`.
 
 ### Notes

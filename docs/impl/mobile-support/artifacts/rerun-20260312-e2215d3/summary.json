@@ -1,6 +1,6 @@
 {
   "checkedAt": "2026-03-12T13:06:45.939Z",
-  "baseUrl": "http://20.106.185.110:8081/",
+  "baseUrl": "https://dev.snakearena.website/",
   "mobile": {
     "entryHost": {
       "label": "mobile-entry-host",

@@ -4,7 +4,7 @@
 PASS
 
 ## Scope
-QA for parent issue #10 against dev deployment `http://20.106.185.110:8081/` on branch `feature/issue-10` / PR #12.
+QA for parent issue #10 against dev deployment `https://dev.snakearena.website/` on branch `feature/issue-10` / PR #12.
 
 ## Test approach
 - Reviewed approved parent issue and implementation artifacts in `docs/impl/core-gameplay-loop/`.

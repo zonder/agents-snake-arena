@@ -6,7 +6,7 @@
 - Branch: `feature/issue-73`
 - Feature slug: `player-names-identity`
 - Environment: dev
-- Dev URL: `http://20.106.185.110:8081/`
+- Dev URL: `https://dev.snakearena.website/`
 - Deployed commit: `aa97a7e0112f1f1f328687a79d2aeab1de5ab98a` (`aa97a7e`)
 - Deployed at (UTC): `2026-03-12T18:48:41Z`
 - Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
@@ -24,8 +24,8 @@ pm2 save
 ```
 
 ## Health verification
-- `curl -I http://20.106.185.110:8081/` returned HTTP 200.
-- `curl http://20.106.185.110:8081/build-info.json` returned build marker `v0.1.0+aa97a7e` after the final artifact-refresh redeploy.
+- `curl -I https://dev.snakearena.website/` returned HTTP 200.
+- `curl https://dev.snakearena.website/build-info.json` returned build marker `v0.1.0+aa97a7e` after the final artifact-refresh redeploy.
 - Deployed HTML contains visible build-marker placeholders:
   - `#buildMarker` with text `Build: loading…` before hydration.
   - `#gameBuildMarker` with text `Build: loading…` before hydration.
@@ -45,7 +45,7 @@ pm2 save
 | Branch | `feature/issue-73` |
 | Environment | dev |
 | PM2 Process | `app-dev` |
-| URL | `http://20.106.185.110:8081/` |
+| URL | `https://dev.snakearena.website/` |
 | Timestamp | `2026-03-12T18:48:41Z` |
 | Status | SUCCESS |
 
@@ -56,7 +56,7 @@ pm2 save
 - Branch: `main`
 - Previous prod commit: `662b4b9`
 - Deployed commit: `13288ac3ec87a3cd3903e7c935064cb3045243c2` (`13288ac`)
-- Production URL: `http://20.106.185.110/`
+- Production URL: `https://snakearena.website/`
 - Deployed at (UTC): `2026-03-12T19:18:41Z`
 - Runtime: `pm2` process `app-prod` behind nginx on port `80`, forwarding to local app on port `3000`
 
@@ -73,9 +73,9 @@ pm2 save
 ```
 
 ### Production health-check results
-- `curl -I http://20.106.185.110/` returned `HTTP/1.1 200 OK` via nginx.
-- `curl http://20.106.185.110/build-info.json` returned `{"version":"0.1.0","commit":"13288ac","builtAt":"2026-03-12T19:18:41.105Z","displayVersion":"v0.1.0+13288ac"}`.
-- `curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
+- `curl -I https://snakearena.website/` returned `HTTP/1.1 200 OK` via nginx.
+- `curl https://snakearena.website/build-info.json` returned `{"version":"0.1.0","commit":"13288ac","builtAt":"2026-03-12T19:18:41.105Z","displayVersion":"v0.1.0+13288ac"}`.
+- `curl 'https://snakearena.website/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
 - Served HTML still exposes the visible build-marker placeholders `#buildMarker` and `#gameBuildMarker` before hydration.
 - Served `/app.js` confirms the player-name feature wiring is live in prod:
   - local persistence key `snake:player-name`
@@ -96,6 +96,6 @@ pm2 save
 | Branch | `main` |
 | Environment | `prod` |
 | PM2 Process | `app-prod` |
-| URL | `http://20.106.185.110/` |
+| URL | `https://snakearena.website/` |
 | Timestamp | `2026-03-12T19:18:41Z` |
 | Status | `SUCCESS` |

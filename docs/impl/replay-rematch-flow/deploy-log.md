@@ -6,7 +6,7 @@
 - Branch: `feature/issue-13`
 - Feature slug: `replay-rematch-flow`
 - Environment: `dev`
-- Dev URL: `http://20.106.185.110:8081/`
+- Dev URL: `https://dev.snakearena.website/`
 - Deployed commit: `ec7474c03b459df85bc5549a69293244b04838ab` (`ec7474c`)
 - Deployed at (UTC): `2026-03-12T00:44:35Z`
 - Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
@@ -25,8 +25,8 @@ pm2 save
 
 ## Health checks
 - `pm2 list` showed `app-dev` online after restart.
-- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
-- `curl http://20.106.185.110:8081/build-info.json` returned build marker `v0.1.0+ec7474c`.
+- `curl -I https://dev.snakearena.website/` returned `HTTP/1.1 200 OK`.
+- `curl https://dev.snakearena.website/build-info.json` returned build marker `v0.1.0+ec7474c`.
 - Deployed `app.js` at the dev URL includes the rematch UI / transport wiring for:
   - `game:rematch-request`
   - `game:rematch-state`
@@ -62,7 +62,7 @@ Verification result: **PASS**
 | Branch | `feature/issue-13` |
 | Environment | `dev` |
 | PM2 Process | `app-dev` |
-| URL | `http://20.106.185.110:8081/` |
+| URL | `https://dev.snakearena.website/` |
 | Timestamp | `2026-03-12T00:44:35Z` |
 | Status | `SUCCESS` |
 
@@ -77,7 +77,7 @@ Verification result: **PASS**
 - `npm ci && npm run build` completed successfully
 - `pm2 restart app-dev --update-env` completed successfully
 - `curl http://127.0.0.1:3001/` returned `200`
-- `curl http://20.106.185.110:8081/` returned `200`
+- `curl https://dev.snakearena.website/` returned `200`
 - Served `/app.js` SHA-256 matched the deployed file SHA-256: `e7f4149980ef5fece49e86cb86448c70855c634b79d76f7365da02a4dd618815`
 - Served asset contains the rematch CTA visibility fix strings:
   - `Accept rematch now`
@@ -93,7 +93,7 @@ Verification result: **PASS**
 | Branch | `feature/issue-13` |
 | Environment | `dev` |
 | PM2 Process | `app-dev` |
-| URL | `http://20.106.185.110:8081/` |
+| URL | `https://dev.snakearena.website/` |
 | Timestamp | `2026-03-12T01:00:26Z` |
 | Status | `SUCCESS` |
 
@@ -104,7 +104,7 @@ Verification result: **PASS**
 - Branch: `main`
 - Previous prod commit: `78f050b434597c234072e17d20d5ef27109cbd30` (`78f050b`)
 - Deployed commit: `10055d5ceaad6312ee2c53f48f5a763d607d5150` (`10055d5`)
-- Production URL: `http://20.106.185.110/`
+- Production URL: `https://snakearena.website/`
 - Deployed at (UTC): `2026-03-12T08:22:05Z`
 - Runtime: `pm2` process `app-prod` behind nginx on port `80`, forwarding to local app on port `3000`
 
@@ -122,9 +122,9 @@ pm2 save
 
 ### Production health-check results
 - `pm2 list` showed `app-prod` online after restart.
-- `curl -I http://20.106.185.110/` returned `HTTP/1.1 200 OK` via nginx.
-- `curl http://20.106.185.110/build-info.json` returned `{"version":"0.1.0","commit":"10055d5","builtAt":"2026-03-12T08:22:05.692Z","displayVersion":"v0.1.0+10055d5"}`.
-- `curl 'http://20.106.185.110/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
+- `curl -I https://snakearena.website/` returned `HTTP/1.1 200 OK` via nginx.
+- `curl https://snakearena.website/build-info.json` returned `{"version":"0.1.0","commit":"10055d5","builtAt":"2026-03-12T08:22:05.692Z","displayVersion":"v0.1.0+10055d5"}`.
+- `curl 'https://snakearena.website/socket.io/?EIO=4&transport=polling'` returned a valid Engine.IO / Socket.IO handshake payload.
 - Served `/app.js` contains the rematch-related UI/build markers:
   - `Accept rematch now`
   - `Waiting for other player`
@@ -145,6 +145,6 @@ pm2 save
 | Branch | `main` |
 | Environment | `prod` |
 | PM2 Process | `app-prod` |
-| URL | `http://20.106.185.110/` |
+| URL | `https://snakearena.website/` |
 | Timestamp | `2026-03-12T08:22:05Z` |
 | Status | `SUCCESS` |
