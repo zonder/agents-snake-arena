@@ -1,5 +1,6 @@
 # UI/UX Polish Pass — Dev Notes
 
+- QA regression fix: moved the polished post-game/rematch banner into an absolute overlay anchored within `.game-center` so result/rematch messaging no longer participates in document flow and cannot push the board downward between countdown, gameplay, and rematch states.
 ## Implementation summary
 - Reworked the vanilla frontend into a cleaner retro-arcade presentation system across entry, lobby, gameplay, result, and rematch states.
 - Added a derived UI/effects layer in `public/app.js` that compares previous vs next lobby/game/rematch payloads to trigger countdown pulses, score pops, board flashes, rematch highlights, and sound cues.
