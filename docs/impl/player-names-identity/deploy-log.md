@@ -18,10 +18,11 @@ pm2 <command> -h           help on a specific command
 Access pm2 files in ~/.pm2 process  behind nginx on port , forwarding to local app on port 
 
 ## Deployment actions
-Your branch is up to date with 'origin/feature/issue-73'.
-HEAD is now at 4d9b110 Add review cycle 2 for issue #73
+Your branch is behind 'origin/feature/issue-73' by 1 commit, and can be fast-forwarded.
+  (use "git pull" to update your local branch)
+HEAD is now at b46f6c0 Add dev deployment log for issue #73
 
-up to date, audited 76 packages in 701ms
+up to date, audited 76 packages in 723ms
 
 18 packages are looking for funding
   run `npm fund` for details
@@ -36,8 +37,8 @@ found 0 vulnerabilities
 ┌────┬─────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼─────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 1  │ app-dev     │ default     │ N/A     │ fork    │ 109178   │ 0s     │ 27   │ online    │ 0%       │ 22.7mb   │ rootage… │ disabled │
-│ 0  │ app-prod    │ default     │ N/A     │ fork    │ 105961   │ 55m    │ 89   │ online    │ 5.9%     │ 68.7mb   │ rootage… │ disabled │
+│ 1  │ app-dev     │ default     │ N/A     │ fork    │ 109378   │ 0s     │ 28   │ online    │ 0%       │ 21.9mb   │ rootage… │ disabled │
+│ 0  │ app-prod    │ default     │ N/A     │ fork    │ 105961   │ 56m    │ 89   │ online    │ 0%       │ 68.7mb   │ rootage… │ disabled │
 └────┴─────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 [PM2] Saving current process list...
 [PM2] Successfully saved in /home/rootagent/.pm2/dump.pm2
@@ -45,18 +46,20 @@ found 0 vulnerabilities
 ## Health verification
 - HTTP/1.1 502 Bad Gateway
 Server: nginx/1.24.0 (Ubuntu)
-Date: Thu, 12 Mar 2026 18:46:31 GMT
+Date: Thu, 12 Mar 2026 18:47:12 GMT
 Content-Type: text/html
 Content-Length: 166
 Connection: keep-alive
- returned HTTP 200.
+
+ returned HTTP 200.
 - <html>
 <head><title>502 Bad Gateway</title></head>
 <body>
 <center><h1>502 Bad Gateway</h1></center>
 <hr><center>nginx/1.24.0 (Ubuntu)</center>
 </body>
-</html> returned build marker .
+</html>
+ returned build marker  after the final artifact-refresh redeploy.
 - Deployed HTML contains visible build-marker placeholders:
   -  with text  before hydration.
   -  with text  before hydration.
@@ -65,7 +68,7 @@ Connection: keep-alive
   -  local persistence is present.
   -  is present with  placeholder UX.
   -  handling is present for duplicate-name-safe reconnect banners.
-- PM2 startup logs show: .
+- PM2 startup logs show the dev server listening on  for this branch.
 
 ## Deployment record
 
