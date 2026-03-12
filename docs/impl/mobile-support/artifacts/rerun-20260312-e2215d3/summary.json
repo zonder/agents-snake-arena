@@ -1,0 +1,917 @@
+{
+  "checkedAt": "2026-03-12T13:06:45.939Z",
+  "baseUrl": "http://20.106.185.110:8081/",
+  "mobile": {
+    "entryHost": {
+      "label": "mobile-entry-host",
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "panel": {
+        "phase": "entry",
+        "layoutMode": "mobile-portrait",
+        "orientation": "portrait",
+        "touch": "true",
+        "outcome": "neutral",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Connected. Create a room or join with a code.",
+      "lobbyMessage": "",
+      "gameMessage": "",
+      "roomCode": "----",
+      "touchControlsVisible": false,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": true
+        },
+        {
+          "label": "Move left",
+          "disabled": true
+        },
+        {
+          "label": "Move down",
+          "disabled": true
+        },
+        {
+          "label": "Move right",
+          "disabled": true
+        }
+      ],
+      "readyEnabled": true,
+      "rematchVisible": true,
+      "postGameVisible": false,
+      "boardRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "stageRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "heads": [],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 777
+    },
+    "entryGuest": {
+      "label": "mobile-entry-guest",
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "panel": {
+        "phase": "entry",
+        "layoutMode": "mobile-portrait",
+        "orientation": "portrait",
+        "touch": "true",
+        "outcome": "neutral",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Connected. Create a room or join with a code.",
+      "lobbyMessage": "",
+      "gameMessage": "",
+      "roomCode": "----",
+      "touchControlsVisible": false,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": true
+        },
+        {
+          "label": "Move left",
+          "disabled": true
+        },
+        {
+          "label": "Move down",
+          "disabled": true
+        },
+        {
+          "label": "Move right",
+          "disabled": true
+        }
+      ],
+      "readyEnabled": true,
+      "rematchVisible": true,
+      "postGameVisible": false,
+      "boardRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "stageRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "heads": [],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 777
+    },
+    "roomCode": "VHQV",
+    "lobbyHost": {
+      "label": "mobile-lobby-host",
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "panel": {
+        "phase": "lobby",
+        "layoutMode": "mobile-portrait",
+        "orientation": "portrait",
+        "touch": "false",
+        "outcome": "neutral",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Player 2 joined the room.",
+      "lobbyMessage": "Game starts automatically when both players are ready.",
+      "gameMessage": "",
+      "roomCode": "VHQV",
+      "touchControlsVisible": false,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": true
+        },
+        {
+          "label": "Move left",
+          "disabled": true
+        },
+        {
+          "label": "Move down",
+          "disabled": true
+        },
+        {
+          "label": "Move right",
+          "disabled": true
+        }
+      ],
+      "readyEnabled": true,
+      "rematchVisible": true,
+      "postGameVisible": false,
+      "boardRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "stageRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "heads": [],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 885
+    },
+    "lobbyGuest": {
+      "label": "mobile-lobby-guest",
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "panel": {
+        "phase": "lobby",
+        "layoutMode": "mobile-portrait",
+        "orientation": "portrait",
+        "touch": "true",
+        "outcome": "neutral",
+        "scrollY": 113
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Joined room.",
+      "lobbyMessage": "Game starts automatically when both players are ready.",
+      "gameMessage": "",
+      "roomCode": "VHQV",
+      "touchControlsVisible": false,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": true
+        },
+        {
+          "label": "Move left",
+          "disabled": true
+        },
+        {
+          "label": "Move down",
+          "disabled": true
+        },
+        {
+          "label": "Move right",
+          "disabled": true
+        }
+      ],
+      "readyEnabled": true,
+      "rematchVisible": true,
+      "postGameVisible": false,
+      "boardRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "stageRect": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "right": 0,
+        "bottom": 0
+      },
+      "heads": [],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 885
+    },
+    "gamePortraitHost": {
+      "label": "mobile-game-portrait-host",
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "panel": {
+        "phase": "countdown",
+        "layoutMode": "mobile-portrait",
+        "orientation": "portrait",
+        "touch": "false",
+        "outcome": "neutral",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Match starts in 3...",
+      "lobbyMessage": "Match starts in 3…",
+      "gameMessage": "Queue your opening turn now. Snakes stay still until the countdown ends.",
+      "roomCode": "VHQV",
+      "touchControlsVisible": true,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": false
+        },
+        {
+          "label": "Move left",
+          "disabled": false
+        },
+        {
+          "label": "Move down",
+          "disabled": false
+        },
+        {
+          "label": "Move right",
+          "disabled": false
+        }
+      ],
+      "readyEnabled": false,
+      "rematchVisible": true,
+      "postGameVisible": false,
+      "boardRect": {
+        "x": 38,
+        "y": 38,
+        "width": 314,
+        "height": 314,
+        "right": 352,
+        "bottom": 352
+      },
+      "stageRect": {
+        "x": 27,
+        "y": 27,
+        "width": 336,
+        "height": 336,
+        "right": 363,
+        "bottom": 363
+      },
+      "heads": [
+        {
+          "index": 457,
+          "className": "cell snake-0 head"
+        },
+        {
+          "index": 472,
+          "className": "cell snake-1 head"
+        }
+      ],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 1392
+    },
+    "gamePortraitGuest": {
+      "label": "mobile-game-portrait-guest",
+      "viewport": {
+        "width": 390,
+        "height": 664
+      },
+      "panel": {
+        "phase": "countdown",
+        "layoutMode": "mobile-portrait",
+        "orientation": "portrait",
+        "touch": "false",
+        "outcome": "neutral",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Match starts in 3...",
+      "lobbyMessage": "Match starts in 3…",
+      "gameMessage": "Queue your opening turn now. Snakes stay still until the countdown ends.",
+      "roomCode": "VHQV",
+      "touchControlsVisible": true,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": false
+        },
+        {
+          "label": "Move left",
+          "disabled": false
+        },
+        {
+          "label": "Move down",
+          "disabled": false
+        },
+        {
+          "label": "Move right",
+          "disabled": false
+        }
+      ],
+      "readyEnabled": false,
+      "rematchVisible": true,
+      "postGameVisible": false,
+      "boardRect": {
+        "x": 38,
+        "y": 38,
+        "width": 314,
+        "height": 314,
+        "right": 352,
+        "bottom": 352
+      },
+      "stageRect": {
+        "x": 27,
+        "y": 27,
+        "width": 336,
+        "height": 336,
+        "right": 363,
+        "bottom": 363
+      },
+      "heads": [
+        {
+          "index": 457,
+          "className": "cell snake-0 head"
+        },
+        {
+          "index": 472,
+          "className": "cell snake-1 head"
+        }
+      ],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 1392
+    },
+    "hostDirectionFramesAfterSwipe": [],
+    "guestDirectionFramesAfterButtons": [],
+    "gameLandscapeHost": {
+      "label": "mobile-game-landscape-host",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "panel": {
+        "phase": "result",
+        "layoutMode": "mobile-landscape",
+        "orientation": "landscape",
+        "touch": "false",
+        "outcome": "draw",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Round ended in a draw.",
+      "lobbyMessage": "Round complete. Choose rematch to play again.",
+      "gameMessage": "Result: draw.",
+      "roomCode": "VHQV",
+      "touchControlsVisible": true,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": true
+        },
+        {
+          "label": "Move left",
+          "disabled": true
+        },
+        {
+          "label": "Move down",
+          "disabled": true
+        },
+        {
+          "label": "Move right",
+          "disabled": true
+        }
+      ],
+      "readyEnabled": false,
+      "rematchVisible": true,
+      "postGameVisible": true,
+      "boardRect": {
+        "x": 55,
+        "y": 46,
+        "width": 734,
+        "height": 734,
+        "right": 789,
+        "bottom": 780
+      },
+      "stageRect": {
+        "x": 42,
+        "y": 33,
+        "width": 760,
+        "height": 760,
+        "right": 802,
+        "bottom": 793
+      },
+      "heads": [
+        {
+          "index": 464,
+          "className": "cell snake-0 snake-1 head"
+        },
+        {
+          "index": 465,
+          "className": "cell snake-0 head snake-1"
+        }
+      ],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 1734
+    },
+    "gameLandscapeGuest": {
+      "label": "mobile-game-landscape-guest",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "panel": {
+        "phase": "result",
+        "layoutMode": "mobile-landscape",
+        "orientation": "landscape",
+        "touch": "false",
+        "outcome": "draw",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Round ended in a draw.",
+      "lobbyMessage": "Round complete. Choose rematch to play again.",
+      "gameMessage": "Result: draw.",
+      "roomCode": "VHQV",
+      "touchControlsVisible": true,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": true
+        },
+        {
+          "label": "Move left",
+          "disabled": true
+        },
+        {
+          "label": "Move down",
+          "disabled": true
+        },
+        {
+          "label": "Move right",
+          "disabled": true
+        }
+      ],
+      "readyEnabled": false,
+      "rematchVisible": true,
+      "postGameVisible": true,
+      "boardRect": {
+        "x": 55,
+        "y": 46,
+        "width": 734,
+        "height": 734,
+        "right": 789,
+        "bottom": 780
+      },
+      "stageRect": {
+        "x": 42,
+        "y": 33,
+        "width": 760,
+        "height": 760,
+        "right": 802,
+        "bottom": 793
+      },
+      "heads": [
+        {
+          "index": 464,
+          "className": "cell snake-0 snake-1 head"
+        },
+        {
+          "index": 465,
+          "className": "cell snake-0 head snake-1"
+        }
+      ],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 1734
+    },
+    "gameOverHost": {
+      "label": "mobile-gameover-host",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "panel": {
+        "phase": "result",
+        "layoutMode": "mobile-landscape",
+        "orientation": "landscape",
+        "touch": "false",
+        "outcome": "draw",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Round ended in a draw.",
+      "lobbyMessage": "Round complete. Choose rematch to play again.",
+      "gameMessage": "Result: draw.",
+      "roomCode": "VHQV",
+      "touchControlsVisible": true,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": true
+        },
+        {
+          "label": "Move left",
+          "disabled": true
+        },
+        {
+          "label": "Move down",
+          "disabled": true
+        },
+        {
+          "label": "Move right",
+          "disabled": true
+        }
+      ],
+      "readyEnabled": false,
+      "rematchVisible": true,
+      "postGameVisible": true,
+      "boardRect": {
+        "x": 55,
+        "y": 46,
+        "width": 734,
+        "height": 734,
+        "right": 789,
+        "bottom": 780
+      },
+      "stageRect": {
+        "x": 42,
+        "y": 33,
+        "width": 760,
+        "height": 760,
+        "right": 802,
+        "bottom": 793
+      },
+      "heads": [
+        {
+          "index": 464,
+          "className": "cell snake-0 snake-1 head"
+        },
+        {
+          "index": 465,
+          "className": "cell snake-0 head snake-1"
+        }
+      ],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 1734
+    },
+    "gameOverGuest": {
+      "label": "mobile-gameover-guest",
+      "viewport": {
+        "width": 844,
+        "height": 390
+      },
+      "panel": {
+        "phase": "result",
+        "layoutMode": "mobile-landscape",
+        "orientation": "landscape",
+        "touch": "false",
+        "outcome": "draw",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Round ended in a draw.",
+      "lobbyMessage": "Round complete. Choose rematch to play again.",
+      "gameMessage": "Result: draw.",
+      "roomCode": "VHQV",
+      "touchControlsVisible": true,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": true
+        },
+        {
+          "label": "Move left",
+          "disabled": true
+        },
+        {
+          "label": "Move down",
+          "disabled": true
+        },
+        {
+          "label": "Move right",
+          "disabled": true
+        }
+      ],
+      "readyEnabled": false,
+      "rematchVisible": true,
+      "postGameVisible": true,
+      "boardRect": {
+        "x": 55,
+        "y": 46,
+        "width": 734,
+        "height": 734,
+        "right": 789,
+        "bottom": 780
+      },
+      "stageRect": {
+        "x": 42,
+        "y": 33,
+        "width": 760,
+        "height": 760,
+        "right": 802,
+        "bottom": 793
+      },
+      "heads": [
+        {
+          "index": 464,
+          "className": "cell snake-0 snake-1 head"
+        },
+        {
+          "index": 465,
+          "className": "cell snake-0 head snake-1"
+        }
+      ],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 1734
+    },
+    "rematchHost": {
+      "label": "mobile-rematch-host",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "panel": {
+        "phase": "countdown",
+        "layoutMode": "mobile-portrait",
+        "orientation": "portrait",
+        "touch": "false",
+        "outcome": "neutral",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Match starts in 3...",
+      "lobbyMessage": "Match starts in 3…",
+      "gameMessage": "Queue your opening turn now. Snakes stay still until the countdown ends.",
+      "roomCode": "VHQV",
+      "touchControlsVisible": true,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": false
+        },
+        {
+          "label": "Move left",
+          "disabled": false
+        },
+        {
+          "label": "Move down",
+          "disabled": false
+        },
+        {
+          "label": "Move right",
+          "disabled": false
+        }
+      ],
+      "readyEnabled": false,
+      "rematchVisible": true,
+      "postGameVisible": false,
+      "boardRect": {
+        "x": 38,
+        "y": 38,
+        "width": 314,
+        "height": 314,
+        "right": 352,
+        "bottom": 352
+      },
+      "stageRect": {
+        "x": 27,
+        "y": 27,
+        "width": 336,
+        "height": 336,
+        "right": 363,
+        "bottom": 363
+      },
+      "heads": [
+        {
+          "index": 457,
+          "className": "cell snake-0 head"
+        },
+        {
+          "index": 472,
+          "className": "cell snake-1 head"
+        }
+      ],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 1392
+    },
+    "rematchGuest": {
+      "label": "mobile-rematch-guest",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "panel": {
+        "phase": "countdown",
+        "layoutMode": "mobile-portrait",
+        "orientation": "portrait",
+        "touch": "false",
+        "outcome": "neutral",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Match starts in 3...",
+      "lobbyMessage": "Match starts in 3…",
+      "gameMessage": "Queue your opening turn now. Snakes stay still until the countdown ends.",
+      "roomCode": "VHQV",
+      "touchControlsVisible": true,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": false
+        },
+        {
+          "label": "Move left",
+          "disabled": false
+        },
+        {
+          "label": "Move down",
+          "disabled": false
+        },
+        {
+          "label": "Move right",
+          "disabled": false
+        }
+      ],
+      "readyEnabled": false,
+      "rematchVisible": true,
+      "postGameVisible": false,
+      "boardRect": {
+        "x": 38,
+        "y": 38,
+        "width": 314,
+        "height": 314,
+        "right": 352,
+        "bottom": 352
+      },
+      "stageRect": {
+        "x": 27,
+        "y": 27,
+        "width": 336,
+        "height": 336,
+        "right": 363,
+        "bottom": 363
+      },
+      "heads": [
+        {
+          "index": 457,
+          "className": "cell snake-0 head"
+        },
+        {
+          "index": 472,
+          "className": "cell snake-1 head"
+        }
+      ],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 1392
+    }
+  },
+  "desktop": {
+    "entryAndGame": {
+      "label": "desktop-game-host",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "panel": {
+        "phase": "countdown",
+        "layoutMode": "desktop",
+        "orientation": "landscape",
+        "touch": "false",
+        "outcome": "neutral",
+        "scrollY": 0
+      },
+      "buildMarker": "Build: v0.1.0+e2215d3",
+      "gameBuildMarker": "Build: v0.1.0+e2215d3",
+      "status": "Match starts in 3...",
+      "lobbyMessage": "Match starts in 3…",
+      "gameMessage": "Queue your opening turn now. Snakes stay still until the countdown ends.",
+      "roomCode": "QLUI",
+      "touchControlsVisible": false,
+      "touchButtonsDisabled": [
+        {
+          "label": "Move up",
+          "disabled": false
+        },
+        {
+          "label": "Move left",
+          "disabled": false
+        },
+        {
+          "label": "Move down",
+          "disabled": false
+        },
+        {
+          "label": "Move right",
+          "disabled": false
+        }
+      ],
+      "readyEnabled": false,
+      "rematchVisible": true,
+      "postGameVisible": false,
+      "boardRect": {
+        "x": 394,
+        "y": 46,
+        "width": 652,
+        "height": 652,
+        "right": 1046,
+        "bottom": 698
+      },
+      "stageRect": {
+        "x": 381,
+        "y": 33,
+        "width": 678,
+        "height": 678,
+        "right": 1059,
+        "bottom": 711
+      },
+      "heads": [
+        {
+          "index": 457,
+          "className": "cell snake-0 head"
+        },
+        {
+          "index": 472,
+          "className": "cell snake-1 head"
+        }
+      ],
+      "bodyOverflowY": "visible",
+      "docScrollHeight": 900
+    },
+    "directionFrames": [
+      "42[\"player:direction:set\",{\"direction\":\"up\"}]"
+    ]
+  },
+  "notes": [],
+  "assertions": {
+    "buildMarkerHost": "Build: v0.1.0+e2215d3",
+    "portraitLayoutHost": "mobile-portrait",
+    "landscapeLayoutHost": "mobile-landscape",
+    "portraitBoardFits": true,
+    "landscapeBoardFits": false,
+    "portraitTouchVisible": true,
+    "landscapeTouchVisible": true,
+    "swipeFramesSeen": false,
+    "buttonFramesSeen": false,
+    "rematchWorked": true,
+    "desktopLayout": "desktop",
+    "desktopTouchHidden": true,
+    "desktopKeyFramesSeen": true
+  }
+}

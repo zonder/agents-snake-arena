@@ -1,0 +1,12 @@
+{
+  "checkedAt": "2026-03-12T14:16:08Z",
+  "url": "http://20.106.185.110:8081/build-info.json",
+  "expectedBranch": "feature/issue-40",
+  "expectedFixCommit": "2510a99",
+  "actualBuild": {
+    "version": "0.1.0",
+    "commit": "e9b8c71",
+    "builtAt": "2026-03-12T14:10:44.015Z",
+    "displayVersion": "v0.1.0+e9b8c71"
+  }
+}

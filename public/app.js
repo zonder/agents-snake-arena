@@ -14,6 +14,7 @@ const playersEl = document.getElementById('players');
 const readyButton = document.getElementById('readyButton');
 const lobbyMessage = document.getElementById('lobbyMessage');
 const phaseBadge = document.getElementById('phaseBadge');
+const gameStageEl = document.getElementById('gameStage');
 const boardEl = document.getElementById('board');
 const boardFxLayerEl = document.getElementById('boardFxLayer');
 const countdownOverlayEl = document.getElementById('countdownOverlay');
@@ -38,6 +39,8 @@ const postGameBannerTitleEl = document.getElementById('postGameBannerTitle');
 const postGameBannerStatusEl = document.getElementById('postGameBannerStatus');
 const postGameBannerButton = document.getElementById('postGameBannerButton');
 const soundToggleButton = document.getElementById('soundToggleButton');
+const touchControlsEl = document.getElementById('touchControls');
+const touchControlButtons = Array.from(document.querySelectorAll('[data-direction]'));
 
 let latestLobbyState = null;
 let latestGameState = null;
@@ -48,6 +51,24 @@ let yourSlotIndex = null;
 let boardReady = false;
 let buildMarkerText = 'Build: loading…';
 let buildMarkerTitle = 'Build metadata is loading.';
+let pendingDirection = null;
+
+const viewportState = {
+  layoutMode: 'desktop',
+  orientation: 'landscape',
+  touchPreferred: window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0,
+};
+
+const swipeState = {
+  active: false,
+  pointerId: null,
+  startX: 0,
+  startY: 0,
+  startAt: 0,
+};
+
+const SWIPE_MIN_DISTANCE_PX = 24;
+const SWIPE_AXIS_DOMINANCE_PX = 6;
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const MOTION_REDUCED = () => prefersReducedMotion.matches;
@@ -62,6 +83,10 @@ const audioManager = createAudioManager();
 audioManager.initFromStorage();
 loadBuildMarker();
 setupAudioUnlock();
+setupTouchControls();
+updateViewportState();
+window.addEventListener('resize', updateViewportState);
+window.addEventListener('orientationchange', updateViewportState);
 renderAudioToggle();
 
 socket.on('connect', () => {
@@ -130,6 +155,7 @@ socket.on('game:start', (payload) => {
 socket.on('game:state', (payload) => {
   const previousGameState = latestGameState;
   latestGameState = payload;
+  pendingDirection = null;
   latestRematchState = { roomCode: payload.roomCode, phase: payload.phase, rematch: payload.rematch, version: payload.version };
   renderGame(payload);
   applyGameTransitionEffects(previousGameState, payload);
@@ -139,6 +165,7 @@ socket.on('game:state', (payload) => {
 socket.on('game:ended', (payload) => {
   const previousGameState = latestGameState;
   latestGameState = payload.finalState;
+  pendingDirection = null;
   latestRematchState = { roomCode: payload.roomCode, phase: payload.phase, rematch: payload.finalState.rematch, version: payload.version };
   renderGame(payload.finalState, payload.result.bySlot);
   renderRematch(payload.finalState.rematch, payload.phase);
@@ -158,6 +185,7 @@ socket.on('game:rematch-state', (payload) => {
 
 socket.on('room:closed', (payload) => {
   latestGameState = null;
+  pendingDirection = null;
   latestLobbyState = null;
   latestRematchState = null;
   latestCountdownState = null;
@@ -184,21 +212,94 @@ document.getElementById('joinRoomButton').addEventListener('click', () => {
   socket.emit('room:join', { roomCode: roomCodeInput.value });
 });
 
+function focusWithoutScroll(element) {
+  if (!element || typeof element.focus !== 'function') {
+    return;
+  }
+
+  try {
+    element.focus({ preventScroll: true });
+  } catch {
+    element.focus();
+  }
+}
+
+function copyTextWithExecCommand(text) {
+  if (!document.body || typeof document.execCommand !== 'function') {
+    return false;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.setAttribute('aria-hidden', 'true');
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '-9999px';
+  textarea.style.opacity = '0';
+
+  const selection = document.getSelection();
+  const originalRange = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+  const activeElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+  document.body.appendChild(textarea);
+  focusWithoutScroll(textarea);
+  textarea.select();
+  textarea.setSelectionRange(0, textarea.value.length);
+
+  let copied = false;
+  try {
+    copied = document.execCommand('copy');
+  } catch {
+    copied = false;
+  } finally {
+    textarea.remove();
+    if (selection) {
+      selection.removeAllRanges();
+      if (originalRange) {
+        selection.addRange(originalRange);
+      }
+    }
+    focusWithoutScroll(activeElement);
+  }
+
+  return copied;
+}
+
+async function writeTextToClipboard(text) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // Fall through to the legacy copy path below. Some browsers expose the API
+      // but block it in embedded/insecure contexts or without the right permission.
+    }
+  }
+
+  return copyTextWithExecCommand(text);
+}
+
+function setCopyFeedback(message) {
+  statusEl.textContent = message;
+  if (!gamePanelEl.classList.contains('hidden')) {
+    gameStatusInlineEl.textContent = message;
+  }
+}
+
 async function copyActiveRoomCode() {
   const roomCode = latestLobbyState?.roomCode || latestGameState?.roomCode;
   if (!roomCode) return;
-  try {
-    await navigator.clipboard.writeText(roomCode);
-    const copiedText = 'Room code copied.';
-    statusEl.textContent = copiedText;
-    if (!gamePanelEl.classList.contains('hidden')) {
-      gameStatusInlineEl.textContent = copiedText;
-    }
+
+  const copied = await writeTextToClipboard(roomCode);
+  if (copied) {
+    setCopyFeedback('Room code copied.');
     audioManager.play('ui.copy');
     pulseConfirmation(soundToggleButton, false);
-  } catch {
-    statusEl.textContent = 'Could not copy room code in this browser.';
+    return;
   }
+
+  setCopyFeedback('Could not copy automatically. Select the room code and copy it manually.');
 }
 
 document.getElementById('copyRoomCodeButton').addEventListener('click', copyActiveRoomCode);
@@ -230,8 +331,8 @@ soundToggleButton.addEventListener('click', async () => {
 
 document.addEventListener('keydown', (event) => {
   const direction = keyToDirection(event.key);
-  if (!direction || !latestGameState) return;
-  socket.emit('player:direction:set', { direction });
+  if (!direction) return;
+  requestDirection(direction, 'keyboard');
 });
 
 async function loadBuildMarker() {
@@ -403,6 +504,7 @@ function renderGame(state, perSlotResult) {
 
 function showScreen(screen) {
   const gameplayActive = screen === 'gameplay';
+  const screenChanged = uiState.screen !== screen;
   uiState.screen = screen;
   entryEl.classList.toggle('hidden', screen !== 'entry');
   lobbyEl.classList.toggle('hidden', screen !== 'lobby');
@@ -411,6 +513,14 @@ function showScreen(screen) {
   panelTopEl.classList.toggle('hidden', gameplayActive);
   statusEl.classList.toggle('hidden', gameplayActive);
   errorEl.classList.toggle('hidden', gameplayActive || !errorEl.textContent);
+
+  if (gameplayActive && screenChanged) {
+    panelEl.scrollTop = 0;
+    gamePanelEl.scrollTop = 0;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }
+
+  syncResponsiveUi();
 }
 
 function applyPhaseTheme(phaseTheme, outcomeTheme) {
@@ -619,6 +729,143 @@ function renderAudioToggle() {
   soundToggleButton.classList.toggle('is-muted', !audioManager.enabled);
 }
 
+function getLayoutMode() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const portrait = window.matchMedia('(orientation: portrait)').matches;
+  const shortEdge = Math.min(width, height);
+  const longEdge = Math.max(width, height);
+  const touchPreferred = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+
+  const phoneSized = shortEdge <= 480 || (touchPreferred && shortEdge <= 540 && longEdge <= 980);
+  if (phoneSized) return portrait ? 'mobile-portrait' : 'mobile-landscape';
+  if (width <= 1100) return 'tablet';
+  return 'desktop';
+}
+
+function updateViewportState() {
+  viewportState.layoutMode = getLayoutMode();
+  viewportState.orientation = window.matchMedia('(orientation: portrait)').matches ? 'portrait' : 'landscape';
+  viewportState.touchPreferred = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  panelEl.dataset.layoutMode = viewportState.layoutMode;
+  panelEl.dataset.orientation = viewportState.orientation;
+  panelEl.dataset.touch = String(viewportState.touchPreferred);
+  syncResponsiveUi();
+}
+
+function syncResponsiveUi() {
+  const touchControlsVisible = shouldShowTouchControls({
+    layoutMode: viewportState.layoutMode,
+    touchPreferred: viewportState.touchPreferred,
+    phase: latestGameState?.phase || latestLobbyState?.phase || 'entry',
+    screen: uiState.screen,
+  });
+  touchControlsEl.classList.toggle('hidden', !touchControlsVisible);
+  gameStageEl.classList.toggle('is-touch-active', touchControlsVisible);
+  gamePanelEl.classList.toggle('touch-controls-visible', touchControlsVisible);
+
+  const controlsEnabled = canRequestDirection();
+  touchControlButtons.forEach((button) => {
+    button.disabled = !controlsEnabled;
+  });
+}
+
+function shouldShowTouchControls({ layoutMode, touchPreferred, phase, screen }) {
+  if (screen !== 'gameplay') return false;
+  if (!touchPreferred && !layoutMode.startsWith('mobile')) return false;
+  return phase === 'starting' || phase === 'in-progress' || phase === 'game-over';
+}
+
+function setupTouchControls() {
+  touchControlButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      requestDirection(button.dataset.direction, 'touch-button');
+    });
+  });
+
+  gameStageEl.addEventListener('pointerdown', (event) => {
+    if (!shouldShowTouchControls({
+      layoutMode: viewportState.layoutMode,
+      touchPreferred: viewportState.touchPreferred,
+      phase: latestGameState?.phase || latestLobbyState?.phase || 'entry',
+      screen: uiState.screen,
+    }) || event.pointerType === 'mouse') {
+      return;
+    }
+
+    audioManager.unlock();
+    swipeState.active = true;
+    swipeState.pointerId = event.pointerId;
+    swipeState.startX = event.clientX;
+    swipeState.startY = event.clientY;
+    swipeState.startAt = Date.now();
+  }, { passive: true });
+
+  gameStageEl.addEventListener('pointerup', (event) => {
+    if (!swipeState.active || swipeState.pointerId !== event.pointerId) return;
+    const direction = resolveSwipeDirection(swipeState.startX, swipeState.startY, event.clientX, event.clientY);
+    resetSwipeState();
+    if (direction) {
+      requestDirection(direction, 'swipe');
+    }
+  });
+
+  gameStageEl.addEventListener('pointercancel', resetSwipeState);
+  gameStageEl.addEventListener('pointerleave', (event) => {
+    if (event.pointerType !== 'mouse') return;
+    resetSwipeState();
+  });
+}
+
+function resetSwipeState() {
+  swipeState.active = false;
+  swipeState.pointerId = null;
+  swipeState.startX = 0;
+  swipeState.startY = 0;
+  swipeState.startAt = 0;
+}
+
+function resolveSwipeDirection(startX, startY, endX, endY) {
+  const dx = endX - startX;
+  const dy = endY - startY;
+  if (Math.hypot(dx, dy) < SWIPE_MIN_DISTANCE_PX) return null;
+
+  if (Math.abs(dx) > Math.abs(dy) + SWIPE_AXIS_DOMINANCE_PX) {
+    return dx > 0 ? 'right' : 'left';
+  }
+
+  if (Math.abs(dy) > Math.abs(dx) + SWIPE_AXIS_DOMINANCE_PX) {
+    return dy > 0 ? 'down' : 'up';
+  }
+
+  return Math.abs(dx) >= Math.abs(dy)
+    ? (dx > 0 ? 'right' : 'left')
+    : (dy > 0 ? 'down' : 'up');
+}
+
+function canRequestDirection() {
+  return latestGameState && (latestGameState.phase === 'starting' || latestGameState.phase === 'in-progress');
+}
+
+function requestDirection(direction, source) {
+  if (!direction || !canRequestDirection()) return;
+
+  audioManager.unlock();
+
+  const snake = yourSlotIndex === null ? null : latestGameState?.snakes?.[yourSlotIndex];
+  const effectiveDirection = pendingDirection || snake?.pendingDirection || snake?.direction;
+  if (effectiveDirection && (direction === effectiveDirection || OPPOSITE[effectiveDirection] === direction)) {
+    return;
+  }
+
+  pendingDirection = direction;
+  socket.emit('player:direction:set', { direction });
+
+  if (source === 'touch-button') {
+    pulseConfirmation(touchControlsEl, false);
+  }
+}
+
 function setupAudioUnlock() {
   const unlock = () => audioManager.unlock();
   window.addEventListener('pointerdown', unlock, { passive: true, once: true });
@@ -719,3 +966,5 @@ function keyToDirection(key) {
       return null;
   }
 }
+
+const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
