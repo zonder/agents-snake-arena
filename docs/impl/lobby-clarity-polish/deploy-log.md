@@ -105,3 +105,10 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-13T01:37:30Z` |
 | Status | `SUCCESS` |
+
+## Final branch-sync redeploy — 2026-03-13T01:38:10Z
+- Trigger: redeploy once more after committing the repaired deployment artifact so live dev matches branch HEAD exactly
+- Branch before final artifact commit: `feature/issue-98`
+- Live app commit before final artifact sync: `949b1a24e238907062bfb7d75089b46c6f5c6abd` (`949b1a2`)
+- Dev URL: `http://20.106.185.110:8081/`
+- Expected action: push this artifact update, then redeploy the resulting branch HEAD and verify `/build-info.json`
