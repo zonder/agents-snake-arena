@@ -105,3 +105,32 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-13T10:53:55Z` |
 | Status | `SUCCESS` |
+
+## Stakeholder review refresh redeploy — 2026-03-13T12:13:18Z
+- Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the desktop lobby fixes are live for stakeholder review
+- Previous live dev build marker before redeploy: `db1a2e6`
+- Redeployed commit:
+  - full: `65ee89ed770d44982a81e6020f36b7d3bc5e8be4`
+  - short: `65ee89e`
+- Dev URL: `http://20.106.185.110:8081/`
+- Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
+
+### Verification
+- `git -C /home/rootagent/deployments/dev rev-parse HEAD` returned `65ee89ed770d44982a81e6020f36b7d3bc5e8be4`.
+- `curl -sf http://127.0.0.1:3001/build-info.json` returned `{"version":"0.1.0","commit":"65ee89e","builtAt":"2026-03-13T12:13:11.032Z","displayVersion":"v0.1.0+65ee89e"}`.
+- `curl -sf http://20.106.185.110:8081/build-info.json` returned `{"version":"0.1.0","commit":"65ee89e","builtAt":"2026-03-13T12:13:11.032Z","displayVersion":"v0.1.0+65ee89e"}`.
+- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
+- `pm2 logs app-dev --lines 8 --nostream` shows the active startup line for `v0.1.0+65ee89e`.
+
+### Latest deployment record
+
+| Field | Value |
+|---|---|
+| Commit | `65ee89ed770d44982a81e6020f36b7d3bc5e8be4` |
+| Short | `65ee89e` |
+| Branch | `feature/issue-98` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-13T12:13:18Z` |
+| Status | `SUCCESS` |
