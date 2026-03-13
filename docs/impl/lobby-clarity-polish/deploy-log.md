@@ -337,3 +337,32 @@ pm2 save
 | Timestamp | `2026-03-13T23:01:11Z` |
 | Status | `SUCCESS` |
 
+
+## Stakeholder review refresh redeploy — 2026-03-13T23:14:13Z
+- Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the desktop lobby composition crowding fix is live for stakeholder review
+- Requested fix commit: `198e1b0`
+- Redeployed branch HEAD before deploy-log update:
+  - full: `198e1b0267dc03bb64753923138b0c3ac3c54442`
+  - short: `198e1b0`
+- Dev URL: `http://20.106.185.110:8081/`
+- Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
+
+### Verification
+- `git -C /home/rootagent/deployments/dev rev-parse HEAD` returned `198e1b0267dc03bb64753923138b0c3ac3c54442`.
+- `curl -sf http://127.0.0.1:3001/build-info.json` returned `{"version":"0.1.0","commit":"198e1b0","builtAt":"2026-03-13T23:14:04.488Z","displayVersion":"v0.1.0+198e1b0"}`.
+- `curl -sf http://20.106.185.110:8081/build-info.json` returned `{"version":"0.1.0","commit":"198e1b0","builtAt":"2026-03-13T23:14:04.488Z","displayVersion":"v0.1.0+198e1b0"}`.
+- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
+- `pm2 logs app-dev --lines 8 --nostream` showed the active startup line for `v0.1.0+198e1b0`.
+
+### Deployment record
+
+| Field | Value |
+|---|---|
+| Commit | `198e1b0267dc03bb64753923138b0c3ac3c54442` |
+| Short | `198e1b0` |
+| Branch | `feature/issue-98` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-13T23:14:13Z` |
+| Status | `SUCCESS` |
