@@ -44,88 +44,89 @@
         </div>
 
         <div id="lobby" class="screen lobby hidden">
-          <section id="lobbyBrand" class="lobby-brand info-card">
-            <div class="lobby-brand-mark" aria-hidden="true">
-              <div class="lobby-brand-emblem">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-              <div class="lobby-brand-grid"></div>
-            </div>
-            <div class="lobby-brand-copy">
+          <section id="lobbyPoster" class="info-card lobby-poster-shell">
+            <div id="lobbyBrand" class="lobby-brand lobby-poster-main">
               <div class="lobby-brand-topline">
                 <div id="phaseBadge" class="badge status-chip">Lobby</div>
-                <div class="lobby-brand-callout">Pre-match staging</div>
+                <div id="lobbyPosterCallout" class="lobby-brand-callout">Main event loading</div>
               </div>
-              <div class="eyebrow">Arena staging</div>
-              <h2 id="lobbyHeroTitle" class="lobby-hero-title">Match lobby</h2>
-              <p id="lobbyHeroSubtitle" class="message lobby-hero-subtitle">Share the code, fill the rail, then launch when both players are ready.</p>
-            </div>
-          </section>
-
-          <section id="lobbyFlow" class="info-card lobby-flow-card" aria-label="Lobby progress">
-            <div class="lobby-flow-head">
-              <div>
-                <div class="eyebrow">Lobby flow</div>
-                <h3 class="section-title">From code share to countdown</h3>
+              <div class="eyebrow">Fight poster</div>
+              <h2 id="lobbyHeroTitle" class="lobby-hero-title">Snake Arena</h2>
+              <p id="lobbyHeroSubtitle" class="message lobby-hero-subtitle">Share the code, fill both corners, then launch when both players are ready.</p>
+              <div class="lobby-launch-wrap" aria-label="Launch status">
+                <div id="lobbyLaunchRing" class="lobby-launch-ring" data-ring-state="waiting">
+                  <span id="lobbyLaunchRingValue">?</span>
+                </div>
+                <div>
+                  <div class="eyebrow">Launch ring</div>
+                  <p id="lobbyStatusSummary" class="lobby-poster-status">Waiting for player two</p>
+                  <p id="lobbyMessage" class="message lobby-message"></p>
+                </div>
               </div>
-              <div id="lobbyFlowSummary" class="lobby-flow-summary">Waiting for player two</div>
             </div>
-            <div class="lobby-flow-steps">
-              <article id="lobbyFlowStepShare" class="lobby-flow-step is-active">
-                <span class="lobby-flow-index">1</span>
+
+            <div class="lobby-poster-side">
+              <section id="roomCodeCard" class="room-header room-code-hero room-code-command-card ticket-card">
                 <div>
-                  <strong>Share code</strong>
-                  <p>Send the room code to your opponent.</p>
+                  <div class="eyebrow">Admission ticket / room code</div>
+                  <div id="roomCodeDisplay" class="room-code room-code-sr">----</div>
+                  <div id="roomCodeDigits" class="room-code-digits" aria-label="Room code">
+                    <span class="room-code-digit">-</span>
+                    <span class="room-code-digit">-</span>
+                    <span class="room-code-digit">-</span>
+                    <span class="room-code-digit">-</span>
+                  </div>
+                  <p id="roomCodeHint" class="message room-code-hint">Share this ticket code with your opponent to fill the room.</p>
                 </div>
-              </article>
-              <article id="lobbyFlowStepJoin" class="lobby-flow-step">
-                <span class="lobby-flow-index">2</span>
-                <div>
-                  <strong>Second player joins</strong>
-                  <p>Fill the second slot to unlock ready check.</p>
+                <button id="copyRoomCodeButton" class="secondary-button" type="button">Copy ticket</button>
+              </section>
+
+              <section id="lobbyGuidanceCard" class="info-card lobby-guidance-card">
+                <div class="eyebrow">Live guidance</div>
+                <h3 id="lobbyNextStepLabel" class="lobby-next-step-label">Share the code to bring in player two.</h3>
+                <p id="lobbySupportCopy" class="message lobby-support-copy">The match starts automatically once both players are connected and ready.</p>
+                <div id="lobbyFlowSummary" class="lobby-flow-summary">Step 1 of 3 · Share the room code</div>
+                <div class="lobby-flow-steps">
+                  <article id="lobbyFlowStepShare" class="lobby-flow-step is-active">
+                    <span class="lobby-flow-index">1</span>
+                    <div>
+                      <strong>Share ticket</strong>
+                      <p>Send the code to your rival.</p>
+                    </div>
+                  </article>
+                  <article id="lobbyFlowStepJoin" class="lobby-flow-step">
+                    <span class="lobby-flow-index">2</span>
+                    <div>
+                      <strong>Fill both corners</strong>
+                      <p>Second player joins the poster.</p>
+                    </div>
+                  </article>
+                  <article id="lobbyFlowStepReady" class="lobby-flow-step">
+                    <span class="lobby-flow-index">3</span>
+                    <div>
+                      <strong>Launch the match</strong>
+                      <p>Countdown starts when both are green.</p>
+                    </div>
+                  </article>
                 </div>
-              </article>
-              <article id="lobbyFlowStepReady" class="lobby-flow-step">
-                <span class="lobby-flow-index">3</span>
-                <div>
-                  <strong>Both players ready</strong>
-                  <p>Countdown triggers automatically when both are green.</p>
-                </div>
-              </article>
+              </section>
             </div>
           </section>
 
-          <section id="roomCodeCard" class="room-header room-code-hero room-code-command-card">
-            <div>
-              <div class="eyebrow">Room code</div>
-              <div id="roomCodeDisplay" class="room-code">----</div>
-              <p id="roomCodeHint" class="message room-code-hint">Share this code with your opponent to fill the room.</p>
-            </div>
-            <button id="copyRoomCodeButton" class="secondary-button" type="button">Copy code</button>
-          </section>
-
-          <section class="lobby-meta-row lobby-summary-row">
-            <div id="lobbyStatusSummary" class="badge status-chip lobby-status-summary">Lobby</div>
-            <p id="lobbyMessage" class="message lobby-message"></p>
-          </section>
-
-          <section class="lobby-players-section">
+          <section class="lobby-players-section poster-corners-section">
             <div class="section-heading-row">
               <div>
-                <div class="eyebrow">Players</div>
-                <h3 class="section-title">Readiness rail</h3>
+                <div class="eyebrow">Main card</div>
+                <h3 class="section-title">Corners and readiness</h3>
               </div>
             </div>
-            <div id="players" class="players players-rail"></div>
+            <div id="players" class="players players-rail poster-corners"></div>
           </section>
 
           <section id="lobbyActionPanel" class="info-card lobby-action-panel">
             <div>
-              <div class="eyebrow">Next step</div>
-              <h3 id="lobbyNextStepLabel" class="lobby-next-step-label">Share the code to bring in player two.</h3>
-              <p id="lobbySupportCopy" class="message lobby-support-copy">The match starts automatically once both players are connected and ready.</p>
+              <div class="eyebrow">How this starts</div>
+              <p class="message lobby-action-caption">Both players must ready up. There is no extra manual start button after that.</p>
             </div>
             <button id="readyButton" class="primary-button ready-button" type="button">Ready</button>
           </section>

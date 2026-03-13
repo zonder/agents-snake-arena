@@ -18,7 +18,11 @@ const lobbyMessage = document.getElementById('lobbyMessage');
 const phaseBadge = document.getElementById('phaseBadge');
 const lobbyHeroTitleEl = document.getElementById('lobbyHeroTitle');
 const lobbyHeroSubtitleEl = document.getElementById('lobbyHeroSubtitle');
+const lobbyPosterCalloutEl = document.getElementById('lobbyPosterCallout');
+const lobbyLaunchRingEl = document.getElementById('lobbyLaunchRing');
+const lobbyLaunchRingValueEl = document.getElementById('lobbyLaunchRingValue');
 const roomCodeHintEl = document.getElementById('roomCodeHint');
+const roomCodeDigitsEl = document.getElementById('roomCodeDigits');
 const lobbyStatusSummaryEl = document.getElementById('lobbyStatusSummary');
 const lobbyNextStepLabelEl = document.getElementById('lobbyNextStepLabel');
 const lobbySupportCopyEl = document.getElementById('lobbySupportCopy');
@@ -540,9 +544,10 @@ function deriveLobbyPresentation(state) {
 
   const presentation = {
     gameplayFocused,
-    heroTitle: 'Match lobby',
-    heroSubtitle: 'Share the code, fill the rail, then launch when both players are ready.',
-    roomCodeHint: 'Share this code with your opponent to fill the room.',
+    heroTitle: 'Snake Arena',
+    heroSubtitle: "Tonight's match poster is live. Share the ticket, fill both corners, then launch when both players are ready.",
+    posterCallout: 'Main event loading',
+    roomCodeHint: 'Share this ticket code with your opponent to fill the room.',
     statusSummary: formatPhaseLabel(state.phase),
     nextStepLabel: 'Share the code to bring in player two.',
     supportCopy: 'The match starts automatically once both players are connected and ready.',
@@ -553,15 +558,20 @@ function deriveLobbyPresentation(state) {
     flowSummary: 'Waiting for player two',
     flowSteps: { share: 'active', join: 'pending', ready: 'pending' },
     lobbyMode: 'waiting',
+    launchRingValue: '?',
+    launchRingState: 'waiting',
   };
 
   if (state.reconnect?.active) {
-    presentation.heroTitle = state.reconnect.yourSlotReserved ? 'Reconnect to the arena' : 'Lobby hold active';
+    presentation.heroTitle = state.reconnect.yourSlotReserved ? 'Intermission hold' : 'Poster hold active';
     presentation.heroSubtitle = state.reconnect.yourSlotReserved
-      ? 'Your seat is still reserved. Jump back in before the timer expires.'
-      : 'One seat is reserved while the disconnected player reconnects.';
-    presentation.roomCodeHint = 'Keep the code handy while the reconnect window is active.';
+      ? 'Your corner is still reserved. Rejoin before the hold timer expires.'
+      : 'One corner is reserved while the disconnected player reconnects.';
+    presentation.posterCallout = 'Intermission';
+    presentation.roomCodeHint = 'Keep the ticket code handy while the reconnect window is active.';
     presentation.statusSummary = 'Reconnect window';
+    presentation.launchRingValue = String(state.reconnect.secondsRemaining ?? 0);
+    presentation.launchRingState = 'reconnect';
     presentation.nextStepLabel = state.reconnect.yourSlotReserved
       ? `Resume your slot within ${state.reconnect.secondsRemaining ?? 0}s.`
       : `${state.reconnect.disconnectedPlayerDisplayName || state.reconnect.disconnectedPlayerName || 'A player'} can still resume this match.`;
@@ -573,9 +583,10 @@ function deriveLobbyPresentation(state) {
   }
 
   if (!state.allPlayersPresent) {
-    presentation.heroTitle = 'Stage the next showdown';
-    presentation.heroSubtitle = 'Your room is live. Send the code and bring in player two.';
-    presentation.roomCodeHint = 'Share this code with a friend so they can drop straight into the lobby.';
+    presentation.heroTitle = 'Fight poster live';
+    presentation.heroSubtitle = 'The poster is up. Share the ticket and bring in your rival.';
+    presentation.posterCallout = 'Rival needed';
+    presentation.roomCodeHint = 'Share this ticket code so a second player can drop straight into the lobby.';
     presentation.statusSummary = 'Waiting for player two';
     presentation.nextStepLabel = 'Share the room code to fill the second slot.';
     presentation.supportCopy = you?.isReady
@@ -588,10 +599,13 @@ function deriveLobbyPresentation(state) {
   }
 
   if (state.phase === 'starting') {
-    presentation.heroTitle = 'Countdown armed';
-    presentation.heroSubtitle = 'Both players are locked in. Match start is underway.';
+    presentation.heroTitle = 'Showtime';
+    presentation.heroSubtitle = 'Both corners are locked in. The launch ring is now running the countdown.';
+    presentation.posterCallout = 'Launch ring active';
     presentation.roomCodeHint = 'Room is full. Hold steady while the countdown hands off to gameplay.';
     presentation.statusSummary = 'Match starting';
+    presentation.launchRingValue = state.countdown?.secondsRemaining ? String(state.countdown.secondsRemaining) : '3';
+    presentation.launchRingState = 'starting';
     presentation.nextStepLabel = state.message || 'Countdown live. Match is starting now.';
     presentation.supportCopy = 'Ready states are locked while the server transitions into the round.';
     presentation.flowSummary = 'Countdown live';
@@ -601,8 +615,9 @@ function deriveLobbyPresentation(state) {
   }
 
   if (state.allPlayersPresent && !state.allReady) {
-    presentation.heroTitle = 'Both players are in';
-    presentation.heroSubtitle = 'Confirm both readiness lights to trigger the automatic countdown.';
+    presentation.heroTitle = 'Main event ready check';
+    presentation.heroSubtitle = 'Both players are here. One final confirmation lights the launch ring.';
+    presentation.posterCallout = 'Corners filling';
     presentation.roomCodeHint = 'Room is full. Final check: both players must be ready.';
     presentation.statusSummary = 'Ready check';
     if (you && !you.isReady) {
@@ -616,15 +631,20 @@ function deriveLobbyPresentation(state) {
       presentation.flowSummary = 'Step 3 of 3 · Waiting on final ready';
       presentation.flowSteps = { share: 'complete', join: 'complete', ready: 'active' };
     }
+    presentation.launchRingValue = you && !you.isReady ? 'YOU' : 'WAIT';
+    presentation.launchRingState = 'armed';
     presentation.lobbyMode = 'ready-check';
     return presentation;
   }
 
   if (state.allReady) {
-    presentation.heroTitle = 'Launch sequence ready';
-    presentation.heroSubtitle = 'Both players are ready. Countdown should begin immediately.';
+    presentation.heroTitle = 'Poster locked in';
+    presentation.heroSubtitle = 'Both players are ready. The launch ring is primed for the automatic countdown.';
+    presentation.posterCallout = 'All signals received';
     presentation.roomCodeHint = 'No further sharing needed. This room is ready to launch.';
     presentation.statusSummary = 'Ready';
+    presentation.launchRingValue = 'READY';
+    presentation.launchRingState = 'ready';
     presentation.nextStepLabel = 'Countdown should begin in just a moment.';
     presentation.supportCopy = 'If the transition stalls, stay connected — the room flow remains authoritative on the server.';
     presentation.flowSummary = 'All systems ready';
@@ -636,6 +656,13 @@ function deriveLobbyPresentation(state) {
 }
 
 
+
+function renderRoomCodeDigits(roomCode) {
+  if (!roomCodeDigitsEl) return;
+  const chars = String(roomCode || '----').padEnd(4, '-').slice(0, 4).split('');
+  roomCodeDigitsEl.innerHTML = chars.map((character) => `<span class="room-code-digit">${escapeHtml(character)}</span>`).join('');
+}
+
 function applyLobbyFlowStep(stepEl, state) {
   if (!stepEl) return;
   stepEl.classList.remove('is-pending', 'is-active', 'is-complete', 'is-blocked');
@@ -644,14 +671,18 @@ function applyLobbyFlowStep(stepEl, state) {
 
 function renderLobby(state) {
   roomCodeDisplay.textContent = state.roomCode;
+  renderRoomCodeDigits(state.roomCode);
   gameRoomCodeEl.textContent = state.roomCode;
 
   const presentation = deriveLobbyPresentation(state);
   phaseBadge.textContent = formatPhaseLabel(state.phase);
   lobbyHeroTitleEl.textContent = presentation.heroTitle;
   lobbyHeroSubtitleEl.textContent = presentation.heroSubtitle;
+  lobbyPosterCalloutEl.textContent = presentation.posterCallout;
   roomCodeHintEl.textContent = presentation.roomCodeHint;
   lobbyStatusSummaryEl.textContent = presentation.statusSummary;
+  lobbyLaunchRingEl.dataset.ringState = presentation.launchRingState;
+  lobbyLaunchRingValueEl.textContent = presentation.launchRingValue;
   lobbyMessage.textContent = presentation.statusMessage;
   lobbyNextStepLabelEl.textContent = presentation.nextStepLabel;
   lobbySupportCopyEl.textContent = presentation.supportCopy;
@@ -668,15 +699,16 @@ function renderLobby(state) {
   for (const player of state.players) {
     const status = getLobbyPlayerStatus(player);
     const card = document.createElement('article');
-    card.className = `player lobby-player-card player-tone-${status.tone} ${player.isYou ? 'you' : ''} ${player.isReady ? 'ready' : ''} ${player.isOccupied ? '' : 'waiting'}`;
+    card.className = `player lobby-player-card player-tone-${status.tone} ${player.slotIndex === 0 ? 'player-corner-red' : player.slotIndex === 1 ? 'player-corner-blue' : ''} ${player.isYou ? 'you' : ''} ${player.isReady ? 'ready' : ''} ${player.isOccupied ? '' : 'waiting'}`;
     card.innerHTML = `
       <div class="player-card-head">
         <div class="player-identity-stack">
           <div class="player-label-row">
-            <span class="eyebrow">${escapeHtml(player.label)}</span>
+            <span class="eyebrow">${escapeHtml(player.slotIndex === 0 ? 'Red corner' : player.slotIndex === 1 ? 'Blue corner' : player.label)}</span>
             ${player.isYou ? '<span class="player-you-tag">You</span>' : ''}
           </div>
           <strong>${escapeHtml(player.displayName)}</strong>
+          <span class="player-corner-note">${escapeHtml(player.label)}</span>
         </div>
         <span class="player-chip player-status-badge player-status-${status.tone}">${escapeHtml(status.badge)}</span>
       </div>
