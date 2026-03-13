@@ -75,108 +75,33 @@ pm2 save
 | Timestamp | `2026-03-13T00:56:08Z` |
 | Status | `SUCCESS` |
 
-## Stakeholder review refresh redeploy — 2026-03-13T01:36:41Z
+## Stakeholder review refresh redeploy — 2026-03-13T01:37:30Z
 - Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the redesigned lobby review build is live
 - Previous dev commit:
-  - full: 
-  - short: 
+  - full: `c1352c4c1eef1b00810cd6c046f628ca90ec16bb`
+  - short: `c1352c4`
 - Redeployed commit:
-  - full: 
-  - short: 
-- Dev URL: 
-- Runtime: usage: pm2 [options] <command>
-
-pm2 -h, --help             all available commands and options
-pm2 examples               display pm2 usage examples
-pm2 <command> -h           help on a specific command
-
-Access pm2 files in ~/.pm2 process  behind nginx on port , forwarding to local app on port 
+  - full: `5ef329aa8645e57b2e73afa99cb652b134dae788`
+  - short: `5ef329a`
+- Dev URL: `http://20.106.185.110:8081/`
+- Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
 
 ### Verification
-- 5ef329aa8645e57b2e73afa99cb652b134dae788 now resolves to .
-- [TAILING] Tailing last 30 lines for [app-dev] process (change the value with --lines option)
-/home/rootagent/.pm2/logs/app-dev-error.log last 30 lines:
-1|app-dev  | npm error errno -2
-1|app-dev  | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/home/rootagent/deployments/dev/package.json'
-1|app-dev  | npm error enoent This is related to npm not being able to find a file.
-1|app-dev  | npm error enoent
-1|app-dev  | npm error A complete log of this run can be found in: /home/rootagent/.npm/_logs/2026-03-11T18_46_16_084Z-debug-0.log
-1|app-dev  | npm error code ENOENT
-1|app-dev  | npm error syscall open
-1|app-dev  | npm error path /home/rootagent/deployments/dev/package.json
-1|app-dev  | npm error errno -2
-1|app-dev  | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/home/rootagent/deployments/dev/package.json'
-1|app-dev  | npm error enoent This is related to npm not being able to find a file.
-1|app-dev  | npm error enoent
-1|app-dev  | npm error A complete log of this run can be found in: /home/rootagent/.npm/_logs/2026-03-11T18_46_21_514Z-debug-0.log
-1|app-dev  | npm error code ENOENT
-1|app-dev  | npm error syscall open
-1|app-dev  | npm error path /home/rootagent/deployments/dev/package.json
-1|app-dev  | npm error errno -2
-1|app-dev  | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/home/rootagent/deployments/dev/package.json'
-1|app-dev  | npm error enoent This is related to npm not being able to find a file.
-1|app-dev  | npm error enoent
-1|app-dev  | npm error A complete log of this run can be found in: /home/rootagent/.npm/_logs/2026-03-11T18_46_26_962Z-debug-0.log
-1|app-dev  | npm error code ENOENT
-1|app-dev  | npm error syscall open
-1|app-dev  | npm error path /home/rootagent/deployments/dev/package.json
-1|app-dev  | npm error errno -2
-1|app-dev  | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/home/rootagent/deployments/dev/package.json'
-1|app-dev  | npm error enoent This is related to npm not being able to find a file.
-1|app-dev  | npm error enoent
-1|app-dev  | npm error A complete log of this run can be found in: /home/rootagent/.npm/_logs/2026-03-11T18_46_32_424Z-debug-0.log
-1|app-dev  | sh: 1: tsx: not found
-
-/home/rootagent/.pm2/logs/app-dev-out.log last 30 lines:
-1|app-dev  | 
-1|app-dev  | > my-test-startup@0.1.0 start
-1|app-dev  | > tsx src/server/index.ts
-1|app-dev  | 
-1|app-dev  | Room lobby server listening on http://localhost:3001 (v0.1.0+b5907d5)
-1|app-dev  | 
-1|app-dev  | > my-test-startup@0.1.0 start
-1|app-dev  | > tsx src/server/index.ts
-1|app-dev  | 
-1|app-dev  | Room lobby server listening on http://localhost:3001 (v0.1.0+b5907d5)
-1|app-dev  | 
-1|app-dev  | > my-test-startup@0.1.0 start
-1|app-dev  | > tsx src/server/index.ts
-1|app-dev  | 
-1|app-dev  | Room lobby server listening on http://localhost:3001 (v0.1.0+355e94d)
-1|app-dev  | 
-1|app-dev  | > my-test-startup@0.1.0 start
-1|app-dev  | > tsx src/server/index.ts
-1|app-dev  | 
-1|app-dev  | Room lobby server listening on http://localhost:3001 (v0.1.0+a8a8aff)
-1|app-dev  | 
-1|app-dev  | > my-test-startup@0.1.0 start
-1|app-dev  | > tsx src/server/index.ts
-1|app-dev  | 
-1|app-dev  | Room lobby server listening on http://localhost:3001 (v0.1.0+c1352c4)
-1|app-dev  | 
-1|app-dev  | > my-test-startup@0.1.0 start
-1|app-dev  | > tsx src/server/index.ts
-1|app-dev  | 
-1|app-dev  | Room lobby server listening on http://localhost:3001 (v0.1.0+5ef329a) shows the active startup line: .
-- {"version":"0.1.0","commit":"5ef329a","builtAt":"2026-03-13T01:35:35.579Z","displayVersion":"v0.1.0+5ef329a"} returned .
-- {"version":"0.1.0","commit":"5ef329a","builtAt":"2026-03-13T01:35:35.579Z","displayVersion":"v0.1.0+5ef329a"} returned the same live build marker: .
-- HTTP/1.1 200 OK
-Server: nginx/1.24.0 (Ubuntu)
-Date: Fri, 13 Mar 2026 01:36:42 GMT
-Content-Type: text/html; charset=utf-8
-Connection: keep-alive
-Cache-Control: no-store, max-age=0
- returned .
+- `git -C /home/rootagent/deployments/dev rev-parse HEAD` now resolves to `5ef329aa8645e57b2e73afa99cb652b134dae788`.
+- `pm2 logs app-dev --lines 30 --nostream` shows the active startup line: `Room lobby server listening on http://localhost:3001 (v0.1.0+5ef329a)`.
+- `curl http://127.0.0.1:3001/build-info.json` returned `{"version":"0.1.0","commit":"5ef329a","builtAt":"2026-03-13T01:35:35.579Z","displayVersion":"v0.1.0+5ef329a"}`.
+- `curl http://20.106.185.110:8081/build-info.json` returned the same live build marker: `v0.1.0+5ef329a`.
+- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
 
 ### Latest deployment record
 
 | Field | Value |
 |---|---|
-| Commit |  |
-| Short |  |
-| Branch |  |
-| Environment |  |
-| PM2 Process |  |
-| URL |  |
-| Timestamp |  |
-| Status |  |
+| Commit | `5ef329aa8645e57b2e73afa99cb652b134dae788` |
+| Short | `5ef329a` |
+| Branch | `feature/issue-98` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-13T01:37:30Z` |
+| Status | `SUCCESS` |
