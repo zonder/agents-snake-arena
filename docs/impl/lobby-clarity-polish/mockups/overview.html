@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lobby Redesign Options — Overview</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b14;
+      --panel: rgba(10, 15, 28, 0.92);
+      --card: rgba(14, 22, 40, 0.95);
+      --muted: #93a6cb;
+      --text: #f5f8ff;
+      --lime: #8fff5a;
+      --cyan: #59dbff;
+      --pink: #ff62ba;
+      --amber: #ffd166;
+      --danger: #ff6b7a;
+      --line: rgba(130, 161, 223, 0.24);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(89,219,255,0.12), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(143,255,90,0.12), transparent 32%),
+        var(--bg);
+      color: var(--text);
+    }
+    .page { max-width: 1480px; margin: 0 auto; padding: 28px; }
+    .hero, .concept, .mini, .phone, .desktop, .rail, .player, .badge, .callout {
+      border: 1px solid var(--line); border-radius: var(--radius);
+      background: var(--panel); box-shadow: 0 24px 56px rgba(0,0,0,0.28);
+    }
+    .hero { padding: 28px; margin-bottom: 24px; }
+    .eyebrow { text-transform: uppercase; letter-spacing: .16em; color: var(--muted); font-size: 12px; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: clamp(28px, 4vw, 48px); margin-top: 8px; }
+    .intro { margin-top: 12px; max-width: 920px; color: var(--muted); line-height: 1.5; }
+    .compare { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 22px; }
+    .callout { padding: 14px 16px; background: rgba(18, 27, 49, 0.72); }
+    .concepts { display: grid; gap: 22px; }
+    .concept { padding: 22px; }
+    .concept-header { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; margin-bottom: 18px; }
+    .concept-header p { color: var(--muted); max-width: 760px; line-height: 1.5; margin-top: 8px; }
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag { border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; color: var(--muted); font-size: 12px; }
+    .boards { display: grid; grid-template-columns: 1.65fr .95fr; gap: 18px; }
+    .desktop { padding: 20px; min-height: 420px; position: relative; overflow: hidden; }
+    .phone { padding: 14px; min-height: 420px; position: relative; overflow: hidden; }
+    .chrome { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+    .brand-row { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; }
+    .brand-mark {
+      width: 82px; height: 82px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.14);
+      display: grid; place-items: center; font-size: 34px; font-weight: 900;
+      background: linear-gradient(135deg, rgba(143,255,90,0.22), rgba(89,219,255,0.14));
+      box-shadow: 0 0 0 1px rgba(143,255,90,0.1), 0 0 36px rgba(89,219,255,0.12);
+    }
+    .room-code, .room-pill {
+      border: 1px solid rgba(143,255,90,0.35); background: rgba(17, 28, 49, 0.96);
+      box-shadow: 0 0 24px rgba(143,255,90,0.12); color: var(--text);
+    }
+    .room-code { border-radius: 18px; padding: 16px 18px; min-width: 220px; }
+    .code { font-size: clamp(28px, 4vw, 46px); letter-spacing: .22em; font-weight: 900; }
+    .sub { color: var(--muted); font-size: 13px; margin-top: 8px; line-height: 1.4; }
+    .layout-two { display: grid; grid-template-columns: 1.1fr .9fr; gap: 16px; }
+    .stack { display: grid; gap: 14px; }
+    .player { padding: 14px; background: var(--card); }
+    .player-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .player-name { font-size: 20px; font-weight: 800; }
+    .slot { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .14em; }
+    .status { font-weight: 800; }
+    .status.ready { color: var(--lime); }
+    .status.wait { color: var(--amber); }
+    .status.offline { color: var(--danger); }
+    .rail { padding: 14px; background: rgba(11, 18, 33, 0.84); }
+    .steps { display: grid; gap: 8px; margin-top: 10px; }
+    .step { display: grid; grid-template-columns: 18px 1fr; gap: 10px; color: var(--muted); font-size: 14px; }
+    .dot { width: 18px; height: 18px; border-radius: 999px; border: 1px solid var(--line); display: inline-grid; place-items: center; font-size: 11px; }
+    .cta-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .btn { border-radius: 14px; padding: 12px 16px; font-weight: 800; }
+    .btn.primary { background: linear-gradient(135deg, var(--lime), #38df93); color: #041409; }
+    .btn.secondary { background: rgba(18, 28, 49, 0.95); border: 1px solid var(--line); }
+    .mini-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+    .mini { padding: 12px; min-height: 124px; background: rgba(12,18,34,0.82); }
+    .mini p { color: var(--muted); margin-top: 8px; line-height: 1.45; font-size: 13px; }
+    .versus { display: grid; place-items: center; font-size: 22px; font-weight: 900; color: var(--pink); }
+
+    .concept-b .desktop { background: linear-gradient(180deg, rgba(13,18,35,.96), rgba(8,12,24,.98)); }
+    .arena-shell { display: grid; grid-template-columns: 240px 1fr 240px; gap: 14px; align-items: stretch; }
+    .side-card, .center-stage { border: 1px solid var(--line); border-radius: 18px; background: rgba(12,18,34,.92); padding: 14px; }
+    .center-stage { display: grid; grid-template-rows: auto 1fr auto; gap: 12px; }
+    .start-banner { border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 12px 14px; background: linear-gradient(135deg, rgba(255,98,186,.14), rgba(89,219,255,.12)); }
+    .player-strip { display: grid; gap: 10px; }
+    .bar { height: 14px; border-radius: 999px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .bar > span { display:block; height:100%; width: 72%; background: linear-gradient(90deg, var(--cyan), var(--lime)); }
+    .board-frame { border: 1px solid rgba(89,219,255,0.28); border-radius: 20px; background:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px) 0 0/100% 10px,
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px) 0 0/10px 100%,
+      rgba(8, 14, 28, 0.96);
+      min-height: 220px; position: relative; }
+    .countdown { position: absolute; inset: 0; display: grid; place-items: center; font-size: 84px; font-weight: 900; color: var(--amber); text-shadow: 0 0 24px rgba(255,209,102,.25); }
+
+    .concept-c .desktop { background: linear-gradient(180deg, rgba(10,16,28,.98), rgba(7,11,20,.98)); }
+    .marquee { border: 1px solid rgba(255,98,186,.28); border-radius: 18px; padding: 14px 18px; background: linear-gradient(90deg, rgba(255,98,186,.12), rgba(89,219,255,.1)); display:flex; justify-content: space-between; gap: 16px; align-items:center; }
+    .marquee-logo { font-size: 24px; font-weight: 900; letter-spacing: .08em; }
+    .billboard { display:grid; grid-template-columns: 1fr 280px; gap: 16px; margin-top: 16px; }
+    .tower { border: 1px solid var(--line); border-radius: 18px; background: rgba(13,21,37,.92); padding: 14px; }
+    .room-pill { border-radius: 999px; display:inline-flex; gap: 12px; align-items:center; padding: 12px 18px; }
+    .timeline { display:grid; gap: 12px; margin-top: 14px; }
+    .timeline .step { grid-template-columns: 30px 1fr; }
+    .timeline .dot { width: 30px; height: 30px; font-size: 12px; }
+    .phone .room-code { min-width: unset; padding: 12px 14px; }
+    .phone .code { font-size: 28px; }
+    .phone .player-name { font-size: 16px; }
+    .phone .btn { width: 100%; text-align: center; }
+    .phone .brand-mark { width: 60px; height: 60px; font-size: 24px; }
+    @media (max-width: 1100px) {
+      .compare, .boards, .billboard, .layout-two, .arena-shell { grid-template-columns: 1fr; }
+      .mini-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div class="eyebrow">Issue #99 · lobby-clarity-polish</div>
+      <h1>Lobby redesign concepts</h1>
+      <p class="intro">These concepts all keep the current product’s retro-arcade direction, 4-letter room code flow, ready logic, reconnect messaging, and desktop/mobile support — but push much harder on pre-match clarity and lobby identity. The goal is to give the stakeholder real choices, not minor cosmetic tweaks.</p>
+      <div class="compare">
+        <div class="callout"><strong>Concept A — Mission Control</strong><br><span class="sub">Best for clarity-first staging with explicit “what happens next” guidance.</span></div>
+        <div class="callout"><strong>Concept B — Arena Cabinet</strong><br><span class="sub">Best for stronger retro-arcade drama with the match board preview as the centerpiece.</span></div>
+        <div class="callout"><strong>Concept C — Neon Marquee</strong><br><span class="sub">Best for a bolder brand identity with a stronger logo/header zone and event-poster feel.</span></div>
+      </div>
+    </section>
+
+    <section class="concepts">
+      <article class="concept concept-a">
+        <div class="concept-header">
+          <div>
+            <div class="eyebrow">Concept A</div>
+            <h2>Mission Control</h2>
+            <p>A clean pre-match staging layout. The room code and next-step explanation dominate the first scan. Players sit in a simple two-card roster while a progress rail explains the flow: share code → second player joins → both ready → auto start.</p>
+          </div>
+          <div class="tags">
+            <span class="tag">Most clarity</span><span class="tag">Lowest implementation risk</span><span class="tag">Strong mobile fit</span>
+          </div>
+        </div>
+        <div class="boards">
+          <div class="desktop">
+            <div class="chrome"><span>Desktop</span><span>Emphasis: room code + steps + player readiness</span></div>
+            <div class="brand-row">
+              <div style="display:flex; gap:14px; align-items:center;">
+                <div class="brand-mark">S</div>
+                <div>
+                  <div class="eyebrow">Snake Arena</div>
+                  <h3>Ready Bay</h3>
+                  <div class="sub">A calm, readable pre-match lobby with subtle neon energy.</div>
+                </div>
+              </div>
+              <div class="room-code"><div class="eyebrow">Room code</div><div class="code">Q J Z R</div><div class="sub">Share this code. The match starts automatically when both players are ready.</div></div>
+            </div>
+            <div class="layout-two">
+              <div class="stack">
+                <div class="player">
+                  <div class="player-top"><div><div class="slot">Player 1 · You</div><div class="player-name">Alex</div></div><div class="status ready">Ready</div></div>
+                  <div class="sub">Host connected. Controls are locked in and waiting for the second player.</div>
+                </div>
+                <div class="player">
+                  <div class="player-top"><div><div class="slot">Player 2</div><div class="player-name">Open slot</div></div><div class="status wait">Waiting</div></div>
+                  <div class="sub">Invite a friend with the room code or copy link/code from the CTA row below.</div>
+                </div>
+                <div class="cta-row"><div class="btn primary">Ready up</div><div class="btn secondary">Copy code</div><div class="btn secondary">Share invite</div></div>
+              </div>
+              <aside class="rail">
+                <div class="eyebrow">What happens next</div>
+                <div class="steps">
+                  <div class="step"><span class="dot">1</span><span>Share the code with your opponent.</span></div>
+                  <div class="step"><span class="dot">2</span><span>When they join, both names appear here instantly.</span></div>
+                  <div class="step"><span class="dot">3</span><span>Both players tap <strong>Ready</strong>.</span></div>
+                  <div class="step"><span class="dot">4</span><span>Auto-countdown begins. No extra start button needed.</span></div>
+                </div>
+              </aside>
+            </div>
+            <div class="mini-grid">
+              <div class="mini"><strong>Why it works</strong><p>Fastest to parse. Minimal ambiguity. Good for first-time players and mobile users.</p></div>
+              <div class="mini"><strong>Retro feel</strong><p>Contained neon, subtle cabinet glow, emblem at top left rather than all-out spectacle.</p></div>
+              <div class="mini"><strong>Risk</strong><p>May feel slightly safer/less theatrical than the stakeholder’s request for a fuller redesign if pushed too conservatively.</p></div>
+            </div>
+          </div>
+          <div class="phone">
+            <div class="chrome"><span>Mobile</span><span>Stacked hierarchy</span></div>
+            <div class="brand-row" style="align-items:flex-start;">
+              <div style="display:flex; gap:12px; align-items:center;"><div class="brand-mark">S</div><div><div class="eyebrow">Snake Arena</div><strong>Ready Bay</strong></div></div>
+            </div>
+            <div class="room-code"><div class="eyebrow">Room code</div><div class="code">Q J Z R</div></div>
+            <div class="stack" style="margin-top:12px;">
+              <div class="player"><div class="player-top"><div><div class="slot">Player 1 · You</div><div class="player-name">Alex</div></div><div class="status ready">Ready</div></div></div>
+              <div class="player"><div class="player-top"><div><div class="slot">Player 2</div><div class="player-name">Sam</div></div><div class="status wait">Not ready</div></div></div>
+              <div class="rail"><div class="eyebrow">Next</div><div class="sub">When both players are ready, the match starts automatically.</div></div>
+              <div class="btn primary">Ready up</div>
+              <div class="btn secondary">Copy code</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="concept concept-b">
+        <div class="concept-header">
+          <div>
+            <div class="eyebrow">Concept B</div>
+            <h2>Arena Cabinet</h2>
+            <p>A fuller redesign with a stronger arcade cabinet silhouette. The center of the lobby previews the arena/countdown zone, making the transition from lobby to match feel continuous. Players and room info live in left/right side cards around a dramatic center stage.</p>
+          </div>
+          <div class="tags">
+            <span class="tag">Most arcade</span><span class="tag">Strongest countdown transition</span><span class="tag">More opinionated</span>
+          </div>
+        </div>
+        <div class="boards">
+          <div class="desktop">
+            <div class="chrome"><span>Desktop</span><span>Emphasis: theatrical pre-match experience</span></div>
+            <div class="start-banner"><div class="eyebrow">Marquee</div><strong>Snake Arena — Match Bay</strong><div class="sub">Room opens as a cabinet-like shell so “lobby to gameplay” feels like one scene.</div></div>
+            <div class="arena-shell" style="margin-top:14px;">
+              <aside class="side-card">
+                <div class="eyebrow">Players</div>
+                <div class="player-strip" style="margin-top:10px;">
+                  <div class="player"><div class="player-top"><div><div class="slot">P1 · You</div><div class="player-name">Alex</div></div><div class="status ready">Ready</div></div></div>
+                  <div class="player"><div class="player-top"><div><div class="slot">P2</div><div class="player-name">Sam</div></div><div class="status wait">Not ready</div></div></div>
+                </div>
+              </aside>
+              <section class="center-stage">
+                <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;"><div><div class="eyebrow">Room code</div><div class="code" style="font-size:40px;">Q J Z R</div></div><div class="btn secondary">Copy</div></div>
+                <div class="board-frame"><div class="countdown">3</div></div>
+                <div class="sub">Both players ready → short 3, 2, 1 countdown → immediate board start.</div>
+              </section>
+              <aside class="side-card">
+                <div class="eyebrow">Flow</div>
+                <div class="steps">
+                  <div class="step"><span class="dot">✓</span><span>Room created</span></div>
+                  <div class="step"><span class="dot">✓</span><span>Both players joined</span></div>
+                  <div class="step"><span class="dot">!</span><span>Waiting for Sam to ready up</span></div>
+                </div>
+                <div class="cta-row"><div class="btn primary">Ready</div></div>
+              </aside>
+            </div>
+            <div class="mini-grid">
+              <div class="mini"><strong>Why it works</strong><p>The lobby feels like a proper pre-fight chamber instead of a utility screen.</p></div>
+              <div class="mini"><strong>Retro feel</strong><p>Most aligned to an arcade cabinet fantasy with marquee + center “screen”.</p></div>
+              <div class="mini"><strong>Risk</strong><p>If overbuilt, the center stage could compete with room-code legibility on small screens.</p></div>
+            </div>
+          </div>
+          <div class="phone">
+            <div class="chrome"><span>Mobile</span><span>Center stage compresses vertically</span></div>
+            <div class="start-banner"><strong>Snake Arena</strong><div class="sub">Mini cabinet layout</div></div>
+            <div class="room-code" style="margin-top:12px;"><div class="eyebrow">Room</div><div class="code">Q J Z R</div></div>
+            <div class="board-frame" style="min-height:150px; margin-top:12px;"><div class="countdown" style="font-size:56px;">3</div></div>
+            <div class="player" style="margin-top:12px;"><div class="player-top"><div><div class="slot">P1</div><div class="player-name">Alex</div></div><div class="status ready">Ready</div></div></div>
+            <div class="player" style="margin-top:10px;"><div class="player-top"><div><div class="slot">P2</div><div class="player-name">Sam</div></div><div class="status wait">Not ready</div></div></div>
+            <div class="btn primary" style="margin-top:12px;">Ready up</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="concept concept-c">
+        <div class="concept-header">
+          <div>
+            <div class="eyebrow">Concept C</div>
+            <h2>Neon Marquee</h2>
+            <p>A stronger branding-first direction. The top of the screen becomes a showpiece marquee with emblem/logo, while the room code is turned into a giant “ticket” and the lobby flow reads like a mini event poster. Good if the stakeholder wants the lobby to feel distinctly branded and memorable.</p>
+          </div>
+          <div class="tags">
+            <span class="tag">Best brand moment</span><span class="tag">Very stakeholder-visible</span><span class="tag">Needs copy discipline</span>
+          </div>
+        </div>
+        <div class="boards">
+          <div class="desktop">
+            <div class="chrome"><span>Desktop</span><span>Emphasis: logo/emblem + event-poster hierarchy</span></div>
+            <div class="marquee"><div class="marquee-logo">⚡ SNAKE ARENA ⚡</div><div class="sub">2-player retro showdown</div></div>
+            <div class="billboard">
+              <div>
+                <div class="room-pill"><span class="eyebrow" style="color:#dbe6ff;">Room code</span><strong style="font-size:36px; letter-spacing:.24em;">Q J Z R</strong></div>
+                <div class="timeline">
+                  <div class="step"><span class="dot">1</span><span><strong>Invite your opponent</strong><br><span class="sub">Send the code so they can enter the room.</span></span></div>
+                  <div class="step"><span class="dot">2</span><span><strong>Check both names</strong><br><span class="sub">The lobby confirms who is in each slot and who still needs to act.</span></span></div>
+                  <div class="step"><span class="dot">3</span><span><strong>Both players ready</strong><br><span class="sub">Automatic start countdown appears immediately.</span></span></div>
+                </div>
+                <div class="cta-row"><div class="btn primary">I’m ready</div><div class="btn secondary">Copy code</div></div>
+              </div>
+              <aside class="tower">
+                <div class="eyebrow">Roster</div>
+                <div class="player" style="margin-top:10px;"><div class="player-top"><div><div class="slot">Player 1 · You</div><div class="player-name">Alex</div></div><div class="status ready">Ready</div></div></div>
+                <div class="versus">VS</div>
+                <div class="player"><div class="player-top"><div><div class="slot">Player 2</div><div class="player-name">Sam</div></div><div class="status wait">Not ready</div></div></div>
+                <div class="rail" style="margin-top:12px;"><div class="eyebrow">Now</div><div class="sub">Waiting for Sam to tap ready. Countdown begins as soon as both players are set.</div></div>
+              </aside>
+            </div>
+            <div class="mini-grid">
+              <div class="mini"><strong>Why it works</strong><p>Feels like a genuine branded lobby, not just a cleaned-up panel stack.</p></div>
+              <div class="mini"><strong>Retro feel</strong><p>Closest to arcade attract-screen / tournament poster energy.</p></div>
+              <div class="mini"><strong>Risk</strong><p>Requires strongest typography/copy discipline so the showpiece header doesn’t outrank the room code or player state.</p></div>
+            </div>
+          </div>
+          <div class="phone">
+            <div class="chrome"><span>Mobile</span><span>Brand on top, actions below</span></div>
+            <div class="marquee" style="padding:12px 14px;"><strong>Snake Arena</strong></div>
+            <div class="room-code" style="margin-top:12px;"><div class="eyebrow">Room code</div><div class="code">Q J Z R</div><div class="sub">Share this code. Both players must ready up.</div></div>
+            <div class="player" style="margin-top:12px;"><div class="player-top"><div><div class="slot">Player 1</div><div class="player-name">Alex</div></div><div class="status ready">Ready</div></div></div>
+            <div class="player" style="margin-top:10px;"><div class="player-top"><div><div class="slot">Player 2</div><div class="player-name">Open slot</div></div><div class="status wait">Waiting</div></div></div>
+            <div class="rail" style="margin-top:12px;"><div class="eyebrow">Next</div><div class="sub">Invite your opponent, then both tap ready to launch the round.</div></div>
+            <div class="btn primary" style="margin-top:12px;">Copy code</div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>
