@@ -96,3 +96,8 @@
   - simpler player cards labeled by player slot instead of corner/poster framing
   - a clearer bottom action panel for the current next step and ready CTA
 - Preserved room-code clarity, duplicate-name handling, reconnect guidance, mobile stacking, ready/countdown handoff, and reduced-motion-safe CSS polish.
+
+## Review cycle 3 follow-up fixes
+- Restored the approved in-shell Mission Control countdown handoff by keeping `starting` on the lobby shell until the actual `game:start` transition, instead of flipping straight to the gameplay panel during `lobby:state` / `game:state` / `game:countdown` updates.
+- Wired `#lobbyHeroSubtitle` back into `renderLobby()` so reconnect, ready-check, and countdown states now show their derived state-specific guidance instead of the stale default subtitle.
+- Kept the scope limited to presentation/rendering behavior; no room-state contracts or server events changed.

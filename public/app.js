@@ -17,6 +17,7 @@ const readyButton = document.getElementById('readyButton');
 const lobbyMessage = document.getElementById('lobbyMessage');
 const phaseBadge = document.getElementById('phaseBadge');
 const lobbyHeroTitleEl = document.getElementById('lobbyHeroTitle');
+const lobbyHeroSubtitleEl = document.getElementById('lobbyHeroSubtitle');
 const lobbyPosterCalloutEl = document.getElementById('lobbyPosterCallout');
 const lobbyLaunchRingEl = document.getElementById('lobbyLaunchRing');
 const lobbyLaunchRingValueEl = document.getElementById('lobbyLaunchRingValue');
@@ -179,8 +180,10 @@ socket.on('game:countdown', (payload) => {
   latestCountdownState = payload;
   statusEl.textContent = `Match starts in ${payload.secondsRemaining}...`;
   gameStatusInlineEl.textContent = `Match starts in ${payload.secondsRemaining}...`;
-  applyPhaseTheme('countdown', 'neutral');
-  showScreen('gameplay');
+  if (uiState.screen !== 'lobby') {
+    applyPhaseTheme('countdown', 'neutral');
+    showScreen('gameplay');
+  }
   triggerCountdownStep(payload.secondsRemaining);
 });
 
@@ -562,7 +565,7 @@ function deriveLobbyPresentation(state) {
   const reconnectMessage = describeReconnect(state);
   const you = state.players.find((player) => player.isYou);
   const opponent = state.players.find((player) => !player.isYou);
-  const gameplayFocused = state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
+  const gameplayFocused = state.phase === 'in-progress' || state.phase === 'game-over';
 
   const presentation = {
     gameplayFocused,
@@ -698,6 +701,7 @@ function renderLobby(state) {
   const presentation = deriveLobbyPresentation(state);
   phaseBadge.textContent = formatPhaseLabel(state.phase);
   lobbyHeroTitleEl.textContent = presentation.heroTitle;
+  if (lobbyHeroSubtitleEl) lobbyHeroSubtitleEl.textContent = presentation.heroSubtitle;
   lobbyPosterCalloutEl.textContent = presentation.posterCallout;
   lobbyStatusSummaryEl.textContent = presentation.statusSummary;
   if (roomCodeHintEl) roomCodeHintEl.textContent = presentation.roomCodeHint;
@@ -827,7 +831,10 @@ function renderRematch(rematch, phase, message) {
 }
 
 function renderGame(state, perSlotResult) {
-  showScreen('gameplay');
+  const gameplayVisible = state.phase === 'in-progress' || state.phase === 'game-over';
+  if (gameplayVisible) {
+    showScreen('gameplay');
+  }
   gameRoomCodeEl.textContent = state.roomCode;
   ensureBoard(state.board.width, state.board.height);
   score0El.textContent = String(state.snakes[0].score);
