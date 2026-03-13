@@ -69,10 +69,13 @@
             </div>
 
             <div class="lobby-side-panel">
-              <section id="roomCodeCard" class="room-header room-code-hero room-code-command-card ticket-card compact-ticket-card">
+              <section id="roomCodeCard" class="room-header room-code-hero room-code-command-card room-code-panel">
                 <div class="room-code-card-copy">
                   <div class="room-code-card-header">
-                    <div class="eyebrow">Room code</div>
+                    <div>
+                      <div class="eyebrow">Room code</div>
+                      <p id="roomCodeHint" class="message room-code-hint">Share this room code with your opponent to fill the room.</p>
+                    </div>
                     <button id="lobbyHelpButton" class="secondary-button lobby-help-button" type="button" aria-haspopup="dialog" aria-controls="lobbyHelpDialog">How it works</button>
                   </div>
                   <div id="roomCodeDisplay" class="room-code room-code-sr">----</div>
@@ -127,14 +130,14 @@
             </form>
           </dialog>
 
-          <section class="lobby-players-section poster-corners-section">
+          <section class="lobby-players-section">
             <div class="section-heading-row">
               <div>
                 <div class="eyebrow">Players</div>
                 <h3 class="section-title">Players and readiness</h3>
               </div>
             </div>
-            <div id="players" class="players players-rail poster-corners"></div>
+            <div id="players" class="players players-rail lobby-player-grid"></div>
           </section>
 
           <section id="lobbyActionPanel" class="info-card lobby-action-panel">

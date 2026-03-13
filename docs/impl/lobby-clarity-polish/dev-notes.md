@@ -77,3 +77,11 @@
   - duplicate-name handling still uses the existing display-name logic
   - ready/unready and countdown flow still use the same `lobby:state` / `game:countdown` transitions
   - mobile layout remains a stacked single-column composition under the existing responsive breakpoints
+
+## Feedback round: remove remaining Fight Poster Live treatment
+- Addressed the latest stakeholder note to drop the lingering **Fight Poster Live** feel from the shipped lobby, not just the earlier copy references.
+- Simplified the live lobby presentation layer again so it reads like a branded staging screen instead of an event poster:
+  - converted the stage callout from a large circular launch ring into a calmer rectangular status panel
+  - removed the remaining ticket-style room-code framing and added an inline room-code hint so sharing/reconnect guidance stays explicit without the poster metaphor
+  - renamed the player-grid presentation hooks away from poster-specific structure while keeping the same responsive two-card / one-column behavior
+- Kept the core lobby flows intact: room code visibility, player list/readiness, reconnect guidance, duplicate-name handling, next-step prompts, and mobile stacking still rely on the same client-side state derivation.

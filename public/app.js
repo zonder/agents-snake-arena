@@ -20,6 +20,7 @@ const lobbyHeroTitleEl = document.getElementById('lobbyHeroTitle');
 const lobbyPosterCalloutEl = document.getElementById('lobbyPosterCallout');
 const lobbyLaunchRingEl = document.getElementById('lobbyLaunchRing');
 const lobbyLaunchRingValueEl = document.getElementById('lobbyLaunchRingValue');
+const roomCodeHintEl = document.getElementById('roomCodeHint');
 const lobbyHelpDialogEl = document.getElementById('lobbyHelpDialog');
 const lobbyHelpButton = document.getElementById('lobbyHelpButton');
 const roomCodeDigitsEl = document.getElementById('roomCodeDigits');
@@ -698,6 +699,7 @@ function renderLobby(state) {
   lobbyHeroTitleEl.textContent = presentation.heroTitle;
   lobbyPosterCalloutEl.textContent = presentation.posterCallout;
   lobbyStatusSummaryEl.textContent = presentation.statusSummary;
+  if (roomCodeHintEl) roomCodeHintEl.textContent = presentation.roomCodeHint;
   lobbyLaunchRingEl.dataset.ringState = presentation.launchRingState;
   lobbyLaunchRingValueEl.textContent = presentation.launchRingValue;
   lobbyMessage.textContent = presentation.statusMessage;
