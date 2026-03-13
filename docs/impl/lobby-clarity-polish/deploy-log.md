@@ -75,69 +75,33 @@ pm2 save
 | Timestamp | `2026-03-13T00:56:08Z` |
 | Status | `SUCCESS` |
 
-## Stakeholder review refresh redeploy — 2026-03-13T01:37:30Z
-- Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the redesigned lobby review build is live
+## Stakeholder review refresh redeploy — 2026-03-13T10:53:55Z
+- Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the created-room lobby fix is live for stakeholder review
 - Previous dev commit:
-  - full: `c1352c4c1eef1b00810cd6c046f628ca90ec16bb`
-  - short: `c1352c4`
-- Redeployed commit:
   - full: `5ef329aa8645e57b2e73afa99cb652b134dae788`
   - short: `5ef329a`
+- Redeployed commit:
+  - full: `3edba268b454d304dab0f0a200bb75306f436b87`
+  - short: `3edba26`
 - Dev URL: `http://20.106.185.110:8081/`
 - Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
 
 ### Verification
-- `git -C /home/rootagent/deployments/dev rev-parse HEAD` now resolves to `5ef329aa8645e57b2e73afa99cb652b134dae788`.
-- `pm2 logs app-dev --lines 30 --nostream` shows the active startup line: `Room lobby server listening on http://localhost:3001 (v0.1.0+5ef329a)`.
-- `curl http://127.0.0.1:3001/build-info.json` returned `{"version":"0.1.0","commit":"5ef329a","builtAt":"2026-03-13T01:35:35.579Z","displayVersion":"v0.1.0+5ef329a"}`.
-- `curl http://20.106.185.110:8081/build-info.json` returned the same live build marker: `v0.1.0+5ef329a`.
+- `git -C /home/rootagent/deployments/dev rev-parse HEAD` returned `3edba268b454d304dab0f0a200bb75306f436b87`.
+- `curl -sf http://127.0.0.1:3001/build-info.json` returned `{"version":"0.1.0","commit":"3edba26","builtAt":"2026-03-13T10:53:20.125Z","displayVersion":"v0.1.0+3edba26"}`.
+- `curl -sf http://20.106.185.110:8081/build-info.json` returned `{"version":"0.1.0","commit":"3edba26","builtAt":"2026-03-13T10:53:20.125Z","displayVersion":"v0.1.0+3edba26"}`.
 - `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
+- `pm2 logs app-dev --lines 6 --nostream` shows the active startup line for `v0.1.0+3edba26`.
 
 ### Latest deployment record
 
 | Field | Value |
 |---|---|
-| Commit | `5ef329aa8645e57b2e73afa99cb652b134dae788` |
-| Short | `5ef329a` |
+| Commit | `3edba268b454d304dab0f0a200bb75306f436b87` |
+| Short | `3edba26` |
 | Branch | `feature/issue-98` |
 | Environment | `dev` |
 | PM2 Process | `app-dev` |
 | URL | `http://20.106.185.110:8081/` |
-| Timestamp | `2026-03-13T01:37:30Z` |
+| Timestamp | `2026-03-13T10:53:55Z` |
 | Status | `SUCCESS` |
-
-## Final branch-sync redeploy — 2026-03-13T01:38:10Z
-- Trigger: redeploy once more after committing the repaired deployment artifact so live dev matches branch HEAD exactly
-- Branch before final artifact commit: `feature/issue-98`
-- Live app commit before final artifact sync: `949b1a24e238907062bfb7d75089b46c6f5c6abd` (`949b1a2`)
-- Dev URL: `http://20.106.185.110:8081/`
-- Expected action: push this artifact update, then redeploy the resulting branch HEAD and verify `/build-info.json`
-
-## Stakeholder review refresh redeploy — 2026-03-13T10:53:03Z
-- Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the created-room lobby fix is live for stakeholder review
-- Previous dev commit:
-  - full: `b4d4d146b00cb76786e319056991f2eee4aeeddd`
-  - short: `b4d4d14`
-- Branch HEAD at log update time:
-  - full: `8cbb0a22b12e3b357b33cc439e41bc0f71702c4d`
-  - short: `8cbb0a2`
-- Dev URL: `http://20.106.185.110:8081/`
-- Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
-
-### Verification to complete after redeploy
-- Reset `/home/rootagent/deployments/dev` to `origin/feature/issue-98`.
-- Run `npm ci` and `npm run build` in the dev deployment checkout.
-- Restart `app-dev` via PM2 and verify `/build-info.json` reports the new branch HEAD.
-
-### Pending deployment record
-
-| Field | Value |
-|---|---|
-| Commit | `8cbb0a22b12e3b357b33cc439e41bc0f71702c4d` |
-| Short | `8cbb0a2` |
-| Branch | `feature/issue-98` |
-| Environment | `dev` |
-| PM2 Process | `app-dev` |
-| URL | `http://20.106.185.110:8081/` |
-| Timestamp | `2026-03-13T10:53:03Z` |
-| Status | `PENDING` |
