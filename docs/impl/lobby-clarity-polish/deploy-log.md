@@ -48,3 +48,29 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-13T00:43:10Z` |
 | Status | `SUCCESS` |
+
+## Stakeholder review refresh — 2026-03-13T00:56:08Z
+- Trigger: redeploy feature branch for parent issue #99 / PR #102 after stronger lobby-polish follow-up
+- Branch: `feature/issue-98`
+- Deployed commit: `a8a8affc2e87196c79e6668c63f0fa0343011c43` (`a8a8aff`)
+- Dev URL: `http://20.106.185.110:8081/`
+- Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
+
+### Refresh verification
+- `git -C /home/rootagent/deployments/dev rev-parse HEAD` returned `a8a8affc2e87196c79e6668c63f0fa0343011c43`.
+- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
+- `curl http://20.106.185.110:8081/build-info.json` returned `{"version":"0.1.0","commit":"a8a8aff","builtAt":"2026-03-13T00:54:58.837Z","displayVersion":"v0.1.0+a8a8aff"}`.
+- The live build marker reports `v0.1.0+a8a8aff`.
+
+### Refresh deployment record
+
+| Field | Value |
+|-------|-------|
+| Commit | `a8a8affc2e87196c79e6668c63f0fa0343011c43` |
+| Short | `a8a8aff` |
+| Branch | `feature/issue-98` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-13T00:56:08Z` |
+| Status | `SUCCESS` |
