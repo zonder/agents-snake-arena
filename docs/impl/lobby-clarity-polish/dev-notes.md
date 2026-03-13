@@ -49,3 +49,13 @@
 - Moved the inline **Live guidance** content into a dedicated lobby help popup so the main poster layout stays cleaner while the same guidance remains one tap/click away.
 - Slimmed the desktop room-code module down to a lighter **Room code** ticket with the code itself plus the relevant action buttons (`Copy code`, `How it works`) instead of the heavier inline guidance stack.
 - Preserved the poster-shell direction, reconnect messaging, duplicate-name handling, ready CTA/countdown flow, and mobile usability by keeping the same client-side presentation derivation and reusing it inside the popup.
+
+## Follow-up fix: created-room lobby still too huge on desktop
+- Reproduced the latest stakeholder complaint against the branch layout: the host-created room state still felt oversized on desktop because the fight-poster shell consumed a full-width first row and the player cards plus ready panel each stacked below it as separate full-width rows.
+- Root cause: even after earlier sidebar cleanup, the desktop composition was still spending too much vertical space on decorative poster scale (large launch ring, roomy ticket digits, tall cards) and on single-column stacking, so the host-only lobby routinely pushed core controls below the fold.
+- Fix:
+  - convert the desktop lobby shell into a two-column dashboard where the poster spans the top row, then the player corners sit beside the ready panel instead of below another full-width block
+  - tighten the poster shell proportions, launch ring, room-code ticket digits, and desktop card padding/min-heights so the created-room state reads as intentional without dominating the viewport
+  - keep the mobile breakpoint on the existing one-column stack so phone usability remains unchanged
+- Preserved reconnect clarity, duplicate-name handling, ready/unready semantics, countdown handoff, and mobile responsiveness because this pass only rebalanced presentation-layer CSS.
+
