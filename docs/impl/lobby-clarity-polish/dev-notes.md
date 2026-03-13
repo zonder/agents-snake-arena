@@ -28,3 +28,10 @@
 ## Notes on contracts
 - No new Socket.IO events or room lifecycle phases were added.
 - The optional `nextStep` / `shareHint` payload additions remain unnecessary for this pass because the client-side presentation layer still cleanly derives the required copy from existing lobby state.
+
+
+## Follow-up fix: created-room poster looked stretched/corrupted
+- Reproduced the stakeholder report on build `v0.1.0+b4d4d14`: the host-created room state showed a large empty block inside the left fight-poster column, which made the lobby read as visually broken.
+- Root cause: the new two-column `.lobby-poster-shell` grid was stretching its left poster card to the full row height instead of letting it size to its own content, so the waiting-for-player-two state exposed a tall dead area under the launch ring.
+- Fix: set the poster shell to `align-items: start` so both columns keep their intrinsic content height and the created-room lobby composes as a compact, intentional poster + command stack instead of a stretched panel.
+- Verified with a fresh local host-created-room screenshot before/after, then reran automated checks.
