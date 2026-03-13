@@ -112,3 +112,32 @@ pm2 save
 - Live app commit before final artifact sync: `949b1a24e238907062bfb7d75089b46c6f5c6abd` (`949b1a2`)
 - Dev URL: `http://20.106.185.110:8081/`
 - Expected action: push this artifact update, then redeploy the resulting branch HEAD and verify `/build-info.json`
+
+## Stakeholder review refresh redeploy — 2026-03-13T10:53:03Z
+- Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the created-room lobby fix is live for stakeholder review
+- Previous dev commit:
+  - full: `b4d4d146b00cb76786e319056991f2eee4aeeddd`
+  - short: `b4d4d14`
+- Branch HEAD at log update time:
+  - full: `8cbb0a22b12e3b357b33cc439e41bc0f71702c4d`
+  - short: `8cbb0a2`
+- Dev URL: `http://20.106.185.110:8081/`
+- Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
+
+### Verification to complete after redeploy
+- Reset `/home/rootagent/deployments/dev` to `origin/feature/issue-98`.
+- Run `npm ci` and `npm run build` in the dev deployment checkout.
+- Restart `app-dev` via PM2 and verify `/build-info.json` reports the new branch HEAD.
+
+### Pending deployment record
+
+| Field | Value |
+|---|---|
+| Commit | `8cbb0a22b12e3b357b33cc439e41bc0f71702c4d` |
+| Short | `8cbb0a2` |
+| Branch | `feature/issue-98` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-13T10:53:03Z` |
+| Status | `PENDING` |
