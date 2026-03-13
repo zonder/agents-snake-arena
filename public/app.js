@@ -16,6 +16,12 @@ const playersEl = document.getElementById('players');
 const readyButton = document.getElementById('readyButton');
 const lobbyMessage = document.getElementById('lobbyMessage');
 const phaseBadge = document.getElementById('phaseBadge');
+const lobbyHeroTitleEl = document.getElementById('lobbyHeroTitle');
+const lobbyHeroSubtitleEl = document.getElementById('lobbyHeroSubtitle');
+const roomCodeHintEl = document.getElementById('roomCodeHint');
+const lobbyStatusSummaryEl = document.getElementById('lobbyStatusSummary');
+const lobbyNextStepLabelEl = document.getElementById('lobbyNextStepLabel');
+const lobbySupportCopyEl = document.getElementById('lobbySupportCopy');
 const gameStageEl = document.getElementById('gameStage');
 const boardEl = document.getElementById('board');
 const boardFxLayerEl = document.getElementById('boardFxLayer');
@@ -502,36 +508,155 @@ playerNameInput.addEventListener('input', () => {
   setNameHelp(result.valid ? `Ready as ${result.normalized}.` : 'Enter a name up to 12 characters. Spaces are fine; emoji are not.', !result.valid && playerNameInput.value.length > 0);
 });
 
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
+}
+
+function getLobbyPlayerStatus(player) {
+  if (!player.isOccupied) {
+    return { meta: 'Open slot', badge: 'Waiting', tone: 'waiting', detail: 'Waiting for another challenger to join this room.' };
+  }
+  if (player.isReserved) {
+    return { meta: 'Reconnect window active', badge: 'Reserved', tone: 'reserved', detail: 'This slot is held while the player reconnects.' };
+  }
+  if (!player.isConnected) {
+    return { meta: 'Temporarily offline', badge: 'Offline', tone: 'reserved', detail: 'Connection dropped. The room will hold briefly for a reconnect.' };
+  }
+  if (player.isReady) {
+    return { meta: 'Locked in', badge: 'Ready', tone: 'ready', detail: 'Ready for the countdown as soon as everyone is set.' };
+  }
+  return { meta: 'Needs ready', badge: 'Not ready', tone: 'joined', detail: 'Connected and waiting for the ready signal.' };
+}
+
+function deriveLobbyPresentation(state) {
+  const reconnectMessage = describeReconnect(state);
+  const you = state.players.find((player) => player.isYou);
+  const opponent = state.players.find((player) => !player.isYou);
+  const gameplayFocused = state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
+
+  const presentation = {
+    gameplayFocused,
+    heroTitle: 'Match lobby',
+    heroSubtitle: 'Share the code, fill the rail, then launch when both players are ready.',
+    roomCodeHint: 'Share this code with your opponent to fill the room.',
+    statusSummary: formatPhaseLabel(state.phase),
+    nextStepLabel: 'Share the code to bring in player two.',
+    supportCopy: 'The match starts automatically once both players are connected and ready.',
+    statusMessage: reconnectMessage || state.message || '',
+    readyButtonLabel: you?.isReady ? 'Unready' : 'Ready up',
+    readyButtonDisabled: !you || !you.isOccupied || gameplayFocused,
+    readyButtonWaiting: !!state.allPlayersPresent && !state.allReady,
+  };
+
+  if (state.reconnect?.active) {
+    presentation.heroTitle = state.reconnect.yourSlotReserved ? 'Reconnect to the arena' : 'Lobby hold active';
+    presentation.heroSubtitle = state.reconnect.yourSlotReserved
+      ? 'Your seat is still reserved. Jump back in before the timer expires.'
+      : 'One seat is reserved while the disconnected player reconnects.';
+    presentation.roomCodeHint = 'Keep the code handy while the reconnect window is active.';
+    presentation.statusSummary = 'Reconnect window';
+    presentation.nextStepLabel = state.reconnect.yourSlotReserved
+      ? `Resume your slot within ${state.reconnect.secondsRemaining ?? 0}s.`
+      : `${state.reconnect.disconnectedPlayerDisplayName || state.reconnect.disconnectedPlayerName || 'A player'} can still resume this match.`;
+    presentation.supportCopy = reconnectMessage || 'Once the player returns, the lobby flow continues from here.';
+    return presentation;
+  }
+
+  if (!state.allPlayersPresent) {
+    presentation.heroTitle = 'Stage the next showdown';
+    presentation.heroSubtitle = 'Your room is live. Send the code and bring in player two.';
+    presentation.roomCodeHint = 'Share this code with a friend so they can drop straight into the lobby.';
+    presentation.statusSummary = 'Waiting for player two';
+    presentation.nextStepLabel = 'Share the room code to fill the second slot.';
+    presentation.supportCopy = you?.isReady
+      ? 'You are marked ready. The countdown starts after another player joins and both players are ready.'
+      : 'You can ready up now, but the match will only start after another player joins and both players confirm.';
+    return presentation;
+  }
+
+  if (state.phase === 'starting') {
+    presentation.heroTitle = 'Countdown armed';
+    presentation.heroSubtitle = 'Both players are locked in. Match start is underway.';
+    presentation.roomCodeHint = 'Room is full. Hold steady while the countdown hands off to gameplay.';
+    presentation.statusSummary = 'Match starting';
+    presentation.nextStepLabel = state.message || 'Countdown live. Match is starting now.';
+    presentation.supportCopy = 'Ready states are locked while the server transitions into the round.';
+    return presentation;
+  }
+
+  if (state.allPlayersPresent && !state.allReady) {
+    presentation.heroTitle = 'Both players are in';
+    presentation.heroSubtitle = 'Confirm both readiness lights to trigger the automatic countdown.';
+    presentation.roomCodeHint = 'Room is full. Final check: both players must be ready.';
+    presentation.statusSummary = 'Ready check';
+    if (you && !you.isReady) {
+      presentation.nextStepLabel = 'Press ready when you are set.';
+      presentation.supportCopy = 'Your opponent is here. The match starts automatically after both readiness badges turn green.';
+    } else {
+      presentation.nextStepLabel = `${opponent?.displayName || 'Your opponent'} still needs to ready up.`;
+      presentation.supportCopy = 'You are locked in. Stay ready and the countdown will begin as soon as they confirm.';
+    }
+    return presentation;
+  }
+
+  if (state.allReady) {
+    presentation.heroTitle = 'Launch sequence ready';
+    presentation.heroSubtitle = 'Both players are ready. Countdown should begin immediately.';
+    presentation.roomCodeHint = 'No further sharing needed. This room is ready to launch.';
+    presentation.statusSummary = 'Ready';
+    presentation.nextStepLabel = 'Countdown should begin in just a moment.';
+    presentation.supportCopy = 'If the transition stalls, stay connected — the room flow remains authoritative on the server.';
+  }
+
+  return presentation;
+}
+
 function renderLobby(state) {
   roomCodeDisplay.textContent = state.roomCode;
   gameRoomCodeEl.textContent = state.roomCode;
+
+  const presentation = deriveLobbyPresentation(state);
   phaseBadge.textContent = formatPhaseLabel(state.phase);
-  lobbyMessage.textContent = describeReconnect(state) || state.message || '';
+  lobbyHeroTitleEl.textContent = presentation.heroTitle;
+  lobbyHeroSubtitleEl.textContent = presentation.heroSubtitle;
+  roomCodeHintEl.textContent = presentation.roomCodeHint;
+  lobbyStatusSummaryEl.textContent = presentation.statusSummary;
+  lobbyMessage.textContent = presentation.statusMessage;
+  lobbyNextStepLabelEl.textContent = presentation.nextStepLabel;
+  lobbySupportCopyEl.textContent = presentation.supportCopy;
   playersEl.innerHTML = '';
 
-  const gameplayFocused = state.phase === 'starting' || state.phase === 'in-progress' || state.phase === 'game-over';
-  applyPhaseTheme(gameplayFocused ? getPhaseTheme(state.phase) : 'lobby', 'neutral');
-  showScreen(gameplayFocused ? 'gameplay' : 'lobby');
+  applyPhaseTheme(presentation.gameplayFocused ? getPhaseTheme(state.phase) : 'lobby', 'neutral');
+  showScreen(presentation.gameplayFocused ? 'gameplay' : 'lobby');
 
   for (const player of state.players) {
-    const card = document.createElement('div');
-    card.className = `player ${player.isYou ? 'you' : ''} ${player.isReady ? 'ready' : ''} ${player.isOccupied ? '' : 'waiting'}`;
+    const status = getLobbyPlayerStatus(player);
+    const card = document.createElement('article');
+    card.className = `player lobby-player-card player-tone-${status.tone} ${player.isYou ? 'you' : ''} ${player.isReady ? 'ready' : ''} ${player.isOccupied ? '' : 'waiting'}`;
     card.innerHTML = `
-      <div class="player-meta">
-        <strong>${player.displayName}${player.isYou ? ' (You)' : ''}</strong>
-        <span>${player.label} · ${player.isOccupied ? (player.isReserved ? 'Reserved' : player.isConnected ? 'Joined' : 'Disconnected') : 'Waiting'}</span>
+      <div class="player-card-head">
+        <div class="player-identity-stack">
+          <div class="player-label-row">
+            <span class="eyebrow">${escapeHtml(player.label)}</span>
+            ${player.isYou ? '<span class="player-you-tag">You</span>' : ''}
+          </div>
+          <strong>${escapeHtml(player.displayName)}</strong>
+        </div>
+        <span class="player-chip player-status-badge player-status-${status.tone}">${escapeHtml(status.badge)}</span>
       </div>
-      <div class="player-state">${player.isOccupied ? (player.isReserved ? 'Reconnect window active' : player.isConnected ? (player.isReady ? 'Ready to launch' : 'Not ready yet') : 'Temporarily offline') : 'Open slot'}</div>
+      <div class="player-meta">
+        <span>${escapeHtml(status.meta)}</span>
+      </div>
+      <div class="player-state">${escapeHtml(status.detail)}</div>
     `;
     playersEl.appendChild(card);
   }
 
-  const you = state.players.find((player) => player.isYou);
-  readyButton.textContent = you?.isReady ? 'Unready' : 'Ready up';
-  readyButton.disabled = !you || !you.isOccupied || gameplayFocused;
-  readyButton.classList.toggle('is-waiting', !!state.allPlayersPresent && !state.allReady);
+  readyButton.textContent = presentation.readyButtonLabel;
+  readyButton.disabled = presentation.readyButtonDisabled;
+  readyButton.classList.toggle('is-waiting', presentation.readyButtonWaiting);
 
-  if (gameplayFocused) {
+  if (presentation.gameplayFocused) {
     gamePhaseLabel.textContent = state.phase === 'starting' ? 'Countdown' : state.phase === 'game-over' ? 'Game over' : 'In progress';
     gameStatusInlineEl.textContent = describeReconnect(state) || (state.phase === 'starting'
       ? 'Match starts in moments.'
