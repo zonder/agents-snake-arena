@@ -221,3 +221,32 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-13T16:54:19Z` |
 | Status | `SUCCESS` |
+
+## Stakeholder review refresh redeploy — 2026-03-13T20:18:46Z
+- Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the latest lobby simplification pass is live for stakeholder review
+- Requested fix commit: `30c11f0`
+- Redeployed branch HEAD before deploy-log update:
+  - full: `30c11f0509cc5b7668817d7d1e2cbfe533f2b471`
+  - short: `30c11f0`
+- Dev URL: `http://20.106.185.110:8081/`
+- Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
+
+### Verification
+- `git -C /home/rootagent/deployments/dev rev-parse HEAD` returned `30c11f0509cc5b7668817d7d1e2cbfe533f2b471`.
+- `curl -sf http://127.0.0.1:3001/build-info.json` returned `{"version":"0.1.0","commit":"30c11f0","builtAt":"2026-03-13T20:17:50.313Z","displayVersion":"v0.1.0+30c11f0"}`.
+- `curl -sf http://20.106.185.110:8081/build-info.json` returned `{"version":"0.1.0","commit":"30c11f0","builtAt":"2026-03-13T20:17:50.313Z","displayVersion":"v0.1.0+30c11f0"}`.
+- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
+- `pm2 restart app-dev --update-env` completed successfully during deploy.
+
+### Latest deployment record
+
+| Field | Value |
+|---|---|
+| Commit | `30c11f0509cc5b7668817d7d1e2cbfe533f2b471` |
+| Short | `30c11f0` |
+| Branch | `feature/issue-98` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-13T20:18:46Z` |
+| Status | `SUCCESS` |
