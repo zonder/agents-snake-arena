@@ -877,6 +877,7 @@ function showScreen(screen) {
   lobbyEl.classList.toggle('hidden', screen !== 'lobby');
   gamePanelEl.classList.toggle('hidden', !gameplayActive);
   panelEl.classList.toggle('gameplay-active', gameplayActive);
+  panelEl.classList.toggle('lobby-active', screen === 'lobby');
   panelTopEl.classList.toggle('hidden', gameplayActive);
   statusEl.classList.toggle('hidden', gameplayActive);
   errorEl.classList.toggle('hidden', gameplayActive || !errorEl.textContent);

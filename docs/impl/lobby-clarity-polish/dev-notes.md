@@ -108,3 +108,14 @@
 - Fix: changed that fallback label to use safe quoting (`"I'm ready"`) so the object literal parses correctly again.
 - Verification: reran `node --check public/app.js`, `npm test`, and `npm run build` successfully after the fix.
 - Favicon note: `/favicon.ico` still appears non-blocking relative to the JavaScript parse failure, so this hotfix leaves favicon work for a separate low-risk follow-up.
+
+## Follow-up fix: desktop lobby composition was still container-bound and overcrowded
+- Reproduced the latest stakeholder complaint as a true layout failure rather than a copy problem: on desktop the current Mission Control lobby was still being squeezed into the old `960px` panel width that was designed for the simpler pre-redesign lobby.
+- Root cause: the redesigned created-room layout now includes a larger hero/status column, room-code command card, player readiness grid, and bottom action panel, but the root `.panel` still only widened for gameplay and **not** for the lobby. That compressed the dashboard horizontally, which made the left hero/status stack feel crowded against the adjacent content and left the room-code + readiness modules visually cramped.
+- Exact fix:
+  - add a dedicated `lobby-active` panel state so the lobby can expand to a wider desktop container without affecting entry or gameplay layouts
+  - rebalance `.lobby-shell` desktop columns so the hero/status side and command/readiness side both get enough width
+  - tighten the stage indicator, room-code digit sizing, and player-grid minimum widths so the created-room state reads cleanly instead of colliding
+  - preserve the existing stacked responsive behavior by collapsing the desktop grid back to one column at narrower breakpoints
+- Preserved room-code clarity, ready/unready flow, reconnect messaging, countdown handoff, duplicate-name handling, and mobile usability.
+
