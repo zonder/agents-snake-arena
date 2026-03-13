@@ -803,10 +803,6 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 .room-code-command-card .secondary-button {
   min-width: 128px;
 }
-.room-code-hint {
-  margin-top: 10px;
-  max-width: 40ch;
-}
 .lobby-summary-row {
   align-items: center;
   flex-wrap: wrap;
@@ -1053,15 +1049,76 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
 }
 
-.lobby-guidance-card {
-  gap: 14px;
-  background:
-    linear-gradient(135deg, rgba(97, 221, 255, 0.12), rgba(11, 15, 27, 0.94) 44%, rgba(146, 255, 98, 0.08));
+.compact-ticket-card {
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
 }
-.lobby-guidance-card .lobby-flow-steps {
+
+.room-code-card-copy {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.room-code-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.room-code-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.lobby-help-button,
+.room-code-card-actions .secondary-button {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.lobby-help-dialog {
+  width: min(680px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 24px;
+  background: rgba(7, 11, 21, 0.98);
+  color: var(--text-primary);
+  box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+}
+
+.lobby-help-dialog::backdrop {
+  background: rgba(2, 6, 12, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.lobby-help-sheet {
+  display: grid;
+  gap: 16px;
+  padding: 22px;
+}
+
+.lobby-help-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.lobby-help-close {
+  min-width: 0;
+}
+
+.lobby-help-flow-steps {
   grid-template-columns: 1fr;
 }
-.lobby-guidance-card .lobby-flow-step {
+
+.lobby-help-flow-steps .lobby-flow-step {
   padding: 12px 14px;
 }
 
@@ -1116,11 +1173,27 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
     grid-template-columns: 1fr;
   }
 
-  .ticket-card {
+  .ticket-card,
+  .compact-ticket-card,
+  .room-code-card-header,
+  .lobby-help-header {
     align-items: flex-start;
   }
 
-  .ticket-card .secondary-button {
+  .compact-ticket-card,
+  .lobby-help-header {
+    display: grid;
+  }
+
+  .room-code-card-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .ticket-card .secondary-button,
+  .lobby-help-button,
+  .lobby-help-close,
+  .room-code-card-actions .secondary-button {
     width: 100%;
   }
 }

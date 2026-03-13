@@ -21,7 +21,8 @@ const lobbyHeroSubtitleEl = document.getElementById('lobbyHeroSubtitle');
 const lobbyPosterCalloutEl = document.getElementById('lobbyPosterCallout');
 const lobbyLaunchRingEl = document.getElementById('lobbyLaunchRing');
 const lobbyLaunchRingValueEl = document.getElementById('lobbyLaunchRingValue');
-const roomCodeHintEl = document.getElementById('roomCodeHint');
+const lobbyHelpDialogEl = document.getElementById('lobbyHelpDialog');
+const lobbyHelpButton = document.getElementById('lobbyHelpButton');
 const roomCodeDigitsEl = document.getElementById('roomCodeDigits');
 const lobbyStatusSummaryEl = document.getElementById('lobbyStatusSummary');
 const lobbyNextStepLabelEl = document.getElementById('lobbyNextStepLabel');
@@ -407,6 +408,26 @@ async function copyActiveRoomCode() {
 }
 
 document.getElementById('copyRoomCodeButton').addEventListener('click', copyActiveRoomCode);
+if (lobbyHelpButton && lobbyHelpDialogEl) {
+  lobbyHelpButton.addEventListener('click', () => {
+    if (typeof lobbyHelpDialogEl.showModal === 'function') {
+      lobbyHelpDialogEl.showModal();
+    } else {
+      lobbyHelpDialogEl.setAttribute('open', 'open');
+    }
+  });
+
+  lobbyHelpDialogEl.addEventListener('click', (event) => {
+    if (event.target === lobbyHelpDialogEl) {
+      lobbyHelpDialogEl.close?.('dismiss');
+      if (lobbyHelpDialogEl.hasAttribute('open')) lobbyHelpDialogEl.removeAttribute('open');
+    }
+  });
+
+  lobbyHelpDialogEl.addEventListener('close', () => {
+    lobbyHelpButton.focus();
+  });
+}
 document.getElementById('copyGameRoomCodeButton').addEventListener('click', copyActiveRoomCode);
 
 function requestRematch() {
@@ -679,7 +700,6 @@ function renderLobby(state) {
   lobbyHeroTitleEl.textContent = presentation.heroTitle;
   lobbyHeroSubtitleEl.textContent = presentation.heroSubtitle;
   lobbyPosterCalloutEl.textContent = presentation.posterCallout;
-  roomCodeHintEl.textContent = presentation.roomCodeHint;
   lobbyStatusSummaryEl.textContent = presentation.statusSummary;
   lobbyLaunchRingEl.dataset.ringState = presentation.launchRingState;
   lobbyLaunchRingValueEl.textContent = presentation.launchRingValue;

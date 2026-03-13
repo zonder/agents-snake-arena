@@ -44,3 +44,8 @@
   - stack the live-guidance steps vertically inside `.lobby-guidance-card` so each step gets full readable width on desktop and mobile alike
   - reduce desktop ticket-digit min width / font size / padding so the room code stays prominent without overpowering the sidebar
 - Preserved the poster-shell structure, launch ring emphasis, reconnect messaging, duplicate-name handling, ready/countdown flow, and mobile responsiveness.
+
+## Feedback round: help popup + compact room-code module
+- Moved the inline **Live guidance** content into a dedicated lobby help popup so the main poster layout stays cleaner while the same guidance remains one tap/click away.
+- Slimmed the desktop room-code module down to a lighter **Room code** ticket with the code itself plus the relevant action buttons (`Copy code`, `How it works`) instead of the heavier inline guidance stack.
+- Preserved the poster-shell direction, reconnect messaging, duplicate-name handling, ready CTA/countdown flow, and mobile usability by keeping the same client-side presentation derivation and reusing it inside the popup.

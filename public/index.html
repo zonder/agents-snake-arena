@@ -66,9 +66,12 @@
             </div>
 
             <div class="lobby-poster-side">
-              <section id="roomCodeCard" class="room-header room-code-hero room-code-command-card ticket-card">
-                <div>
-                  <div class="eyebrow">Admission ticket / room code</div>
+              <section id="roomCodeCard" class="room-header room-code-hero room-code-command-card ticket-card compact-ticket-card">
+                <div class="room-code-card-copy">
+                  <div class="room-code-card-header">
+                    <div class="eyebrow">Room code</div>
+                    <button id="lobbyHelpButton" class="secondary-button lobby-help-button" type="button" aria-haspopup="dialog" aria-controls="lobbyHelpDialog">How it works</button>
+                  </div>
                   <div id="roomCodeDisplay" class="room-code room-code-sr">----</div>
                   <div id="roomCodeDigits" class="room-code-digits" aria-label="Room code">
                     <span class="room-code-digit">-</span>
@@ -76,42 +79,50 @@
                     <span class="room-code-digit">-</span>
                     <span class="room-code-digit">-</span>
                   </div>
-                  <p id="roomCodeHint" class="message room-code-hint">Share this ticket code with your opponent to fill the room.</p>
                 </div>
-                <button id="copyRoomCodeButton" class="secondary-button" type="button">Copy ticket</button>
-              </section>
-
-              <section id="lobbyGuidanceCard" class="info-card lobby-guidance-card">
-                <div class="eyebrow">Live guidance</div>
-                <h3 id="lobbyNextStepLabel" class="lobby-next-step-label">Share the code to bring in player two.</h3>
-                <p id="lobbySupportCopy" class="message lobby-support-copy">The match starts automatically once both players are connected and ready.</p>
-                <div id="lobbyFlowSummary" class="lobby-flow-summary">Step 1 of 3 · Share the room code</div>
-                <div class="lobby-flow-steps">
-                  <article id="lobbyFlowStepShare" class="lobby-flow-step is-active">
-                    <span class="lobby-flow-index">1</span>
-                    <div>
-                      <strong>Share ticket</strong>
-                      <p>Send the code to your rival.</p>
-                    </div>
-                  </article>
-                  <article id="lobbyFlowStepJoin" class="lobby-flow-step">
-                    <span class="lobby-flow-index">2</span>
-                    <div>
-                      <strong>Fill both corners</strong>
-                      <p>Second player joins the poster.</p>
-                    </div>
-                  </article>
-                  <article id="lobbyFlowStepReady" class="lobby-flow-step">
-                    <span class="lobby-flow-index">3</span>
-                    <div>
-                      <strong>Launch the match</strong>
-                      <p>Countdown starts when both are green.</p>
-                    </div>
-                  </article>
+                <div class="room-code-card-actions">
+                  <button id="copyRoomCodeButton" class="secondary-button" type="button">Copy code</button>
                 </div>
               </section>
             </div>
           </section>
+
+          <dialog id="lobbyHelpDialog" class="lobby-help-dialog">
+            <form method="dialog" class="lobby-help-sheet">
+              <div class="lobby-help-header">
+                <div>
+                  <div class="eyebrow">Lobby help</div>
+                  <h3 id="lobbyNextStepLabel" class="lobby-next-step-label">Share the code to bring in player two.</h3>
+                </div>
+                <button id="closeLobbyHelpButton" class="secondary-button lobby-help-close" type="submit" value="close">Close</button>
+              </div>
+              <p id="lobbySupportCopy" class="message lobby-support-copy">The match starts automatically once both players are connected and ready.</p>
+              <div id="lobbyFlowSummary" class="lobby-flow-summary">Step 1 of 3 · Share the room code</div>
+              <div class="lobby-flow-steps lobby-help-flow-steps">
+                <article id="lobbyFlowStepShare" class="lobby-flow-step is-active">
+                  <span class="lobby-flow-index">1</span>
+                  <div>
+                    <strong>Share ticket</strong>
+                    <p>Send the code to your rival.</p>
+                  </div>
+                </article>
+                <article id="lobbyFlowStepJoin" class="lobby-flow-step">
+                  <span class="lobby-flow-index">2</span>
+                  <div>
+                    <strong>Fill both corners</strong>
+                    <p>Second player joins the poster.</p>
+                  </div>
+                </article>
+                <article id="lobbyFlowStepReady" class="lobby-flow-step">
+                  <span class="lobby-flow-index">3</span>
+                  <div>
+                    <strong>Launch the match</strong>
+                    <p>Countdown starts when both are green.</p>
+                  </div>
+                </article>
+              </div>
+            </form>
+          </dialog>
 
           <section class="lobby-players-section poster-corners-section">
             <div class="section-heading-row">
