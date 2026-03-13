@@ -1,188 +1,149 @@
-# UX Brief — Lobby Redesign Options for Issue #99
+# UX Brief — Lobby Redesign Round 2 for Issue #99
 
 ## Context
 Parent issue: #99  
 Feature slug: `lobby-clarity-polish`  
 Working branch: `feature/issue-98`
 
-The stakeholder’s feedback is that the current lobby changes are **not clear enough** and they want a **fuller lobby redesign** to review before more implementation happens.
+The first mockup round was rejected because it still felt too close to the current lobby. This round deliberately pushes farther: larger structural changes, stronger hero treatments, more obvious pre-match staging, and more visibly different concepts from one another.
 
-I grounded these mockups in the current app structure and behaviors:
-- 4-letter room code remains core
-- lobby states already include waiting, ready, starting, and reconnect flows
-- the app already uses a retro-arcade visual language
-- desktop and mobile responsiveness are required
-- the lobby currently transitions straight into gameplay/countdown once both players are ready
+## What changed in this round
+These concepts are **more visibly different than the previous round** because they do not share the same basic page skeleton.
 
-## What’s included
-Files in this folder:
-- `overview.html` — side-by-side concept comparison with desktop/mobile frames
-- `states.html` — key lobby states shown across all concept directions
-- `ux-brief.md` — this summary and recommendation
+- **Concept A** is a broadcast-style scoreboard with a faceoff layout and giant split-flap room code digits.
+- **Concept B** is a theatrical event poster with a hero marquee, ticket-code module, and ceremonial launch ring.
+- **Concept C** is a staged ready-room with a left-side channel rail and a “live guidance” main stage.
 
-## Shared design principles across all concepts
-No matter which concept is chosen, the redesign should preserve these UX priorities:
+That means the stakeholder is now reacting to three genuinely different lobby models, not three variants of the same centered-card composition.
 
-1. **Room code is the primary object**
-   - it should be visible above the fold
-   - it should be copyable without hunting
-   - it should explain why it matters: invite / share / join
+## Files included
+- `overview.html` — side-by-side comparison of the three redesigned concepts on desktop and mobile
+- `states.html` — same key product states shown through all three concepts
+- `ux-brief.md` — this rationale and recommendation summary
 
-2. **Player roster must be legible instantly**
-   - clear names
-   - obvious “you” marker
-   - obvious ready / not-ready / reconnecting status
-   - empty slot should look intentional, not broken
+## Shared UX goals preserved
+Even with the bigger redesign swings, all concepts still preserve the requested direction:
 
-3. **“What happens next” must be explicit**
-   - waiting for second player
-   - both players must ready up
-   - match auto-starts when both are ready
-   - reconnect state should explain the timer / reserved slot behavior
+1. **Retro arcade identity stays intact**
+   - neon contrast, bold typography, cabinet/showmanship language
+   - pre-match space feels game-like rather than generic app UI
 
-4. **Logo / emblem area should feel deliberate**
-   - not just a heading
-   - should help the lobby feel like a branded pre-match space
+2. **Room code remains obvious**
+   - still above the fold
+   - treated as a featured object, not a small label-value pair
+   - tied directly to sharing / inviting behavior
 
-5. **Mobile cannot be a squeezed desktop**
-   - room code still needs to stay prominent
-   - CTA should remain thumb-reachable
-   - copy should stay short and directive
+3. **Player names and ready state are easier to parse**
+   - clear “you” / slot ownership
+   - stronger ready vs not-ready vs reconnecting labels
+   - less ambiguity about who is blocking start
 
----
+4. **Next-step guidance is explicit**
+   - copy explains what the player should do now
+   - copy explains what the system does next
+   - auto-start behavior is clearer
 
-## Option summaries
-
-### Concept A — Mission Control
-**Summary:** clarity-first staging area.
-
-**Strengths**
-- clearest information hierarchy
-- easiest to understand for new players
-- strongest direct explanation of the flow
-- easiest to implement on top of the current structure
-- likely safest for mobile
-
-**Trade-offs**
-- most conservative visually
-- could feel less “wow” than the stakeholder may want if the emblem area stays too restrained
-
-**Best if:** the stakeholder’s top concern is usability and they want a redesign that is visibly improved without taking major visual risks.
+5. **Desktop + mobile awareness is preserved**
+   - each concept still has a stacked mobile version
+   - primary CTA remains easy to reach on small screens
+   - hierarchy remains readable when compressed
 
 ---
 
-### Concept B — Arena Cabinet
-**Summary:** cabinet-like pre-match chamber with center-stage countdown preview.
+## Concept summaries
+
+### Concept A — Scoreboard Showdown
+**Core idea:** treat the lobby like a versus broadcast board.
+
+**What makes it distinct**
+- giant split-flap room-code board at center
+- head-to-head player framing instead of stacked roster cards
+- bottom “announcer desk” messaging for next-step guidance
+- strongest sports/broadcast energy of the three
 
 **Strengths**
-- strongest retro-arcade identity
-- best continuity between lobby and gameplay
-- countdown / “about to start” state feels exciting and intentional
-- feels like a bigger redesign, not just polish
+- room code is almost impossible to miss
+- player-vs-player framing makes the lobby feel match-oriented immediately
+- very clear responsibility: you can see exactly which side is not ready
+- desktop and mobile both adapt cleanly
 
-**Trade-offs**
-- needs careful balance so the center stage does not compete with room-code prominence
-- more layout complexity, especially on mobile
-- easiest concept to over-style
+**Risks / trade-offs**
+- more “arena scoreboard” than “mysterious arcade cabinet”
+- could feel a little sporty if the stakeholder wants something moodier
 
-**Best if:** the stakeholder explicitly wants the lobby to feel much more like a pre-fight arcade scene and wants the redesign to read as substantial.
+**Best if:** the stakeholder wants the clearest possible pre-match read while still getting a visibly different redesign.
 
 ---
 
-### Concept C — Neon Marquee
-**Summary:** branding-first lobby with marquee/header emphasis and poster-like structure.
+### Concept B — Fight Poster
+**Core idea:** make the lobby feel like a retro arcade event poster.
+
+**What makes it distinct**
+- strongest hero/logo treatment by far
+- ticket-like room code presentation
+- circular launch ring gives the ready/start moment a ceremonial feel
+- information grouped like a show flyer, not a utility panel
 
 **Strengths**
-- strongest logo/emblem opportunity
-- most visually distinct from the current lobby
-- good for giving the product a memorable branded pre-match identity
+- biggest step away from the current implementation visually
+- most memorable branded presentation
+- strongest emotional payoff for countdown / start state
+- feels intentionally “showtime” rather than “waiting room”
 
-**Trade-offs**
-- typography and copy hierarchy must be very disciplined
-- risk that the marquee becomes louder than the room code or player state
-- slightly less literal about next-step flow unless paired with explicit copy blocks
+**Risks / trade-offs**
+- needs discipline so spectacle does not outrank core information
+- could be the hardest to balance on smaller screens
 
-**Best if:** the stakeholder wants the lobby to feel more branded and showpiece-driven, with a stronger “arcade event” tone.
+**Best if:** the stakeholder wants a lobby that feels like a real redesign and is comfortable with a more theatrical branded direction.
+
+---
+
+### Concept C — Ready Room Channel
+**Core idea:** make the lobby feel like a live staging room with guided system feedback.
+
+**What makes it distinct**
+- left rail changes the navigation model completely
+- main stage is organized around live status and queue progression
+- feels more like entering a pre-match station than opening a static card
+- strongest “guided lobby flow” of the three
+
+**Strengths**
+- best explicit explanation of what is happening now vs next
+- reconnect rules fit naturally in the rail / channel model
+- has a stronger sense of place than a standard panel layout
+- could scale well if the game later adds more lobby guidance or rule surfacing
+
+**Risks / trade-offs**
+- slightly more system-like, less poster-like
+- sidebar metaphor needs careful simplification on mobile
+
+**Best if:** the stakeholder wants the lobby to feel more purpose-built and staged, with the clearest structural separation between code, status, and actions.
 
 ---
 
 ## Recommendation
-**Recommended direction: Concept B — Arena Cabinet, borrowing Concept A’s explicit next-step guidance.**
+**Recommended lead concept: Concept B — Fight Poster**
 
 Why:
-- The stakeholder asked for a **fuller redesign**, not just incremental cleanup.
-- Concept B most clearly delivers that bigger step-change while still matching the game’s retro-arcade direction.
-- It gives the lobby a stronger identity and makes the countdown/start transition feel more exciting.
-- It can still preserve clarity if we import two specific behaviors from Concept A:
-  1. a concise “what happens next” explainer block
-  2. very explicit player readiness labels and reconnect messaging
+- It most directly addresses the stakeholder’s complaint that the previous round was still too similar to the current product.
+- It has the strongest visual separation from the current lobby and the previous mockups.
+- The hero/logo area, ticket-code treatment, and launch ring make it feel like a full redesign rather than a polish pass.
 
-### Recommended hybrid direction
-If implementation proceeds, I’d suggest:
-- **Use Concept B’s overall layout** (cabinet / center stage / side information columns)
-- **Use Concept A’s copy model** for room instructions and step explanation
-- **Use Concept C’s stronger marquee/logo treatment** only if it doesn’t push the room code out of first place
+## Recommended fallback if the stakeholder wants stronger clarity than spectacle
+**Concept A — Scoreboard Showdown** is the best fallback.
 
-That hybrid would likely satisfy the stakeholder’s desire for a fuller redesign **without sacrificing clarity**.
+It still looks materially different from the current lobby, but it is easier to parse instantly and carries less risk of style overpowering utility.
 
----
+## Suggested hybrid direction if the stakeholder likes multiple ideas
+A promising hybrid would be:
+- **Concept B’s hero / poster framing**
+- **Concept A’s giant room-code board clarity**
+- **Concept C’s explicit live guidance copy**
 
-## Specific UI guidance for implementation
+That combination would preserve the “real redesign” feel while keeping the start logic unmistakable.
 
-### 1. Make the room code impossible to miss
-- large display in the top zone or center-stage header
-- support both “Copy code” and potentially “Share invite” actions
-- pair with one line of explanatory copy
-
-### 2. Keep the player states literal
-Preferred labels:
-- `Ready`
-- `Not ready`
-- `Waiting for player`
-- `Reconnecting`
-- `You`
-
-Avoid vague labels like:
-- `Active`
-- `Pending`
-- `Stand by`
-
-### 3. Reserve space for the countdown state
-Even before both players are ready, the layout should hint where the countdown/game launch appears. This helps the lobby feel like part of the match flow instead of a disconnected screen.
-
-### 4. Reconnect state should be visually different from normal waiting
-It should not look the same as “waiting for second player.”
-Use:
-- warning or alert styling
-- specific player name
-- visible timer / reserved-slot copy
-
-### 5. Mobile layout priorities
-On mobile, the order should be:
-1. logo/emblem header
-2. room code
-3. current status / next-step message
-4. player cards
-5. primary CTA
-6. secondary actions
-
----
-
-## Suggested stakeholder decision prompt
-When PM shares these, the cleanest choice prompt is:
-
-1. Which overall direction feels closest: **A / B / C**?
-2. Do you want the final lobby to lean more toward:
-   - **maximum clarity**
-   - **maximum arcade personality**
-   - **balanced hybrid**
-3. Is the logo/emblem area strong enough, or should it become even more prominent?
-
----
-
-## Final take
-If the goal is to convince the stakeholder that the redesign is meaningfully bigger and more intentional than the current pass, **Concept B** is the strongest lead option.
-
-If the goal is to minimize risk and prioritize clearest UX, **Concept A** is the safest choice.
-
-If the goal is strongest branding/showmanship, **Concept C** is the boldest option.
+## Final note for PM handoff
+If these are shared in Discord, I’d frame the decision as:
+1. Which overall structure feels strongest: **broadcast board / event poster / ready room**?
+2. How bold should the final lobby feel: **clarity-first / theatrical / guided-system**?
+3. Does the stakeholder want the countdown/start moment to feel more like a **scoreboard**, a **show reveal**, or a **system handoff**?
