@@ -250,3 +250,32 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-13T20:18:46Z` |
 | Status | `SUCCESS` |
+
+## Stakeholder review refresh redeploy — 2026-03-13T21:19:05Z
+- Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the Fight Poster removal is live for stakeholder review
+- Requested fix commit: `4826201`
+- Redeployed branch HEAD before deploy-log update:
+  - full: `48262019da7b11d17db6e447c12e2eeab770c218`
+  - short: `4826201`
+- Dev URL: `http://20.106.185.110:8081/`
+- Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
+
+### Verification
+- `git -C /home/rootagent/deployments/dev rev-parse HEAD` returned `48262019da7b11d17db6e447c12e2eeab770c218`.
+- `curl -sf http://127.0.0.1:3001/build-info.json` returned `{"version":"0.1.0","commit":"4826201","builtAt":"2026-03-13T21:18:40.754Z","displayVersion":"v0.1.0+4826201"}`.
+- `curl -sf http://20.106.185.110:8081/build-info.json` returned `{"version":"0.1.0","commit":"4826201","builtAt":"2026-03-13T21:18:40.754Z","displayVersion":"v0.1.0+4826201"}`.
+- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
+- `pm2 startOrRestart /home/rootagent/deployments/ecosystem.config.js --only app-dev` completed successfully; older log lines still include historical startup failures from earlier deploy attempts, but the active startup line now shows `Room lobby server listening on http://localhost:3001 (v0.1.0+4826201)`.
+
+### Latest deployment record
+
+| Field | Value |
+|---|---|
+| Commit | `48262019da7b11d17db6e447c12e2eeab770c218` |
+| Short | `4826201` |
+| Branch | `feature/issue-98` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-13T21:19:05Z` |
+| Status | `SUCCESS` |
