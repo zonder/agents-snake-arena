@@ -164,3 +164,62 @@ pm2 save
 | Timestamp | `2026-03-13T16:29:49Z` |
 | Status | `SUCCESS` |
 
+
+## Stakeholder review refresh redeploy — 2026-03-13T16:53:24Z
+- Trigger: redeploy latest branch head for parent issue #99 / PR #102 so the created-room fit-on-screen fix is live for stakeholder review
+- Requested fix commit: 
+- Redeployed commit:
+  - full: 
+  - short: 
+- Dev URL: 
+- Runtime: usage: pm2 [options] <command>
+
+pm2 -h, --help             all available commands and options
+pm2 examples               display pm2 usage examples
+pm2 <command> -h           help on a specific command
+
+Access pm2 files in ~/.pm2 process  behind nginx on port , forwarding to local app on port 
+
+### Verification
+- 8bedfb45ba8e7cb638c15ddf529c2e925a7bb24d returned .
+- {"version":"0.1.0","commit":"8bedfb4","builtAt":"2026-03-13T16:52:48.160Z","displayVersion":"v0.1.0+8bedfb4"} returned .
+- HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Date: Fri, 13 Mar 2026 16:53:24 GMT
+Content-Type: text/html; charset=utf-8
+Connection: keep-alive
+Cache-Control: no-store, max-age=0
+ returned .
+- [TAILING] Tailing last 8 lines for [app-dev] process (change the value with --lines option)
+/home/rootagent/.pm2/logs/app-dev-error.log last 8 lines:
+1|app-dev  | npm error syscall open
+1|app-dev  | npm error path /home/rootagent/deployments/dev/package.json
+1|app-dev  | npm error errno -2
+1|app-dev  | npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/home/rootagent/deployments/dev/package.json'
+1|app-dev  | npm error enoent This is related to npm not being able to find a file.
+1|app-dev  | npm error enoent
+1|app-dev  | npm error A complete log of this run can be found in: /home/rootagent/.npm/_logs/2026-03-11T18_46_32_424Z-debug-0.log
+1|app-dev  | sh: 1: tsx: not found
+
+/home/rootagent/.pm2/logs/app-dev-out.log last 8 lines:
+1|app-dev  | > tsx src/server/index.ts
+1|app-dev  | 
+1|app-dev  | Room lobby server listening on http://localhost:3001 (v0.1.0+3c6ba2e)
+1|app-dev  | 
+1|app-dev  | > my-test-startup@0.1.0 start
+1|app-dev  | > tsx src/server/index.ts
+1|app-dev  | 
+1|app-dev  | Room lobby server listening on http://localhost:3001 (v0.1.0+8bedfb4) shows the active startup line for .
+
+### Latest deployment record
+
+| Field | Value |
+|---|---|
+| Commit |  |
+| Short |  |
+| Branch |  |
+| Environment |  |
+| PM2 Process |  |
+| URL |  |
+| Timestamp |  |
+| Status |  |
