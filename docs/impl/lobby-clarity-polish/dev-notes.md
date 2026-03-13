@@ -101,3 +101,10 @@
 - Restored the approved in-shell Mission Control countdown handoff by keeping `starting` on the lobby shell until the actual `game:start` transition, instead of flipping straight to the gameplay panel during `lobby:state` / `game:state` / `game:countdown` updates.
 - Wired `#lobbyHeroSubtitle` back into `renderLobby()` so reconnect, ready-check, and countdown states now show their derived state-specific guidance instead of the stale default subtitle.
 - Kept the scope limited to presentation/rendering behavior; no room-state contracts or server events changed.
+
+## Blocking hotfix: lobby JavaScript syntax error in dev build
+- Reproduced the blocker reported against dev build `v0.1.0+3996472`: the browser failed to finish loading `public/app.js`, and `node --check public/app.js` stopped at the `readyButtonLabel` field inside `deriveLobbyPresentation()`.
+- Root cause: the fallback ready CTA string used a single-quoted literal with an unescaped apostrophe (`'I'm ready'`), which terminated the string early and caused the parser to throw `Unexpected identifier 'm'` before any lobby logic could run.
+- Fix: changed that fallback label to use safe quoting (`"I'm ready"`) so the object literal parses correctly again.
+- Verification: reran `node --check public/app.js`, `npm test`, and `npm run build` successfully after the fix.
+- Favicon note: `/favicon.ico` still appears non-blocking relative to the JavaScript parse failure, so this hotfix leaves favicon work for a separate low-risk follow-up.

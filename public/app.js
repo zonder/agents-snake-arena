@@ -577,7 +577,7 @@ function deriveLobbyPresentation(state) {
     nextStepLabel: 'Share the room code to fill the second slot.',
     supportCopy: 'The match starts automatically once both players are connected and ready.',
     statusMessage: reconnectMessage || '',
-    readyButtonLabel: you?.isReady ? 'Unready' : 'I'm ready',
+    readyButtonLabel: you?.isReady ? 'Unready' : "I'm ready",
     readyButtonDisabled: !you || !you.isOccupied || gameplayFocused,
     readyButtonWaiting: !!state.allPlayersPresent && !state.allReady,
     flowSummary: 'Step 1 of 3 · Share the room code',
