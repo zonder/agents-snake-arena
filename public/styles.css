@@ -1035,18 +1035,18 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 
 .room-code-digits {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   margin-top: 12px;
 }
 .room-code-digit {
-  min-width: clamp(52px, 10vw, 66px);
-  padding: 14px 0;
+  min-width: clamp(46px, 5.2vw, 58px);
+  padding: 12px 0;
   border-radius: 14px;
   text-align: center;
-  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-size: clamp(1.4rem, 2.3vw, 1.95rem);
   font-weight: 900;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   color: #ffdd75;
   background: linear-gradient(180deg, rgba(28, 16, 8, 0.98), rgba(16, 9, 5, 1));
   border: 1px solid rgba(255, 209, 102, 0.26);
@@ -1057,6 +1057,12 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   gap: 14px;
   background:
     linear-gradient(135deg, rgba(97, 221, 255, 0.12), rgba(11, 15, 27, 0.94) 44%, rgba(146, 255, 98, 0.08));
+}
+.lobby-guidance-card .lobby-flow-steps {
+  grid-template-columns: 1fr;
+}
+.lobby-guidance-card .lobby-flow-step {
+  padding: 12px 14px;
 }
 
 .poster-corners-section {
