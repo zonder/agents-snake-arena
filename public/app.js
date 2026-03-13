@@ -566,8 +566,9 @@ function deriveLobbyPresentation(state) {
   const presentation = {
     gameplayFocused,
     heroTitle: 'Snake Arena',
-    posterCallout: 'Main event loading',
-    roomCodeHint: 'Share this ticket code with your opponent to fill the room.',
+    heroSubtitle: "The lobby is live. Share the room code, fill both slots, then get ready to start.",
+    posterCallout: 'Lobby loading',
+    roomCodeHint: 'Share this room code with your opponent to fill the room.',
     statusSummary: formatPhaseLabel(state.phase),
     nextStepLabel: 'Share the code to bring in player two.',
     supportCopy: 'The match starts automatically once both players are connected and ready.',
@@ -583,9 +584,12 @@ function deriveLobbyPresentation(state) {
   };
 
   if (state.reconnect?.active) {
-    presentation.heroTitle = state.reconnect.yourSlotReserved ? 'Intermission hold' : 'Poster hold active';
-    presentation.posterCallout = 'Intermission';
-    presentation.roomCodeHint = 'Keep the ticket code handy while the reconnect window is active.';
+    presentation.heroTitle = state.reconnect.yourSlotReserved ? 'Reconnect window hold' : 'Lobby hold active';
+    presentation.heroSubtitle = state.reconnect.yourSlotReserved
+      ? 'Your corner is still reserved. Rejoin before the hold timer expires.'
+      : 'One slot is reserved while the disconnected player reconnects.';
+    presentation.posterCallout = 'Reconnect window';
+    presentation.roomCodeHint = 'Keep the room code handy while the reconnect window is active.';
     presentation.statusSummary = 'Reconnect window';
     presentation.launchRingValue = String(state.reconnect.secondsRemaining ?? 0);
     presentation.launchRingState = 'reconnect';
@@ -600,9 +604,10 @@ function deriveLobbyPresentation(state) {
   }
 
   if (!state.allPlayersPresent) {
-    presentation.heroTitle = 'Fight poster live';
+    presentation.heroTitle = 'Room waiting';
+    presentation.heroSubtitle = 'The room is open. Share the code and bring in your rival.';
     presentation.posterCallout = 'Rival needed';
-    presentation.roomCodeHint = 'Share this ticket code so a second player can drop straight into the lobby.';
+    presentation.roomCodeHint = 'Share this room code so a second player can drop straight into the lobby.';
     presentation.statusSummary = 'Waiting for player two';
     presentation.nextStepLabel = 'Share the room code to fill the second slot.';
     presentation.supportCopy = 'Share the code, then both players ready up for the auto-start countdown.';
@@ -614,7 +619,8 @@ function deriveLobbyPresentation(state) {
 
   if (state.phase === 'starting') {
     presentation.heroTitle = 'Showtime';
-    presentation.posterCallout = 'Launch ring active';
+    presentation.heroSubtitle = 'Both players are locked in. Countdown is now running.';
+    presentation.posterCallout = 'Countdown live';
     presentation.roomCodeHint = 'Room is full. Hold steady while the countdown hands off to gameplay.';
     presentation.statusSummary = 'Match starting';
     presentation.launchRingValue = state.countdown?.secondsRemaining ? String(state.countdown.secondsRemaining) : '3';
@@ -628,13 +634,14 @@ function deriveLobbyPresentation(state) {
   }
 
   if (state.allPlayersPresent && !state.allReady) {
-    presentation.heroTitle = 'Main event ready check';
-    presentation.posterCallout = 'Corners filling';
+    presentation.heroTitle = 'Ready check';
+    presentation.heroSubtitle = 'Both players are here. One final ready check starts the match.';
+    presentation.posterCallout = 'Room full';
     presentation.roomCodeHint = 'Room is full. Final check: both players must be ready.';
     presentation.statusSummary = 'Ready check';
     if (you && !you.isReady) {
-      presentation.nextStepLabel = 'Press ready when you are set.';
-      presentation.supportCopy = 'Press Ready when set. The countdown begins automatically once both badges are green.';
+      presentation.nextStepLabel = 'Press ready when you are set to play.';
+      presentation.supportCopy = 'Your opponent is here. The match starts automatically after both readiness badges turn green.';
       presentation.flowSummary = 'Step 2 of 3 · Ready check unlocked';
       presentation.flowSteps = { share: 'complete', join: 'active', ready: 'pending' };
     } else {
@@ -650,8 +657,9 @@ function deriveLobbyPresentation(state) {
   }
 
   if (state.allReady) {
-    presentation.heroTitle = 'Poster locked in';
-    presentation.posterCallout = 'All signals received';
+    presentation.heroTitle = 'Lobby locked in';
+    presentation.heroSubtitle = 'Both players are ready. Countdown should begin automatically.';
+    presentation.posterCallout = 'All players ready';
     presentation.roomCodeHint = 'No further sharing needed. This room is ready to launch.';
     presentation.statusSummary = 'Ready';
     presentation.launchRingValue = 'READY';

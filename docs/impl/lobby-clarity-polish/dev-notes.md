@@ -65,3 +65,15 @@
 - Tightened state-driven copy in `deriveLobbyPresentation()` so the main view uses shorter labels while the help popup keeps the fuller guidance and flow summary.
 - Preserved reconnect visibility by keeping reconnect-specific status text on the main poster only when it matters, while duplicate-name handling, ready semantics, countdown handoff, and mobile layout remain unchanged.
 
+## Feedback round: remove Fight Poster widget from live lobby
+- Applied stakeholder feedback to drop the live **Fight Poster** treatment instead of trying to salvage it.
+- Rebalanced the lobby shell around a cleaner branded header + status layout:
+  - replaced the poster hero framing with a simpler `Snake Arena lobby` hero panel
+  - converted the oversized launch-ring callout into a smaller **Stage** status indicator card so countdown / ready / reconnect states still read clearly without dominating the page
+  - kept the compact room-code module and help popup so the code, invite flow, and next-step guidance stay easy to reach
+- Updated lobby copy to remove poster-specific language (`Fight poster`, `ticket`, `poster hold`, etc.) in favor of clearer room / lobby wording.
+- Preserved the existing client-side state derivation and all underlying room behavior:
+  - reconnect reservation clarity still comes from the authoritative reconnect payload
+  - duplicate-name handling still uses the existing display-name logic
+  - ready/unready and countdown flow still use the same `lobby:state` / `game:countdown` transitions
+  - mobile layout remains a stacked single-column composition under the existing responsive breakpoints
