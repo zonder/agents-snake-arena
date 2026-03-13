@@ -85,3 +85,14 @@
   - removed the remaining ticket-style room-code framing and added an inline room-code hint so sharing/reconnect guidance stays explicit without the poster metaphor
   - renamed the player-grid presentation hooks away from poster-specific structure while keeping the same responsive two-card / one-column behavior
 - Kept the core lobby flows intact: room code visibility, player list/readiness, reconnect guidance, duplicate-name handling, next-step prompts, and mobile stacking still rely on the same client-side state derivation.
+
+## Round-3 redesign implementation summary
+- Reworked the live lobby to follow the approved **round-3 Mission Control** direction from the updated non-poster mockups.
+- Implemented **Concept A — Mission Control** directly rather than the older poster/fight-card hybrids.
+- The shipped layout now emphasizes:
+  - a compact branded Mission Control hero/status header
+  - a room-code command card with adjacent help/copy actions
+  - a persistent in-layout “What happens next” step rail
+  - simpler player cards labeled by player slot instead of corner/poster framing
+  - a clearer bottom action panel for the current next step and ready CTA
+- Preserved room-code clarity, duplicate-name handling, reconnect guidance, mobile stacking, ready/countdown handoff, and reduced-motion-safe CSS polish.

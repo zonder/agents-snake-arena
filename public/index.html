@@ -48,11 +48,16 @@
             <div id="lobbyBrand" class="lobby-brand lobby-hero-panel">
               <div class="lobby-brand-topline">
                 <div id="phaseBadge" class="badge status-chip">Lobby</div>
-                <div id="lobbyPosterCallout" class="lobby-brand-callout">Lobby loading</div>
+                <div id="lobbyPosterCallout" class="lobby-brand-callout">Mission Control</div>
               </div>
-              <div class="eyebrow">Snake Arena lobby</div>
-              <h2 id="lobbyHeroTitle" class="lobby-hero-title">Snake Arena</h2>
-              <p id="lobbyHeroSubtitle" class="message lobby-hero-subtitle">Share the code, fill both slots, then get ready to start.</p>
+              <div class="lobby-brand-mark">
+                <div class="lobby-brand-emblem" aria-hidden="true"><span></span><span></span><span></span></div>
+                <div>
+                  <div class="eyebrow">Snake Arena</div>
+                  <h2 id="lobbyHeroTitle" class="lobby-hero-title">Mission Control</h2>
+                </div>
+              </div>
+              <p id="lobbyHeroSubtitle" class="message lobby-hero-subtitle">Room code first. Players second. Match starts automatically when both players are ready.</p>
               <div class="lobby-status-grid">
                 <section class="lobby-status-card" aria-label="Current lobby status">
                   <div class="eyebrow">Current status</div>
@@ -62,7 +67,7 @@
                 <section class="lobby-status-card lobby-stage-card" aria-label="Lobby stage">
                   <div class="eyebrow">Stage</div>
                   <div id="lobbyLaunchRing" class="lobby-stage-indicator" data-ring-state="waiting">
-                    <span id="lobbyLaunchRingValue">?</span>
+                    <span id="lobbyLaunchRingValue">WAITING</span>
                   </div>
                 </section>
               </div>
@@ -74,7 +79,7 @@
                   <div class="room-code-card-header">
                     <div>
                       <div class="eyebrow">Room code</div>
-                      <p id="roomCodeHint" class="message room-code-hint">Share this room code with your opponent to fill the room.</p>
+                      <p id="roomCodeHint" class="message room-code-hint">Share this room code with the second player to fill the room.</p>
                     </div>
                     <button id="lobbyHelpButton" class="secondary-button lobby-help-button" type="button" aria-haspopup="dialog" aria-controls="lobbyHelpDialog">How it works</button>
                   </div>
@@ -90,6 +95,38 @@
                   <button id="copyRoomCodeButton" class="secondary-button" type="button">Copy code</button>
                 </div>
               </section>
+
+              <section class="info-card lobby-flow-card mission-flow-card">
+                <div class="lobby-flow-head">
+                  <div>
+                    <div class="eyebrow">What happens next</div>
+                    <p id="lobbyFlowSummary" class="lobby-flow-summary">Step 1 of 3 · Share the room code</p>
+                  </div>
+                </div>
+                <div class="lobby-flow-steps mission-flow-steps">
+                  <article id="lobbyFlowStepShare" class="lobby-flow-step is-active">
+                    <span class="lobby-flow-index">1</span>
+                    <div>
+                      <strong>Invite the second player</strong>
+                      <p>Send the room code so the open slot gets filled.</p>
+                    </div>
+                  </article>
+                  <article id="lobbyFlowStepJoin" class="lobby-flow-step">
+                    <span class="lobby-flow-index">2</span>
+                    <div>
+                      <strong>Both players confirm ready</strong>
+                      <p>Readiness updates instantly in the player list.</p>
+                    </div>
+                  </article>
+                  <article id="lobbyFlowStepReady" class="lobby-flow-step">
+                    <span class="lobby-flow-index">3</span>
+                    <div>
+                      <strong>Automatic countdown handoff</strong>
+                      <p>The board takes over in 3, 2, 1 with no extra start button.</p>
+                    </div>
+                  </article>
+                </div>
+              </section>
             </div>
           </section>
 
@@ -98,35 +135,11 @@
               <div class="lobby-help-header">
                 <div>
                   <div class="eyebrow">Lobby help</div>
-                  <h3 id="lobbyNextStepLabel" class="lobby-next-step-label">Share the code to bring in player two.</h3>
+                  <h3 id="lobbyNextStepLabel" class="lobby-next-step-label">Share the room code to bring in player two.</h3>
                 </div>
                 <button id="closeLobbyHelpButton" class="secondary-button lobby-help-close" type="submit" value="close">Close</button>
               </div>
               <p id="lobbySupportCopy" class="message lobby-support-copy">The match starts automatically once both players are connected and ready.</p>
-              <div id="lobbyFlowSummary" class="lobby-flow-summary">Step 1 of 3 · Share the room code</div>
-              <div class="lobby-flow-steps lobby-help-flow-steps">
-                <article id="lobbyFlowStepShare" class="lobby-flow-step is-active">
-                  <span class="lobby-flow-index">1</span>
-                  <div>
-                    <strong>Share code</strong>
-                    <p>Send the room code to your rival.</p>
-                  </div>
-                </article>
-                <article id="lobbyFlowStepJoin" class="lobby-flow-step">
-                  <span class="lobby-flow-index">2</span>
-                  <div>
-                    <strong>Fill both slots</strong>
-                    <p>The second player joins the lobby.</p>
-                  </div>
-                </article>
-                <article id="lobbyFlowStepReady" class="lobby-flow-step">
-                  <span class="lobby-flow-index">3</span>
-                  <div>
-                    <strong>Launch the match</strong>
-                    <p>Countdown starts when both are green.</p>
-                  </div>
-                </article>
-              </div>
             </form>
           </dialog>
 
