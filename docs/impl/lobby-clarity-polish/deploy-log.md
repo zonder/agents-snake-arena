@@ -192,3 +192,32 @@ pm2 save
 | URL | `http://20.106.185.110:8081/` |
 | Timestamp | `2026-03-13T16:53:24Z` |
 | Status | `SUCCESS` |
+
+
+## Stakeholder review refresh redeploy — 2026-03-13T16:54:19Z
+- Trigger: final dev redeploy after pushing the deploy-log artifact so live dev matches the latest feature branch HEAD exactly
+- App fix commit included in deployed branch history: `8bedfb4`
+- Redeployed branch HEAD:
+  - full: `a248ab13f13916b91176cae9e793ed7b0e02c56b`
+  - short: `a248ab1`
+- Dev URL: `http://20.106.185.110:8081/`
+- Runtime: `pm2` process `app-dev` behind nginx on port `8081`, forwarding to local app on port `3001`
+
+### Verification
+- `git -C /home/rootagent/deployments/dev rev-parse HEAD` returned `a248ab13f13916b91176cae9e793ed7b0e02c56b`.
+- `curl -sf http://20.106.185.110:8081/build-info.json` returned `{"version":"0.1.0","commit":"a248ab1","builtAt":"2026-03-13T16:54:15.774Z","displayVersion":"v0.1.0+a248ab1"}`.
+- `curl -I http://20.106.185.110:8081/` returned `HTTP/1.1 200 OK`.
+- `pm2 logs app-dev --lines 8 --nostream` shows the active startup line for `v0.1.0+a248ab1`.
+
+### Latest deployment record
+
+| Field | Value |
+|---|---|
+| Commit | `a248ab13f13916b91176cae9e793ed7b0e02c56b` |
+| Short | `a248ab1` |
+| Branch | `feature/issue-98` |
+| Environment | `dev` |
+| PM2 Process | `app-dev` |
+| URL | `http://20.106.185.110:8081/` |
+| Timestamp | `2026-03-13T16:54:19Z` |
+| Status | `SUCCESS` |
