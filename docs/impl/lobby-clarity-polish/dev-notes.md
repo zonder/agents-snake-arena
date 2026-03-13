@@ -59,3 +59,9 @@
   - keep the mobile breakpoint on the existing one-column stack so phone usability remains unchanged
 - Preserved reconnect clarity, duplicate-name handling, ready/unready semantics, countdown handoff, and mobile responsiveness because this pass only rebalanced presentation-layer CSS.
 
+## Feedback round: simplify main lobby copy
+- Reduced main-lobby copy so the room stays focused on the essentials: branding, room code, players, ready state, and a single clear next-step area.
+- Moved the primary dynamic next-step text into the action panel and removed the extra poster subtitle plus the per-player explanatory paragraph from the main layout.
+- Tightened state-driven copy in `deriveLobbyPresentation()` so the main view uses shorter labels while the help popup keeps the fuller guidance and flow summary.
+- Preserved reconnect visibility by keeping reconnect-specific status text on the main poster only when it matters, while duplicate-name handling, ready semantics, countdown handoff, and mobile layout remain unchanged.
+
