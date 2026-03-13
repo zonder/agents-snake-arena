@@ -22,6 +22,10 @@ const roomCodeHintEl = document.getElementById('roomCodeHint');
 const lobbyStatusSummaryEl = document.getElementById('lobbyStatusSummary');
 const lobbyNextStepLabelEl = document.getElementById('lobbyNextStepLabel');
 const lobbySupportCopyEl = document.getElementById('lobbySupportCopy');
+const lobbyFlowSummaryEl = document.getElementById('lobbyFlowSummary');
+const lobbyFlowStepShareEl = document.getElementById('lobbyFlowStepShare');
+const lobbyFlowStepJoinEl = document.getElementById('lobbyFlowStepJoin');
+const lobbyFlowStepReadyEl = document.getElementById('lobbyFlowStepReady');
 const gameStageEl = document.getElementById('gameStage');
 const boardEl = document.getElementById('board');
 const boardFxLayerEl = document.getElementById('boardFxLayer');
@@ -546,6 +550,9 @@ function deriveLobbyPresentation(state) {
     readyButtonLabel: you?.isReady ? 'Unready' : 'Ready up',
     readyButtonDisabled: !you || !you.isOccupied || gameplayFocused,
     readyButtonWaiting: !!state.allPlayersPresent && !state.allReady,
+    flowSummary: 'Waiting for player two',
+    flowSteps: { share: 'active', join: 'pending', ready: 'pending' },
+    lobbyMode: 'waiting',
   };
 
   if (state.reconnect?.active) {
@@ -559,6 +566,9 @@ function deriveLobbyPresentation(state) {
       ? `Resume your slot within ${state.reconnect.secondsRemaining ?? 0}s.`
       : `${state.reconnect.disconnectedPlayerDisplayName || state.reconnect.disconnectedPlayerName || 'A player'} can still resume this match.`;
     presentation.supportCopy = reconnectMessage || 'Once the player returns, the lobby flow continues from here.';
+    presentation.flowSummary = 'Reconnect window active';
+    presentation.flowSteps = { share: 'complete', join: 'active', ready: 'blocked' };
+    presentation.lobbyMode = 'reconnect';
     return presentation;
   }
 
@@ -571,6 +581,9 @@ function deriveLobbyPresentation(state) {
     presentation.supportCopy = you?.isReady
       ? 'You are marked ready. The countdown starts after another player joins and both players are ready.'
       : 'You can ready up now, but the match will only start after another player joins and both players confirm.';
+    presentation.flowSummary = 'Step 1 of 3 · Share the room code';
+    presentation.flowSteps = { share: 'active', join: 'pending', ready: 'pending' };
+    presentation.lobbyMode = 'waiting';
     return presentation;
   }
 
@@ -581,6 +594,9 @@ function deriveLobbyPresentation(state) {
     presentation.statusSummary = 'Match starting';
     presentation.nextStepLabel = state.message || 'Countdown live. Match is starting now.';
     presentation.supportCopy = 'Ready states are locked while the server transitions into the round.';
+    presentation.flowSummary = 'Countdown live';
+    presentation.flowSteps = { share: 'complete', join: 'complete', ready: 'complete' };
+    presentation.lobbyMode = 'starting';
     return presentation;
   }
 
@@ -592,10 +608,15 @@ function deriveLobbyPresentation(state) {
     if (you && !you.isReady) {
       presentation.nextStepLabel = 'Press ready when you are set.';
       presentation.supportCopy = 'Your opponent is here. The match starts automatically after both readiness badges turn green.';
+      presentation.flowSummary = 'Step 2 of 3 · Ready check unlocked';
+      presentation.flowSteps = { share: 'complete', join: 'active', ready: 'pending' };
     } else {
       presentation.nextStepLabel = `${opponent?.displayName || 'Your opponent'} still needs to ready up.`;
       presentation.supportCopy = 'You are locked in. Stay ready and the countdown will begin as soon as they confirm.';
+      presentation.flowSummary = 'Step 3 of 3 · Waiting on final ready';
+      presentation.flowSteps = { share: 'complete', join: 'complete', ready: 'active' };
     }
+    presentation.lobbyMode = 'ready-check';
     return presentation;
   }
 
@@ -606,9 +627,19 @@ function deriveLobbyPresentation(state) {
     presentation.statusSummary = 'Ready';
     presentation.nextStepLabel = 'Countdown should begin in just a moment.';
     presentation.supportCopy = 'If the transition stalls, stay connected — the room flow remains authoritative on the server.';
+    presentation.flowSummary = 'All systems ready';
+    presentation.flowSteps = { share: 'complete', join: 'complete', ready: 'complete' };
+    presentation.lobbyMode = 'ready';
   }
 
   return presentation;
+}
+
+
+function applyLobbyFlowStep(stepEl, state) {
+  if (!stepEl) return;
+  stepEl.classList.remove('is-pending', 'is-active', 'is-complete', 'is-blocked');
+  stepEl.classList.add(`is-${state}`);
 }
 
 function renderLobby(state) {
@@ -624,6 +655,11 @@ function renderLobby(state) {
   lobbyMessage.textContent = presentation.statusMessage;
   lobbyNextStepLabelEl.textContent = presentation.nextStepLabel;
   lobbySupportCopyEl.textContent = presentation.supportCopy;
+  lobbyFlowSummaryEl.textContent = presentation.flowSummary;
+  applyLobbyFlowStep(lobbyFlowStepShareEl, presentation.flowSteps.share);
+  applyLobbyFlowStep(lobbyFlowStepJoinEl, presentation.flowSteps.join);
+  applyLobbyFlowStep(lobbyFlowStepReadyEl, presentation.flowSteps.ready);
+  lobbyEl.dataset.lobbyMode = presentation.lobbyMode;
   playersEl.innerHTML = '';
 
   applyPhaseTheme(presentation.gameplayFocused ? getPhaseTheme(state.phase) : 'lobby', 'neutral');

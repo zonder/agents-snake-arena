@@ -54,10 +54,46 @@
               <div class="lobby-brand-grid"></div>
             </div>
             <div class="lobby-brand-copy">
-              <div id="phaseBadge" class="badge status-chip">Lobby</div>
+              <div class="lobby-brand-topline">
+                <div id="phaseBadge" class="badge status-chip">Lobby</div>
+                <div class="lobby-brand-callout">Pre-match staging</div>
+              </div>
               <div class="eyebrow">Arena staging</div>
               <h2 id="lobbyHeroTitle" class="lobby-hero-title">Match lobby</h2>
               <p id="lobbyHeroSubtitle" class="message lobby-hero-subtitle">Share the code, fill the rail, then launch when both players are ready.</p>
+            </div>
+          </section>
+
+          <section id="lobbyFlow" class="info-card lobby-flow-card" aria-label="Lobby progress">
+            <div class="lobby-flow-head">
+              <div>
+                <div class="eyebrow">Lobby flow</div>
+                <h3 class="section-title">From code share to countdown</h3>
+              </div>
+              <div id="lobbyFlowSummary" class="lobby-flow-summary">Waiting for player two</div>
+            </div>
+            <div class="lobby-flow-steps">
+              <article id="lobbyFlowStepShare" class="lobby-flow-step is-active">
+                <span class="lobby-flow-index">1</span>
+                <div>
+                  <strong>Share code</strong>
+                  <p>Send the room code to your opponent.</p>
+                </div>
+              </article>
+              <article id="lobbyFlowStepJoin" class="lobby-flow-step">
+                <span class="lobby-flow-index">2</span>
+                <div>
+                  <strong>Second player joins</strong>
+                  <p>Fill the second slot to unlock ready check.</p>
+                </div>
+              </article>
+              <article id="lobbyFlowStepReady" class="lobby-flow-step">
+                <span class="lobby-flow-index">3</span>
+                <div>
+                  <strong>Both players ready</strong>
+                  <p>Countdown triggers automatically when both are green.</p>
+                </div>
+              </article>
             </div>
           </section>
 
