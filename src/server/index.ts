@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import { EVENTS, type Direction } from '../shared/contracts.js';
 import { normalizePlayerName } from '../shared/playerName.js';
 import { RoomService, type ClientEvent } from './roomService.js';
+import type { BotDifficulty } from './botController.js';
 
 const publicDir = join(process.cwd(), 'public');
 const roomService = new RoomService();
@@ -74,6 +75,11 @@ io.on('connection', (socket) => {
 
   socket.on(EVENTS.gameRematchRequest, () => {
     emitEvents(roomService.requestRematch(socket.id).events);
+  });
+
+  socket.on(EVENTS.botAdd, (payload: { difficulty?: string }) => {
+    const difficulty: BotDifficulty = ['easy', 'medium', 'hard'].includes(payload?.difficulty ?? '') ? (payload!.difficulty as BotDifficulty) : 'medium';
+    emitEvents(roomService.addBot(socket.id, difficulty).events);
   });
 
   socket.on('disconnect', () => {

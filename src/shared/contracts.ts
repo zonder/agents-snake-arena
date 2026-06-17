@@ -23,7 +23,8 @@ export type LobbyErrorReason =
   | 'ROOM_FULL'
   | 'GAME_ALREADY_STARTED'
   | 'ACTION_NOT_ALLOWED'
-  | 'INVALID_PLAYER_NAME';
+  | 'INVALID_PLAYER_NAME'
+  | 'BOT_ALREADY_ADDED';
 
 export interface GridPoint { x: number; y: number; }
 
@@ -170,4 +171,5 @@ export const EVENTS = {
   gameCountdown: 'game:countdown', gameStart: 'game:start', gameState: 'game:state', gameEnded: 'game:ended', gameRematchRequest: 'game:rematch-request',
   gameRematchState: 'game:rematch-state', roomClosed: 'room:closed', sessionIssued: 'session:issued', sessionResume: 'session:resume',
   sessionResumeSucceeded: 'session:resume:succeeded', sessionResumeFailed: 'session:resume:failed',
+  botAdd: 'bot:room:add',
 } as const;
