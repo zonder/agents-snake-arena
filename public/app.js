@@ -44,6 +44,7 @@ const postGameBannerStatusEl = document.getElementById('postGameBannerStatus');
 const postGameBannerButton = document.getElementById('postGameBannerButton');
 const soundToggleButton = document.getElementById('soundToggleButton');
 const touchControlsEl = document.getElementById('touchControls');
+const swipeTrailEl = document.getElementById('swipeTrail');
 const touchControlButtons = Array.from(document.querySelectorAll('[data-direction]'));
 
 let latestLobbyState = null;
@@ -71,10 +72,12 @@ const swipeState = {
   startX: 0,
   startY: 0,
   startAt: 0,
+  directionFired: false,
 };
 
 const SWIPE_MIN_DISTANCE_PX = 24;
 const SWIPE_AXIS_DOMINANCE_PX = 6;
+const SWIPE_MAX_DURATION_MS = 600;
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const MOTION_REDUCED = () => prefersReducedMotion.matches;
@@ -910,6 +913,9 @@ function syncResponsiveUi() {
   gameStageEl.classList.toggle('is-touch-active', touchControlsVisible);
   gamePanelEl.classList.toggle('touch-controls-visible', touchControlsVisible);
 
+  // Lock page scroll/zoom during mobile gameplay so swipes only control the snake.
+  document.body.classList.toggle('swipe-active', touchControlsVisible);
+
   const controlsEnabled = canRequestDirection();
   touchControlButtons.forEach((button) => {
     button.disabled = !controlsEnabled;
@@ -929,38 +935,109 @@ function setupTouchControls() {
     });
   });
 
-  gameStageEl.addEventListener('pointerdown', (event) => {
-    if (!shouldShowTouchControls({
-      layoutMode: viewportState.layoutMode,
-      touchPreferred: viewportState.touchPreferred,
-      phase: latestGameState?.phase || latestLobbyState?.phase || 'entry',
-      screen: uiState.screen,
-    }) || event.pointerType === 'mouse') {
-      return;
-    }
+  // Swipe gestures: listen on document so swipes work anywhere during mobile gameplay.
+  // Direction fires on pointermove (not pointerup) for instant response — no finger-lift delay.
+  document.addEventListener('pointerdown', handleSwipePointerDown, { passive: true });
+  document.addEventListener('pointermove', handleSwipePointerMove, { passive: true });
+  document.addEventListener('pointerup', handleSwipePointerUp, { passive: true });
+  document.addEventListener('pointercancel', handleSwipePointerCancel);
 
-    audioManager.unlock();
-    swipeState.active = true;
-    swipeState.pointerId = event.pointerId;
-    swipeState.startX = event.clientX;
-    swipeState.startY = event.clientY;
-    swipeState.startAt = Date.now();
-  }, { passive: true });
+  // Prevent scroll/zoom via touch events during mobile gameplay.
+  // touch-action: none on body handles most browsers, but iOS Safari sometimes
+  // needs an explicit touchmove preventDefault as a belt-and-suspenders approach.
+  document.addEventListener('touchmove', handleSwipeTouchMove, { passive: false });
+}
 
-  gameStageEl.addEventListener('pointerup', (event) => {
-    if (!swipeState.active || swipeState.pointerId !== event.pointerId) return;
-    const direction = resolveSwipeDirection(swipeState.startX, swipeState.startY, event.clientX, event.clientY);
+function isSwipeGameplayActive() {
+  return shouldShowTouchControls({
+    layoutMode: viewportState.layoutMode,
+    touchPreferred: viewportState.touchPreferred,
+    phase: latestGameState?.phase || latestLobbyState?.phase || 'entry',
+    screen: uiState.screen,
+  });
+}
+
+function handleSwipePointerDown(event) {
+  if (!isSwipeGameplayActive() || event.pointerType === 'mouse') return;
+
+  audioManager.unlock();
+  swipeState.active = true;
+  swipeState.directionFired = false;
+  swipeState.pointerId = event.pointerId;
+  swipeState.startX = event.clientX;
+  swipeState.startY = event.clientY;
+  swipeState.startAt = Date.now();
+}
+
+function handleSwipePointerMove(event) {
+  if (!swipeState.active || swipeState.pointerId !== event.pointerId) return;
+  if (swipeState.directionFired) return;
+
+  const elapsed = Date.now() - swipeState.startAt;
+  if (elapsed > SWIPE_MAX_DURATION_MS) {
     resetSwipeState();
+    return;
+  }
+
+  const direction = resolveSwipeDirection(swipeState.startX, swipeState.startY, event.clientX, event.clientY);
+  if (direction) {
+    swipeState.directionFired = true;
+    requestDirection(direction, 'swipe');
+    showSwipeIndicator(direction);
+  }
+}
+
+function handleSwipePointerUp(event) {
+  if (!swipeState.active || swipeState.pointerId !== event.pointerId) return;
+
+  // If no direction was fired during the gesture (very short swipe), try one last time on release.
+  if (!swipeState.directionFired) {
+    const direction = resolveSwipeDirection(swipeState.startX, swipeState.startY, event.clientX, event.clientY);
     if (direction) {
       requestDirection(direction, 'swipe');
+      showSwipeIndicator(direction);
     }
-  });
+  }
 
-  gameStageEl.addEventListener('pointercancel', resetSwipeState);
-  gameStageEl.addEventListener('pointerleave', (event) => {
-    if (event.pointerType !== 'mouse') return;
+  resetSwipeState();
+}
+
+function handleSwipePointerCancel(event) {
+  if (swipeState.pointerId === event.pointerId) {
     resetSwipeState();
-  });
+  }
+}
+
+function handleSwipeTouchMove(event) {
+  // Block native scroll/zoom when swipe gameplay is active.
+  if (isSwipeGameplayActive()) {
+    event.preventDefault();
+  }
+}
+
+function showSwipeIndicator(direction) {
+  // 1. Pulse the matching arrow button.
+  const button = touchControlButtons.find((b) => b.dataset.direction === direction);
+  if (button) {
+    pulseConfirmation(button, false);
+  }
+
+  // 2. Flash a directional trail on the game stage at the swipe origin.
+  if (swipeTrailEl && swipeState.startX != null) {
+    const rect = gameStageEl.getBoundingClientRect();
+    const x = swipeState.startX - rect.left;
+    const y = swipeState.startY - rect.top;
+    swipeTrailEl.style.left = `${x}px`;
+    swipeTrailEl.style.top = `${y}px`;
+    swipeTrailEl.dataset.direction = direction;
+    swipeTrailEl.className = 'swipe-trail';
+    void swipeTrailEl.offsetWidth;
+    swipeTrailEl.classList.add('is-active');
+    clearTimeout(swipeTrailEl._hideTimer);
+    swipeTrailEl._hideTimer = setTimeout(() => {
+      swipeTrailEl.className = 'swipe-trail';
+    }, 320);
+  }
 }
 
 function resetSwipeState() {
@@ -969,6 +1046,7 @@ function resetSwipeState() {
   swipeState.startX = 0;
   swipeState.startY = 0;
   swipeState.startAt = 0;
+  swipeState.directionFired = false;
 }
 
 function resolveSwipeDirection(startX, startY, endX, endY) {
