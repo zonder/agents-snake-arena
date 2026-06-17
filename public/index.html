@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Multiplayer Snake</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
@@ -96,6 +96,7 @@
               <div id="gameStage" class="game-stage">
                 <div id="boardFxLayer" class="board-fx-layer" aria-hidden="true"></div>
                 <div id="countdownOverlay" class="countdown-overlay hidden" aria-hidden="true"></div>
+                <div id="swipeTrail" class="swipe-trail" aria-hidden="true"></div>
                 <div id="board" class="board" aria-label="Game board"></div>
               </div>
               <div id="touchControls" class="touch-controls hidden" aria-label="Touch controls">
@@ -134,7 +135,7 @@
               </div>
             </aside>
           </div>
-          <p class="controls-hint">Use arrow keys or WASD during countdown and gameplay.</p>
+          <p class="controls-hint">Swipe or tap the arrows on mobile. Arrow keys or WASD on desktop.</p>
         </section>
       </section>
     </main>
