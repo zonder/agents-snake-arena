@@ -57,6 +57,7 @@ let buildMarkerText = 'Build: loading…';
 let buildMarkerTitle = 'Build metadata is loading.';
 let pendingDirection = null;
 let latestSession = null;
+let soloMode = false;
 const PLAYER_NAME_STORAGE_KEY = 'snake:player-name';
 
 const viewportState = {
@@ -151,6 +152,7 @@ socket.on('player:left', () => {
 socket.on('lobby:state', (payload) => {
   const previousLobbyState = latestLobbyState;
   latestLobbyState = payload;
+  if (payload.soloMode !== undefined) soloMode = payload.soloMode;
   if (payload.yourSlotIndex !== undefined) {
     yourSlotIndex = payload.yourSlotIndex;
   }
@@ -199,7 +201,13 @@ socket.on('game:ended', (payload) => {
   renderRematch(payload.finalState.rematch, payload.phase);
   applyGameTransitionEffects(previousGameState, payload.finalState, payload.result.bySlot);
   const yourOutcome = getYourOutcome(payload.result.bySlot);
-  const statusText = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
+  let statusText;
+  if (soloMode) {
+    const yourScore = payload.finalState.snakes[0]?.score ?? 0;
+    statusText = `Game over! You scored ${yourScore}.`;
+  } else {
+    statusText = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
+  }
   statusEl.textContent = statusText;
   gameStatusInlineEl.textContent = statusText;
 });
@@ -236,6 +244,15 @@ document.getElementById('createRoomButton').addEventListener('click', () => {
   audioManager.play('ui.click');
   persistPlayerName(name);
   socket.emit('room:create', { name });
+});
+
+document.getElementById('playSoloButton').addEventListener('click', () => {
+  const name = getValidPlayerNameOrShowError();
+  if (!name) return;
+  audioManager.play('ui.click');
+  persistPlayerName(name);
+  soloMode = true;
+  socket.emit('room:create-solo', { name });
 });
 
 document.getElementById('joinRoomButton').addEventListener('click', () => {
@@ -557,6 +574,26 @@ function renderRematch(rematch, phase, message) {
   postGameBannerButton.classList.remove('waiting', 'accepted');
   if (!isPostGame) return;
 
+  if (soloMode) {
+    const statusText = message || 'Try again? Hit play to restart.';
+    const buttonText = rematch?.requestedByYou ? 'Restarting…' : 'Play Again';
+    const buttonDisabled = rematch?.requestedByYou || !rematch?.available;
+    rematchStatusEl.textContent = statusText;
+    postGameBannerTitleEl.textContent = 'Play again';
+    postGameBannerStatusEl.textContent = statusText;
+    rematchButton.textContent = buttonText;
+    postGameBannerButton.textContent = buttonText;
+    rematchButton.disabled = buttonDisabled;
+    postGameBannerButton.disabled = buttonDisabled;
+    if (rematch?.available && !rematch?.requestedByYou) {
+      rematchPanelEl.classList.add('highlighted');
+    }
+    if (rematch?.requestedByYou) {
+      postGameBannerButton.classList.add('accepted');
+    }
+    return;
+  }
+
   const players = latestGameState?.players || latestLobbyState?.players || latestRematchState?.players || [];
   const opponent = players.find((player) => player.slotIndex !== yourSlotIndex);
   let statusText = message || 'Want another round? Rematch is ready as soon as both players accept.';
@@ -617,8 +654,17 @@ function renderGame(state, perSlotResult) {
   ensureBoard(state.board.width, state.board.height);
   score0El.textContent = String(state.snakes[0].score);
   scoreLabel0El.textContent = `${state.players[0].displayName} · ${state.players[0].label}`;
-  score1El.textContent = String(state.snakes[1].score);
-  scoreLabel1El.textContent = `${state.players[1].displayName} · ${state.players[1].label}`;
+
+  if (soloMode) {
+    scoreCard1El.classList.add('hidden');
+    score1El.textContent = '—';
+    scoreLabel1El.textContent = 'Solo mode';
+  } else {
+    scoreCard1El.classList.remove('hidden');
+    score1El.textContent = String(state.snakes[1].score);
+    scoreLabel1El.textContent = `${state.players[1].displayName} · ${state.players[1].label}`;
+  }
+
   speedLabel.textContent = `Speed: ${state.tickIntervalMs}ms`;
 
   updateScoreCards(state, perSlotResult);
@@ -639,9 +685,16 @@ function renderGame(state, perSlotResult) {
     gamePhaseLabel.textContent = 'Game over';
     countdownLabel.textContent = 'Rematch: ready now';
     const yourOutcome = getYourOutcome(perSlotResult);
-    gameStatusInlineEl.textContent = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
-    gameMessageEl.textContent = yourOutcome === 'win' ? 'Result: you win. Rematch is available immediately.' : yourOutcome === 'lose' ? 'Result: you lose. Rematch is available immediately.' : 'Result: draw. Rematch is available immediately.';
-    applyPhaseTheme('result', yourOutcome);
+    if (soloMode) {
+      const yourScore = state.snakes[0]?.score ?? 0;
+      gameStatusInlineEl.textContent = `Game over! You scored ${yourScore}.`;
+      gameMessageEl.textContent = `You scored ${yourScore}. Press rematch to try again.`;
+      applyPhaseTheme('result', yourOutcome === 'win' ? 'win' : 'lose');
+    } else {
+      gameStatusInlineEl.textContent = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
+      gameMessageEl.textContent = yourOutcome === 'win' ? 'Result: you win. Rematch is available immediately.' : yourOutcome === 'lose' ? 'Result: you lose. Rematch is available immediately.' : 'Result: draw. Rematch is available immediately.';
+      applyPhaseTheme('result', yourOutcome);
+    }
   }
 
   paintBoard(state);

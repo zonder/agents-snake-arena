@@ -31,6 +31,7 @@ export interface MatchState {
   result: RoundResultKey | null;
   deathReasons: Array<{ slotIndex: 0 | 1; reason: DeathReason }>;
   winnerSlotIndex: 0 | 1 | null;
+  soloMode: boolean;
 }
 
 const BOARD = { width: 30, height: 30 } as const;
@@ -41,10 +42,11 @@ const OPPOSITE: Record<Direction, Direction> = {
   right: 'left',
 };
 
-export function createInitialMatchState(roomCode: string, random: () => number = Math.random): MatchState {
-  const snakes = createInitialSnakes(random);
+export function createInitialMatchState(roomCode: string, random: () => number = Math.random, soloMode: boolean = false): MatchState {
+  const snakes = createInitialSnakes(random, soloMode);
 
-  const initialFood = spawnFood(BOARD, snakes, random, { phase: 'initial' });
+  const activeSnakes = soloMode ? [snakes[0]] : snakes;
+  const initialFood = spawnFood(BOARD, activeSnakes, random, { phase: 'initial' });
   if (!initialFood) {
     throw new Error('Unable to spawn initial food on the board.');
   }
@@ -63,6 +65,7 @@ export function createInitialMatchState(roomCode: string, random: () => number =
     result: null,
     deathReasons: [],
     winnerSlotIndex: null,
+    soloMode,
   };
 }
 
@@ -95,7 +98,7 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
     }
   }
 
-  const candidateHeads = snakes.map((snake) => movePoint(snake.body[0], snake.direction)) as [GridPoint, GridPoint];
+  const candidateHeads = snakes.map((snake) => snake.alive ? movePoint(snake.body[0], snake.direction) : snake.body[0]) as [GridPoint, GridPoint];
   const consumers = candidateHeads.map((head) => samePoint(head, match.food)) as [boolean, boolean];
 
   const candidateBodies = snakes.map((snake, index) => {
@@ -161,13 +164,17 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
   const aliveSnakes = snakes.filter((snake) => snake.alive);
   if (aliveSnakes.length === 0) {
     result = 'draw';
-  } else if (aliveSnakes.length === 1) {
+  } else if (!match.soloMode && aliveSnakes.length === 1) {
     winnerSlotIndex = aliveSnakes[0].slotIndex;
     result = winnerSlotIndex === 0 ? 'player-0-win' : 'player-1-win';
+  } else if (match.soloMode && !snakes[0].alive) {
+    result = 'player-0-win';
+    winnerSlotIndex = null;
   }
 
   if (!result && (consumers[0] || consumers[1])) {
-    const spawned = spawnFood(match.board, snakes, random, { phase: 'replacement' });
+    const activeSnakes = snakes.filter((snake) => snake.alive);
+    const spawned = spawnFood(match.board, activeSnakes, random, { phase: 'replacement' });
     if (spawned) {
       food = spawned;
     } else {
@@ -194,6 +201,7 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
     result,
     winnerSlotIndex,
     deathReasons,
+    soloMode: match.soloMode,
   };
 }
 
@@ -249,7 +257,7 @@ export function spawnFood(
   return replacementCell ?? pickRandomCell(emptyCells, random);
 }
 
-function createInitialSnakes(_random: () => number): [SnakeState, SnakeState] {
+function createInitialSnakes(_random: () => number, soloMode: boolean = false): [SnakeState, SnakeState] {
   return [
     {
       slotIndex: 0,
@@ -263,18 +271,27 @@ function createInitialSnakes(_random: () => number): [SnakeState, SnakeState] {
       alive: true,
       score: 0,
     },
-    {
-      slotIndex: 1,
-      direction: 'left',
-      pendingDirection: null,
-      body: [
-        { x: 22, y: 15 },
-        { x: 23, y: 15 },
-        { x: 24, y: 15 },
-      ],
-      alive: true,
-      score: 0,
-    },
+    soloMode
+      ? {
+          slotIndex: 1,
+          direction: 'left',
+          pendingDirection: null,
+          body: [{ x: -1, y: -1 }],
+          alive: false,
+          score: 0,
+        }
+      : {
+          slotIndex: 1,
+          direction: 'left',
+          pendingDirection: null,
+          body: [
+            { x: 22, y: 15 },
+            { x: 23, y: 15 },
+            { x: 24, y: 15 },
+          ],
+          alive: true,
+          score: 0,
+        },
   ];
 }
 

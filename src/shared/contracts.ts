@@ -74,6 +74,7 @@ export interface LobbyStatePayload {
   allPlayersPresent: boolean;
   allReady: boolean;
   canStart: boolean;
+  soloMode: boolean;
   version: number;
   message?: string;
   rematch: RematchView;
@@ -165,7 +166,7 @@ export interface GameRematchStatePayload {
 export interface RoomClosedPayload { roomCode: string; reason: 'round-complete' | 'player-disconnected'; version: number; }
 
 export const EVENTS = {
-  roomCreate: 'room:create', roomCreated: 'room:created', roomJoin: 'room:join', roomJoined: 'room:joined', roomError: 'room:error',
+  roomCreate: 'room:create', roomCreateSolo: 'room:create-solo', roomCreated: 'room:created', roomJoin: 'room:join', roomJoined: 'room:joined', roomError: 'room:error',
   lobbyState: 'lobby:state', playerReadySet: 'player:ready:set', playerLeft: 'player:left', playerDirectionSet: 'player:direction:set',
   gameCountdown: 'game:countdown', gameStart: 'game:start', gameState: 'game:state', gameEnded: 'game:ended', gameRematchRequest: 'game:rematch-request',
   gameRematchState: 'game:rematch-state', roomClosed: 'room:closed', sessionIssued: 'session:issued', sessionResume: 'session:resume',

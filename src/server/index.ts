@@ -53,6 +53,10 @@ io.on('connection', (socket) => {
     emitEvents(roomService.createRoom(socket.id, normalizePlayerName(payload?.name ?? '')).events);
   });
 
+  socket.on(EVENTS.roomCreateSolo, (payload: { name?: string }) => {
+    emitEvents(roomService.createSoloRoom(socket.id, normalizePlayerName(payload?.name ?? '')).events);
+  });
+
   socket.on(EVENTS.roomJoin, (payload: { roomCode?: string; name?: string }) => {
     emitEvents(roomService.joinRoom(socket.id, payload?.roomCode ?? '', normalizePlayerName(payload?.name ?? '')).events);
   });

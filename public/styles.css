@@ -167,6 +167,11 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   background: rgba(7, 14, 28, 0.92);
   color: var(--text-primary);
 }
+.solo-button {
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(99, 102, 241, 0.18);
+}
 .room-code-hero {
   padding: 18px;
   border: 1px solid rgba(124, 255, 107, 0.22);

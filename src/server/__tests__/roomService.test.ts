@@ -365,3 +365,111 @@ describe("RoomService", () => {
   });
 
 });
+
+describe("RoomService — Solo Mode", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-03-11T22:00:00Z"));
+  });
+
+  test("createSoloRoom creates a room and starts countdown immediately", () => {
+    const emitted: Array<{ type: string; payload: any }> = [];
+    const service = new RoomService();
+    service.setEventSink((events) => emitted.push(...events));
+
+    const result = service.createSoloRoom("socket-a", "Alex");
+
+    const created = payloads(result, "room:created")[0];
+    expect(created.roomCode).toMatch(/^[A-Z]{4}$/);
+    expect(created.yourSlotIndex).toBe(0);
+
+    const lobbyState = payloads(result, "lobby:state")[0];
+    expect(lobbyState.soloMode).toBe(true);
+    expect(lobbyState.occupiedCount).toBe(1);
+    expect(lobbyState.players[0].isOccupied).toBe(true);
+    expect(lobbyState.players[0].isReady).toBe(true);
+
+    // Should have countdown events
+    const countdowns = payloads(result, "game:countdown");
+    expect(countdowns.length).toBeGreaterThanOrEqual(1);
+
+    // After countdown, game should start
+    vi.advanceTimersByTime(3000);
+    const gameStarts = emitted.filter((e) => e.type === "game:start");
+    expect(gameStarts).toHaveLength(1);
+    expect(gameStarts[0].payload.phase).toBe("in-progress");
+  });
+
+  test("solo game loop runs correctly with 1 player", () => {
+    const emitted: Array<{ type: string; payload: any }> = [];
+    const service = new RoomService();
+    service.setEventSink((events) => emitted.push(...events));
+
+    service.createSoloRoom("socket-a", "Alex");
+    vi.advanceTimersByTime(3200); // countdown + first tick
+
+    // Game should be in-progress
+    const gameStates = emitted.filter((e) => e.type === "game:state");
+    const lastState = gameStates[gameStates.length - 1];
+    expect(lastState.payload.phase).toBe("in-progress");
+    expect(lastState.payload.snakes[0].alive).toBe(true);
+    // Snake 1 should be dead in solo mode
+    expect(lastState.payload.snakes[1].alive).toBe(false);
+  });
+
+  test("solo game ends when player dies (wall collision)", () => {
+    const emitted: Array<{ type: string; payload: any }> = [];
+    const service = new RoomService();
+    service.setEventSink((events) => emitted.push(...events));
+
+    service.createSoloRoom("socket-a", "Alex");
+    vi.advanceTimersByTime(3000); // countdown
+
+    // Snake starts at (7,15) going right. Drive it into the wall.
+    // Go up to hit the top wall eventually
+    service.setDirection("socket-a", "up");
+
+    // Run ticks until game ends
+    for (let i = 0; i < 30; i++) {
+      vi.advanceTimersByTime(200);
+    }
+
+    const gameEnded = emitted.filter((e) => e.type === "game:ended");
+    expect(gameEnded).toHaveLength(1);
+    expect(gameEnded[0].payload.phase).toBe("game-over");
+  });
+
+  test("solo rematch starts immediately with single request", () => {
+    const emitted: Array<{ type: string; payload: any }> = [];
+    const service = new RoomService();
+    service.setEventSink((events) => emitted.push(...events));
+
+    service.createSoloRoom("socket-a", "Alex");
+    vi.advanceTimersByTime(3000);
+
+    // Drive into wall to end game
+    service.setDirection("socket-a", "up");
+    for (let i = 0; i < 30; i++) {
+      vi.advanceTimersByTime(200);
+    }
+
+    const gameEnded = emitted.filter((e) => e.type === "game:ended");
+    expect(gameEnded).toHaveLength(1);
+
+    // Request rematch
+    emitted.length = 0;
+    const rematchResult = service.requestRematch("socket-a");
+    const countdowns = payloads(rematchResult, "game:countdown");
+    expect(countdowns.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test("solo room rejects join attempts", () => {
+    const service = new RoomService();
+    const result = service.createSoloRoom("socket-a", "Alex");
+    const roomCode = payloads(result, "room:created")[0].roomCode;
+
+    const joinResult = service.joinRoom("socket-b", roomCode, "Sam");
+    const error = payloads(joinResult, "room:error")[0];
+    expect(error.reason).toBe("ROOM_FULL");
+  });
+});
