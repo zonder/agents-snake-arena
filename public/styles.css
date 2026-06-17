@@ -195,6 +195,10 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 .player.waiting { opacity: 0.72; }
 .player-state { margin-top: 8px; }
 .ready-button { min-height: 54px; }
+.bot-section { margin-top: 12px; }
+.bot-controls { display: flex; gap: 8px; align-items: center; justify-content: center; }
+.bot-difficulty-select { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px 12px; font-size: 0.9rem; min-height: 40px; cursor: pointer; }
+.bot-difficulty-select:focus { border-color: var(--accent-secondary); outline: none; }
 .game { margin-top: 0; align-content: start; }
 .game-shell {
   display: grid;

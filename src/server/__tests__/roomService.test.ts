@@ -364,4 +364,82 @@ describe("RoomService", () => {
     expect(rematchStates[0].reconnect.disconnectedPlayerDisplayName).toBe("Alex (Player 2)");
   });
 
+  test("addBot fills the empty slot with a ready bot player", () => {
+    const service = new RoomService();
+    service.createRoom("socket-a", "Alex");
+
+    const botResult = service.addBot("socket-a", "medium");
+    const lobby = payloads(botResult, "lobby:state")[0];
+
+    expect(lobby.phase).toBe("lobby");
+    expect(lobby.occupiedCount).toBe(2);
+    expect(lobby.players[1].name).toBe("Bot");
+    expect(lobby.players[1].isOccupied).toBe(true);
+    expect(lobby.players[1].isReady).toBe(true);
+    expect(lobby.players[1].isConnected).toBe(true);
+  });
+
+  test("addBot starts game when host is already ready", () => {
+    const service = new RoomService();
+    service.createRoom("socket-a", "Alex");
+
+    service.setReady("socket-a", true);
+
+    const botResult = service.addBot("socket-a", "medium");
+    const countdown = payloads(botResult, "game:countdown");
+
+    expect(countdown).toHaveLength(2);
+    expect(countdown[0].secondsRemaining).toBe(3);
+  });
+
+  test("addBot returns error when a bot is already in the room", () => {
+    const service = new RoomService();
+    service.createRoom("socket-a", "Alex");
+
+    service.addBot("socket-a", "medium");
+    const duplicateResult = service.addBot("socket-a", "hard");
+    const error = payloads(duplicateResult, "room:error")[0];
+
+    expect(error.reason).toBe("BOT_ALREADY_ADDED");
+  });
+
+  test("addBot returns error when room is full", () => {
+    const service = new RoomService();
+    const created = service.createRoom("socket-a", "Alex");
+    const roomCode = payloads(created, "room:created")[0].roomCode;
+    service.joinRoom("socket-b", roomCode, "Sam");
+
+    const botResult = service.addBot("socket-a", "medium");
+    const error = payloads(botResult, "room:error")[0];
+
+    expect(error.reason).toBe("ROOM_FULL");
+  });
+
+  test("bot auto-accepts rematch when human requests it", () => {
+    const emitted: Array<{ type: string; payload: any }> = [];
+    const service = new RoomService();
+    service.setEventSink((events) => emitted.push(...events));
+    service.createRoom("socket-a", "Alex");
+
+    service.addBot("socket-a", "medium");
+    service.setReady("socket-a", true);
+    vi.advanceTimersByTime(3000);
+
+    // Let the game run until it ends
+    for (let i = 0; i < 200; i++) {
+      vi.advanceTimersByTime(200);
+      if (emitted.some((e) => e.type === "game:ended")) break;
+    }
+
+    const gameEnded = emitted.find((e) => e.type === "game:ended");
+    expect(gameEnded).toBeTruthy();
+
+    // Request rematch — bot should auto-accept
+    const rematchResult = service.requestRematch("socket-a");
+    const countdown = payloads(rematchResult, "game:countdown");
+
+    expect(countdown).toHaveLength(2);
+    expect(countdown[0].secondsRemaining).toBe(3);
+  });
+
 });

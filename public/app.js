@@ -45,6 +45,9 @@ const postGameBannerButton = document.getElementById('postGameBannerButton');
 const soundToggleButton = document.getElementById('soundToggleButton');
 const touchControlsEl = document.getElementById('touchControls');
 const touchControlButtons = Array.from(document.querySelectorAll('[data-direction]'));
+const botSectionEl = document.getElementById('botSection');
+const addBotButtonEl = document.getElementById('addBotButton');
+const botDifficultySelectEl = document.getElementById('botDifficultySelect');
 
 let latestLobbyState = null;
 let latestGameState = null;
@@ -412,6 +415,12 @@ readyButton.addEventListener('click', () => {
   socket.emit('player:ready:set', { ready: !you.isReady });
 });
 
+addBotButtonEl.addEventListener('click', () => {
+  if (!latestLobbyState) return;
+  audioManager.play('ui.click');
+  socket.emit('bot:room:add', { difficulty: botDifficultySelectEl.value });
+});
+
 soundToggleButton.addEventListener('click', async () => {
   await audioManager.unlock();
   audioManager.setEnabled(!audioManager.enabled);
@@ -530,6 +539,9 @@ function renderLobby(state) {
   readyButton.textContent = you?.isReady ? 'Unready' : 'Ready up';
   readyButton.disabled = !you || !you.isOccupied || gameplayFocused;
   readyButton.classList.toggle('is-waiting', !!state.allPlayersPresent && !state.allReady);
+
+  const showBot = !gameplayFocused && state.occupiedCount === 1 && state.yourSlotIndex === 0;
+  botSectionEl.classList.toggle('hidden', !showBot);
 
   if (gameplayFocused) {
     gamePhaseLabel.textContent = state.phase === 'starting' ? 'Countdown' : state.phase === 'game-over' ? 'Game over' : 'In progress';
