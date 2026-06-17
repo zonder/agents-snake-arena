@@ -1,0 +1,126 @@
+# Deploy workflow: push to main -> prod, push to feature branches -> dev
+# Required GitHub Secrets:
+#   DEPLOY_SSH_KEY        - Private SSH key for root@snake-droplet
+#   DEPLOY_HOST           - VM IP or hostname (e.g. 139.59.148.236)
+#   DEPLOY_USER           - SSH username (e.g. root)
+#   E2E_BASE_URL          - Base URL for post-deploy E2E tests
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deploy target'
+        required: true
+        default: 'prod'
+        type: choice
+        options: [dev, prod]
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
+  deploy-prod:
+    name: Deploy to Prod
+    needs: test
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod')
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            bash /opt/snake-arena/scripts/deploy.sh prod ${{ github.sha }}
+
+      - name: Post-deploy smoke test
+        run: |
+          sleep 5
+          RESPONSE=$(curl -sf "http://${{ secrets.DEPLOY_HOST }}:80/socket.io/?EIO=4&transport=polling" -w '%{http_code}' -o /dev/null || echo "FAIL")
+          echo "Smoke test: HTTP $RESPONSE"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "WARNING: Smoke test did not return 200"
+          fi
+
+  deploy-dev:
+    name: Deploy to Dev
+    needs: test
+    if: github.ref != 'refs/heads/main' && github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            bash /opt/snake-arena/scripts/deploy.sh dev ${{ github.sha }}
+
+      - name: Post-deploy smoke test
+        run: |
+          sleep 5
+          RESPONSE=$(curl -sf "http://${{ secrets.DEPLOY_HOST }}:8081/socket.io/?EIO=4&transport=polling" -w '%{http_code}' -o /dev/null || echo "FAIL")
+          echo "Smoke test: HTTP $RESPONSE"
+          if [ "$RESPONSE" != "200" ]; then
+            echo "WARNING: Smoke test did not return 200"
+          fi
+
+  e2e:
+    name: Post-deploy E2E Tests
+    needs: [deploy-prod, deploy-dev]
+    if: |
+      always() &&
+      (needs.deploy-prod.result == 'success' || needs.deploy-dev.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - uses: microsoft/playwright-github-action@v1
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        env:
+          E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
