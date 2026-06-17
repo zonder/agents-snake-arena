@@ -46,6 +46,10 @@ const soundToggleButton = document.getElementById('soundToggleButton');
 const touchControlsEl = document.getElementById('touchControls');
 const swipeTrailEl = document.getElementById('swipeTrail');
 const touchControlButtons = Array.from(document.querySelectorAll('[data-direction]'));
+const mobileHudEl = document.getElementById('mobileHud');
+const mobileHudScoreEl = document.getElementById('mobileHudScore');
+const mobileHudPhaseEl = document.getElementById('mobileHudPhase');
+const mobileHudRoomEl = document.getElementById('mobileHudRoom');
 
 let latestLobbyState = null;
 let latestGameState = null;
@@ -144,6 +148,7 @@ socket.on('session:resume:failed', (payload) => {
   gameStatusInlineEl.textContent = statusEl.textContent;
   applyPhaseTheme('entry', 'neutral');
   showScreen('entry');
+  exitFullscreenMode();
 });
 
 socket.on('player:left', () => {
@@ -171,6 +176,7 @@ socket.on('game:countdown', (payload) => {
   applyPhaseTheme('countdown', 'neutral');
   showScreen('gameplay');
   triggerCountdownStep(payload.secondsRemaining);
+  syncFullscreenMode();
 });
 
 socket.on('game:start', (payload) => {
@@ -236,6 +242,7 @@ socket.on('room:closed', (payload) => {
   clearCountdownOverlay();
   applyPhaseTheme('entry', 'neutral');
   showScreen('entry');
+  exitFullscreenMode();
   statusEl.textContent = payload.reason === 'player-disconnected'
     ? 'Room closed because a player disconnected. Create or join a new room to play again.'
     : 'Room closed. Create or join a new room to play again.';
@@ -701,6 +708,7 @@ function renderGame(state, perSlotResult) {
   }
 
   paintBoard(state);
+  updateMobileHud();
 }
 
 function showScreen(screen) {
@@ -722,6 +730,7 @@ function showScreen(screen) {
   }
 
   syncResponsiveUi();
+  syncFullscreenMode();
 }
 
 function applyPhaseTheme(phaseTheme, outcomeTheme) {
@@ -953,6 +962,7 @@ function updateViewportState() {
   panelEl.dataset.orientation = viewportState.orientation;
   panelEl.dataset.touch = String(viewportState.touchPreferred);
   syncResponsiveUi();
+  syncFullscreenMode();
 }
 
 function syncResponsiveUi() {
@@ -979,6 +989,76 @@ function shouldShowTouchControls({ layoutMode, touchPreferred, phase, screen }) 
   if (screen !== 'gameplay') return false;
   if (!touchPreferred && !layoutMode.startsWith('mobile')) return false;
   return phase === 'starting' || phase === 'in-progress' || phase === 'game-over';
+}
+
+/* --- Mobile fullscreen mode --- */
+function isMobileFullscreenCandidate() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const shortEdge = Math.min(width, height);
+  const touchPreferred = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  // Match phones and small tablets: short edge <= 600px with touch, or short edge <= 480px without
+  return shortEdge <= 480 || (touchPreferred && shortEdge <= 600);
+}
+
+function shouldEnterFullscreen() {
+  if (!isMobileFullscreenCandidate()) return false;
+  const phase = latestGameState?.phase || latestLobbyState?.phase || 'entry';
+  return phase === 'starting' || phase === 'in-progress' || phase === 'game-over';
+}
+
+function enterFullscreenMode() {
+  if (document.body.classList.contains('mobile-fullscreen')) return;
+  document.body.classList.add('mobile-fullscreen');
+  // Prevent iOS Safari pull-to-refresh and overscroll
+  document.body.style.overscrollBehavior = 'none';
+  updateMobileHud();
+}
+
+function exitFullscreenMode() {
+  if (!document.body.classList.contains('mobile-fullscreen')) return;
+  document.body.classList.remove('mobile-fullscreen');
+  document.body.style.overscrollBehavior = '';
+  // Restore scroll position
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+}
+
+function syncFullscreenMode() {
+  if (shouldEnterFullscreen()) {
+    enterFullscreenMode();
+  } else {
+    exitFullscreenMode();
+  }
+}
+
+function updateMobileHud() {
+  if (!document.body.classList.contains('mobile-fullscreen')) return;
+  const state = latestGameState;
+  const roomCode = state?.roomCode || latestLobbyState?.roomCode || '----';
+
+  mobileHudRoomEl.textContent = roomCode;
+
+  if (!state) {
+    mobileHudScoreEl.textContent = '0';
+    mobileHudPhaseEl.textContent = 'Waiting';
+    return;
+  }
+
+  const yourScore = yourSlotIndex !== null && state.snakes?.[yourSlotIndex]
+    ? state.snakes[yourSlotIndex].score
+    : 0;
+  mobileHudScoreEl.textContent = String(yourScore);
+
+  if (state.phase === 'starting') {
+    mobileHudPhaseEl.textContent = `Starting ${state.countdownSecondsRemaining ?? 3}`;
+  } else if (state.phase === 'in-progress') {
+    mobileHudPhaseEl.textContent = 'Live';
+  } else if (state.phase === 'game-over') {
+    const outcome = getYourOutcome(state.result?.bySlot);
+    mobileHudPhaseEl.textContent = soloMode
+      ? `Score: ${yourScore}`
+      : (outcome === 'win' ? 'You Win' : outcome === 'lose' ? 'You Lose' : 'Draw');
+  }
 }
 
 function setupTouchControls() {

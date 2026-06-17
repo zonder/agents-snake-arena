@@ -660,6 +660,152 @@ body.swipe-active input {
   .panel[data-layout-mode^="mobile"] .touch-controls { width: min(100%, 360px); }
 }
 
+/* --- Mobile fullscreen mode: hide all UI chrome, canvas fills viewport --- */
+body.mobile-fullscreen {
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+  position: fixed;
+  inset: 0;
+  touch-action: none;
+}
+body.mobile-fullscreen .app {
+  padding: 0;
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: block;
+}
+body.mobile-fullscreen .panel {
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  min-height: 100dvh;
+  min-height: 100vh;
+  background: var(--bg-board);
+}
+body.mobile-fullscreen .panel::before { display: none; }
+body.mobile-fullscreen .panel-top,
+body.mobile-fullscreen .room-header,
+body.mobile-fullscreen .lobby-meta-row,
+body.mobile-fullscreen .status,
+body.mobile-fullscreen .error,
+body.mobile-fullscreen .build-marker,
+body.mobile-fullscreen .topbar-actions,
+body.mobile-fullscreen .game-side-left,
+body.mobile-fullscreen .game-side-right,
+body.mobile-fullscreen .gameplay-summary-card,
+body.mobile-fullscreen .rematch-card,
+body.mobile-fullscreen .room-info-card,
+body.mobile-fullscreen .game-meta-stack,
+body.mobile-fullscreen .controls-hint,
+body.mobile-fullscreen .game-message {
+  display: none !important;
+}
+body.mobile-fullscreen .game-shell {
+  grid-template-columns: 1fr;
+  grid-template-areas: "center";
+  gap: 0;
+  align-items: center;
+  justify-items: center;
+  height: 100dvh;
+  height: 100vh;
+}
+body.mobile-fullscreen .game-center {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  position: relative;
+}
+body.mobile-fullscreen .game-stage {
+  width: min(100vw, calc(100dvh - 60px));
+  max-width: 100vw;
+  max-height: calc(100dvh - 60px);
+  aspect-ratio: 1;
+  border-radius: 0;
+  border: none;
+  padding: 8px;
+  box-shadow: none;
+}
+body.mobile-fullscreen .board-fx-layer,
+body.mobile-fullscreen .countdown-overlay {
+  inset: 8px;
+  border-radius: 0;
+}
+body.mobile-fullscreen .touch-controls {
+  position: fixed;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: min(100%, 320px);
+  gap: 6px;
+  opacity: 0.85;
+}
+body.mobile-fullscreen .touch-control {
+  min-height: 48px;
+  padding: 8px 12px;
+  background: rgba(7, 14, 28, 0.88);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+body.mobile-fullscreen .post-game-banner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 20;
+  width: min(calc(100% - 32px), 400px);
+  border-radius: var(--radius-md);
+}
+
+/* --- Minimal HUD overlay during fullscreen gameplay --- */
+.mobile-hud {
+  display: none;
+}
+body.mobile-fullscreen .mobile-hud {
+  display: flex;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 15;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: linear-gradient(180deg, rgba(5, 10, 20, 0.92) 0%, rgba(5, 10, 20, 0.6) 80%, transparent 100%);
+  pointer-events: none;
+  min-height: 44px;
+}
+.mobile-hud-score {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+  text-shadow: 0 0 8px rgba(124, 255, 107, 0.3);
+}
+.mobile-hud-room {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+.mobile-hud-phase {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+body.mobile-fullscreen .game-stage {
+  margin-top: 44px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   button:hover:not(:disabled) { transform: none; }
