@@ -71,3 +71,23 @@ describe('spawnFood', () => {
 function manhattan(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
+
+describe('solo mode', () => {
+  it('creates a match with 1 alive snake and 1 dead snake', () => {
+    const match = createInitialMatchState('TEST', Math.random, true);
+    expect(match.soloMode).toBe(true);
+    expect(match.snakes[0].alive).toBe(true);
+    expect(match.snakes[1].alive).toBe(false);
+    expect(match.snakes[0].body).toHaveLength(3);
+    expect(match.snakes[1].body).toHaveLength(1);
+    expect(match.snakes[1].body[0]).toEqual({ x: -1, y: -1 });
+  });
+
+  it('food spawns on the board (not at dead snake position)', () => {
+    const match = createInitialMatchState('TEST', () => 0.5, true);
+    expect(match.food.x).toBeGreaterThanOrEqual(0);
+    expect(match.food.x).toBeLessThan(30);
+    expect(match.food.y).toBeGreaterThanOrEqual(0);
+    expect(match.food.y).toBeLessThan(30);
+  });
+});
