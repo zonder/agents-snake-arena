@@ -4,6 +4,7 @@ import {
   computeSpeedInterval,
   createInitialCoOpMatchState,
   createInitialMatchState,
+  createRandomCoOpLayout,
   spawnFood,
   type GridPoint,
   type SnakeState,
@@ -61,6 +62,27 @@ describe('createInitialCoOpMatchState', () => {
 
     expect(pathExists(match.snakes[0].body[0], coOp.exit, blocked, match.board)).toBe(true);
     expect(pathExists(match.snakes[1].body[0], coOp.exit, blocked, match.board)).toBe(true);
+  });
+
+  it('keeps every layout on free cells with access to the full board', () => {
+    const layouts = [0, 0.5, 0.99].map((seed) => createRandomCoOpLayout(() => seed));
+    expect(new Set(layouts.map((layout) => layout.layoutId))).toEqual(
+      new Set(['crossroads-open', 'double-corridor-open', 'split-pillars-open']),
+    );
+
+    for (const layout of layouts) {
+      const blocked = new Set(layout.walls.map((wall) => `${wall.x},${wall.y}`));
+
+      expect(blocked.has(`${layout.exit.x},${layout.exit.y}`)).toBe(false);
+      for (const snake of layout.snakes) {
+        for (const segment of snake.body) {
+          expect(blocked.has(`${segment.x},${segment.y}`)).toBe(false);
+        }
+
+        expect(pathExists(snake.body[0], layout.exit, blocked, { width: 30, height: 30 })).toBe(true);
+        expect(canReachBoardEdge(snake.body[0], blocked, { width: 30, height: 30 })).toBe(true);
+      }
+    }
   });
 });
 
@@ -140,6 +162,34 @@ function pathExists(start: GridPoint, target: GridPoint, blocked: Set<string>, b
   while (queue.length > 0) {
     const point = queue.shift()!;
     if (point.x === target.x && point.y === target.y) {
+      return true;
+    }
+
+    for (const candidate of [
+      { x: point.x + 1, y: point.y },
+      { x: point.x - 1, y: point.y },
+      { x: point.x, y: point.y + 1 },
+      { x: point.x, y: point.y - 1 },
+    ]) {
+      if (candidate.x < 0 || candidate.x >= board.width || candidate.y < 0 || candidate.y >= board.height) continue;
+      const candidateKey = key(candidate);
+      if (blocked.has(candidateKey) || visited.has(candidateKey)) continue;
+      visited.add(candidateKey);
+      queue.push(candidate);
+    }
+  }
+
+  return false;
+}
+
+function canReachBoardEdge(start: GridPoint, blocked: Set<string>, board: { width: number; height: number }) {
+  const key = (point: GridPoint) => `${point.x},${point.y}`;
+  const queue: GridPoint[] = [start];
+  const visited = new Set([key(start)]);
+
+  while (queue.length > 0) {
+    const point = queue.shift()!;
+    if (point.x === 0 || point.y === 0 || point.x === board.width - 1 || point.y === board.height - 1) {
       return true;
     }
 

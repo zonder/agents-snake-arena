@@ -62,48 +62,50 @@ const OPPOSITE: Record<Direction, Direction> = {
 
 const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
   {
-    layoutId: 'crossroads-chamber',
+    layoutId: 'crossroads-open',
     walls: [
-      ...rectangleOutline(3, 3, 24, 24),
-      ...verticalLine(10, 6, 18),
-      ...verticalLine(17, 9, 21),
-      ...horizontalLine(7, 12, 10),
-      ...horizontalLine(17, 20, 22),
+      ...verticalLine(9, 4, 10),
+      ...verticalLine(9, 14, 21),
+      ...verticalLine(20, 8, 15),
+      ...horizontalLine(11, 12, 17),
+      ...horizontalLine(13, 22, 24),
     ],
-    exit: { x: 25, y: 25 },
+    exit: { x: 26, y: 25 },
     snakes: [
-      { slotIndex: 0, direction: 'right', body: [{ x: 5, y: 5 }, { x: 4, y: 5 }, { x: 3, y: 5 }] },
-      { slotIndex: 1, direction: 'down', body: [{ x: 22, y: 6 }, { x: 22, y: 5 }, { x: 22, y: 4 }] },
+      { slotIndex: 0, direction: 'right', body: [{ x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }] },
+      { slotIndex: 1, direction: 'down', body: [{ x: 24, y: 4 }, { x: 24, y: 3 }, { x: 24, y: 2 }] },
     ],
   },
   {
-    layoutId: 'double-corridor',
+    layoutId: 'double-corridor-open',
     walls: [
-      ...rectangleOutline(4, 4, 22, 20),
-      ...horizontalLine(7, 9, 20),
-      ...horizontalLine(7, 17, 20),
-      ...verticalLine(14, 10, 16),
-      ...verticalLine(20, 10, 16),
+      ...horizontalLine(6, 9, 12),
+      ...horizontalLine(17, 9, 23),
+      ...horizontalLine(6, 19, 12),
+      ...horizontalLine(17, 19, 23),
+      ...verticalLine(14, 5, 11),
+      ...verticalLine(14, 17, 24),
+      ...verticalLine(20, 11, 17),
     ],
-    exit: { x: 24, y: 22 },
+    exit: { x: 27, y: 23 },
     snakes: [
-      { slotIndex: 0, direction: 'right', body: [{ x: 6, y: 6 }, { x: 5, y: 6 }, { x: 4, y: 6 }] },
-      { slotIndex: 1, direction: 'left', body: [{ x: 21, y: 6 }, { x: 22, y: 6 }, { x: 23, y: 6 }] },
+      { slotIndex: 0, direction: 'right', body: [{ x: 2, y: 13 }, { x: 1, y: 13 }, { x: 0, y: 13 }] },
+      { slotIndex: 1, direction: 'left', body: [{ x: 27, y: 13 }, { x: 28, y: 13 }, { x: 29, y: 13 }] },
     ],
   },
   {
-    layoutId: 'split-pillars',
+    layoutId: 'split-pillars-open',
     walls: [
-      ...rectangleOutline(4, 4, 22, 22),
       ...rectangleOutline(8, 8, 4, 6),
       ...rectangleOutline(18, 8, 4, 6),
       ...rectangleOutline(8, 18, 4, 4),
       ...rectangleOutline(18, 18, 4, 4),
+      ...horizontalLine(12, 15, 17),
     ],
-    exit: { x: 15, y: 24 },
+    exit: { x: 14, y: 27 },
     snakes: [
-      { slotIndex: 0, direction: 'right', body: [{ x: 6, y: 15 }, { x: 5, y: 15 }, { x: 4, y: 15 }] },
-      { slotIndex: 1, direction: 'left', body: [{ x: 23, y: 15 }, { x: 24, y: 15 }, { x: 25, y: 15 }] },
+      { slotIndex: 0, direction: 'right', body: [{ x: 3, y: 15 }, { x: 2, y: 15 }, { x: 1, y: 15 }] },
+      { slotIndex: 1, direction: 'left', body: [{ x: 26, y: 15 }, { x: 27, y: 15 }, { x: 28, y: 15 }] },
     ],
   },
 ];
@@ -175,7 +177,7 @@ export function createInitialCoOpMatchState(roomCode: string, random: () => numb
 
 export function createRandomCoOpLayout(random: () => number = Math.random): CoOpLayoutTemplate {
   const selected = CO_OP_LAYOUT_TEMPLATES[Math.floor(random() * CO_OP_LAYOUT_TEMPLATES.length)] ?? CO_OP_LAYOUT_TEMPLATES[0];
-  return {
+  const layout = {
     layoutId: selected.layoutId,
     exit: { ...selected.exit },
     walls: selected.walls.map((wall) => ({ ...wall })),
@@ -185,6 +187,9 @@ export function createRandomCoOpLayout(random: () => number = Math.random): CoOp
       body: snake.body.map((segment) => ({ ...segment })),
     })) as CoOpLayoutTemplate['snakes'],
   };
+
+  validateCoOpLayout(layout, BOARD);
+  return layout;
 }
 
 export function queueDirectionInput(snake: SnakeState, direction: Direction): boolean {
@@ -574,6 +579,81 @@ function dedupePoints(points: GridPoint[]): GridPoint[] {
     unique.set(`${point.x},${point.y}`, point);
   }
   return [...unique.values()];
+}
+
+function validateCoOpLayout(layout: CoOpLayoutTemplate, board: { width: number; height: number }) {
+  const wallSet = new Set(layout.walls.map((wall) => `${wall.x},${wall.y}`));
+  const assert = (condition: boolean, message: string) => {
+    if (!condition) throw new Error(`Invalid co-op layout '${layout.layoutId}': ${message}`);
+  };
+
+  for (const wall of layout.walls) {
+    assert(isInsideBoard(wall, board), `wall out of bounds at (${wall.x},${wall.y})`);
+  }
+
+  assert(isInsideBoard(layout.exit, board), `exit out of bounds at (${layout.exit.x},${layout.exit.y})`);
+  assert(!wallSet.has(`${layout.exit.x},${layout.exit.y}`), `exit overlaps a wall at (${layout.exit.x},${layout.exit.y})`);
+
+  for (const snake of layout.snakes) {
+    for (const segment of snake.body) {
+      assert(isInsideBoard(segment, board), `snake ${snake.slotIndex} segment out of bounds at (${segment.x},${segment.y})`);
+      assert(!wallSet.has(`${segment.x},${segment.y}`), `snake ${snake.slotIndex} overlaps wall at (${segment.x},${segment.y})`);
+    }
+
+    assert(pathExists(snake.body[0], layout.exit, wallSet, board), `snake ${snake.slotIndex} cannot reach exit`);
+    assert(canReachOuterField(snake.body[0], wallSet, board), `snake ${snake.slotIndex} is trapped in a reduced inner room`);
+  }
+}
+
+function pathExists(start: GridPoint, target: GridPoint, blocked: Set<string>, board: { width: number; height: number }): boolean {
+  const queue: GridPoint[] = [start];
+  const visited = new Set([`${start.x},${start.y}`]);
+
+  while (queue.length > 0) {
+    const point = queue.shift()!;
+    if (samePoint(point, target)) return true;
+
+    for (const candidate of neighbors(point)) {
+      if (!isInsideBoard(candidate, board)) continue;
+      const key = `${candidate.x},${candidate.y}`;
+      if (blocked.has(key) || visited.has(key)) continue;
+      visited.add(key);
+      queue.push(candidate);
+    }
+  }
+
+  return false;
+}
+
+function canReachOuterField(start: GridPoint, blocked: Set<string>, board: { width: number; height: number }): boolean {
+  const queue: GridPoint[] = [start];
+  const visited = new Set([`${start.x},${start.y}`]);
+
+  while (queue.length > 0) {
+    const point = queue.shift()!;
+    if (point.x === 0 || point.y === 0 || point.x === board.width - 1 || point.y === board.height - 1) {
+      return true;
+    }
+
+    for (const candidate of neighbors(point)) {
+      if (!isInsideBoard(candidate, board)) continue;
+      const key = `${candidate.x},${candidate.y}`;
+      if (blocked.has(key) || visited.has(key)) continue;
+      visited.add(key);
+      queue.push(candidate);
+    }
+  }
+
+  return false;
+}
+
+function neighbors(point: GridPoint): GridPoint[] {
+  return [
+    { x: point.x + 1, y: point.y },
+    { x: point.x - 1, y: point.y },
+    { x: point.x, y: point.y + 1 },
+    { x: point.x, y: point.y - 1 },
+  ];
 }
 
 function manhattanDistance(a: GridPoint, b: GridPoint): number {
