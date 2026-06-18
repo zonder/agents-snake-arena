@@ -3,7 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join } from 'node:path';
 import { Server } from 'socket.io';
-import { EVENTS, type Direction } from '../shared/contracts.js';
+import { EVENTS, type Direction, type RoomCreateRequestPayload } from '../shared/contracts.js';
 import { normalizePlayerName } from '../shared/playerName.js';
 import { RoomService, type ClientEvent } from './roomService.js';
 
@@ -49,8 +49,9 @@ const io = new Server(httpServer, { cors: { origin: '*' } });
 roomService.setEventSink(emitEvents);
 
 io.on('connection', (socket) => {
-  socket.on(EVENTS.roomCreate, (payload: { name?: string }) => {
-    emitEvents(roomService.createRoom(socket.id, normalizePlayerName(payload?.name ?? '')).events);
+  socket.on(EVENTS.roomCreate, (payload: RoomCreateRequestPayload) => {
+    const roomMode = payload?.mode === 'co-op' ? 'co-op' : 'versus';
+    emitEvents(roomService.createRoom(socket.id, normalizePlayerName(payload?.name ?? ''), roomMode).events);
   });
 
   socket.on(EVENTS.roomCreateSolo, (payload: { name?: string }) => {

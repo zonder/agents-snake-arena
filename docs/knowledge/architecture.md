@@ -74,10 +74,10 @@ Each room supports:
 - anonymous participation only
 
 Suggested room lifecycle:
-1. room created
-2. second player joins via code
+1. room created (with explicit room mode: versus, solo, or co-op)
+2. second player joins via code when applicable
 3. both players toggle Ready
-4. match auto-starts
+4. match auto-starts for playable modes; non-playable foundations may stop at lobby until gameplay ships
 5. game reaches win/loss/draw terminal state
 6. players may trigger replay flow
 

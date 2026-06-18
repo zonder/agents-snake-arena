@@ -46,6 +46,10 @@ const soundToggleButton = document.getElementById('soundToggleButton');
 const touchControlsEl = document.getElementById('touchControls');
 const swipeTrailEl = document.getElementById('swipeTrail');
 const touchControlButtons = Array.from(document.querySelectorAll('[data-direction]'));
+const mobileHudEl = document.getElementById('mobileHud');
+const mobileHudScoreEl = document.getElementById('mobileHudScore');
+const mobileHudPhaseEl = document.getElementById('mobileHudPhase');
+const mobileHudRoomEl = document.getElementById('mobileHudRoom');
 
 let latestLobbyState = null;
 let latestGameState = null;
@@ -58,6 +62,7 @@ let buildMarkerText = 'Build: loading…';
 let buildMarkerTitle = 'Build metadata is loading.';
 let pendingDirection = null;
 let latestSession = null;
+let roomMode = 'versus';
 let soloMode = false;
 const PLAYER_NAME_STORAGE_KEY = 'snake:player-name';
 
@@ -115,6 +120,8 @@ socket.on('room:error', (payload) => {
 
 socket.on('room:created', (payload) => {
   yourSlotIndex = payload.yourSlotIndex;
+  roomMode = payload.roomMode || 'versus';
+  soloMode = roomMode === 'solo';
   errorEl.classList.add('hidden');
   statusEl.textContent = 'Room created.';
   audioManager.play('ui.click');
@@ -122,6 +129,8 @@ socket.on('room:created', (payload) => {
 
 socket.on('room:joined', (payload) => {
   yourSlotIndex = payload.yourSlotIndex;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   errorEl.classList.add('hidden');
   statusEl.textContent = 'Joined room.';
   audioManager.play('ui.click');
@@ -129,6 +138,8 @@ socket.on('room:joined', (payload) => {
 
 socket.on('session:issued', (payload) => {
   latestSession = payload;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   storeSession(payload);
 });
 
@@ -144,6 +155,7 @@ socket.on('session:resume:failed', (payload) => {
   gameStatusInlineEl.textContent = statusEl.textContent;
   applyPhaseTheme('entry', 'neutral');
   showScreen('entry');
+  exitFullscreenMode();
 });
 
 socket.on('player:left', () => {
@@ -155,7 +167,8 @@ socket.on('player:left', () => {
 socket.on('lobby:state', (payload) => {
   const previousLobbyState = latestLobbyState;
   latestLobbyState = payload;
-  if (payload.soloMode !== undefined) soloMode = payload.soloMode;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = payload.soloMode !== undefined ? payload.soloMode : roomMode === 'solo';
   if (payload.yourSlotIndex !== undefined) {
     yourSlotIndex = payload.yourSlotIndex;
   }
@@ -171,9 +184,12 @@ socket.on('game:countdown', (payload) => {
   applyPhaseTheme('countdown', 'neutral');
   showScreen('gameplay');
   triggerCountdownStep(payload.secondsRemaining);
+  syncFullscreenMode();
 });
 
 socket.on('game:start', (payload) => {
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   statusEl.textContent = `Game started in room ${payload.roomCode}.`;
   gamePhaseLabel.textContent = 'In progress';
   gameStatusInlineEl.textContent = 'Game live.';
@@ -188,6 +204,8 @@ socket.on('game:start', (payload) => {
 socket.on('game:state', (payload) => {
   const previousGameState = latestGameState;
   latestGameState = payload;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   pendingDirection = null;
   latestRematchState = { roomCode: payload.roomCode, phase: payload.phase, rematch: payload.rematch, version: payload.version };
   renderGame(payload);
@@ -218,6 +236,8 @@ socket.on('game:ended', (payload) => {
 socket.on('game:rematch-state', (payload) => {
   const previousRematch = latestRematchState;
   latestRematchState = payload;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   renderRematch(payload.rematch, payload.phase, payload.message);
   applyRematchEffects(previousRematch, payload);
 });
@@ -236,6 +256,7 @@ socket.on('room:closed', (payload) => {
   clearCountdownOverlay();
   applyPhaseTheme('entry', 'neutral');
   showScreen('entry');
+  exitFullscreenMode();
   statusEl.textContent = payload.reason === 'player-disconnected'
     ? 'Room closed because a player disconnected. Create or join a new room to play again.'
     : 'Room closed. Create or join a new room to play again.';
@@ -274,6 +295,7 @@ function storeSession(payload) {
   if (!payload?.roomCode || !payload?.reconnectToken) return;
   const record = {
     roomCode: payload.roomCode,
+    roomMode: payload.roomMode,
     reconnectToken: payload.reconnectToken,
     slotIndex: payload.slotIndex,
     issuedAt: payload.issuedAt,
@@ -305,6 +327,8 @@ function tryResumeStoredSession() {
   const stored = getStoredSession();
   if (!stored?.roomCode || !stored?.reconnectToken) return false;
   latestSession = stored;
+  roomMode = stored.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   socket.emit('session:resume', { roomCode: stored.roomCode, reconnectToken: stored.reconnectToken });
   return true;
 }
@@ -701,6 +725,7 @@ function renderGame(state, perSlotResult) {
   }
 
   paintBoard(state);
+  updateMobileHud();
 }
 
 function showScreen(screen) {
@@ -722,6 +747,7 @@ function showScreen(screen) {
   }
 
   syncResponsiveUi();
+  syncFullscreenMode();
 }
 
 function applyPhaseTheme(phaseTheme, outcomeTheme) {
@@ -953,6 +979,7 @@ function updateViewportState() {
   panelEl.dataset.orientation = viewportState.orientation;
   panelEl.dataset.touch = String(viewportState.touchPreferred);
   syncResponsiveUi();
+  syncFullscreenMode();
 }
 
 function syncResponsiveUi() {
@@ -979,6 +1006,76 @@ function shouldShowTouchControls({ layoutMode, touchPreferred, phase, screen }) 
   if (screen !== 'gameplay') return false;
   if (!touchPreferred && !layoutMode.startsWith('mobile')) return false;
   return phase === 'starting' || phase === 'in-progress' || phase === 'game-over';
+}
+
+/* --- Mobile fullscreen mode --- */
+function isMobileFullscreenCandidate() {
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  const shortEdge = Math.min(width, height);
+  const touchPreferred = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0;
+  // Match phones and small tablets: short edge <= 600px with touch, or short edge <= 480px without
+  return shortEdge <= 480 || (touchPreferred && shortEdge <= 600);
+}
+
+function shouldEnterFullscreen() {
+  if (!isMobileFullscreenCandidate()) return false;
+  const phase = latestGameState?.phase || latestLobbyState?.phase || 'entry';
+  return phase === 'starting' || phase === 'in-progress' || phase === 'game-over';
+}
+
+function enterFullscreenMode() {
+  if (document.body.classList.contains('mobile-fullscreen')) return;
+  document.body.classList.add('mobile-fullscreen');
+  // Prevent iOS Safari pull-to-refresh and overscroll
+  document.body.style.overscrollBehavior = 'none';
+  updateMobileHud();
+}
+
+function exitFullscreenMode() {
+  if (!document.body.classList.contains('mobile-fullscreen')) return;
+  document.body.classList.remove('mobile-fullscreen');
+  document.body.style.overscrollBehavior = '';
+  // Restore scroll position
+  window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+}
+
+function syncFullscreenMode() {
+  if (shouldEnterFullscreen()) {
+    enterFullscreenMode();
+  } else {
+    exitFullscreenMode();
+  }
+}
+
+function updateMobileHud() {
+  if (!document.body.classList.contains('mobile-fullscreen')) return;
+  const state = latestGameState;
+  const roomCode = state?.roomCode || latestLobbyState?.roomCode || '----';
+
+  mobileHudRoomEl.textContent = roomCode;
+
+  if (!state) {
+    mobileHudScoreEl.textContent = '0';
+    mobileHudPhaseEl.textContent = 'Waiting';
+    return;
+  }
+
+  const yourScore = yourSlotIndex !== null && state.snakes?.[yourSlotIndex]
+    ? state.snakes[yourSlotIndex].score
+    : 0;
+  mobileHudScoreEl.textContent = String(yourScore);
+
+  if (state.phase === 'starting') {
+    mobileHudPhaseEl.textContent = `Starting ${state.countdownSecondsRemaining ?? 3}`;
+  } else if (state.phase === 'in-progress') {
+    mobileHudPhaseEl.textContent = 'Live';
+  } else if (state.phase === 'game-over') {
+    const outcome = getYourOutcome(state.result?.bySlot);
+    mobileHudPhaseEl.textContent = soloMode
+      ? `Score: ${yourScore}`
+      : (outcome === 'win' ? 'You Win' : outcome === 'lose' ? 'You Lose' : 'Draw');
+  }
 }
 
 function setupTouchControls() {
