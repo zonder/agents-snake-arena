@@ -79,6 +79,27 @@ test.describe('Lobby clarity — waiting state', () => {
     await expect(guidanceText).toContainText('Share');
   });
 
+  test('next-action icon renders a real emoji glyph (no raw HTML entity)', async ({ page }) => {
+    // Regression guard for issue #99 follow-up: the nextActionIcon was being
+    // set with `textContent = '&#x1F4E3;'` which renders as literal text in a
+    // real browser. The icon must contain a single non-empty grapheme that
+    // does NOT include the raw `&#x` HTML-entity prefix.
+    const icon = page.locator('#nextActionIcon');
+    await expect(icon).toBeVisible();
+
+    const text = (await icon.textContent()) ?? '';
+    expect(text).not.toContain('&#x');
+    expect(text).not.toContain('&amp;');
+    // Should be a non-empty, non-whitespace single grapheme (emoji).
+    expect(text.trim().length).toBeGreaterThan(0);
+    // The waiting-state icon is the megaphone (📣 = U+1F4E3). It is encoded
+    // as a surrogate pair in JS strings, so the length is 2 — but the
+    // character count (codepoints) is 1.
+    const codepoints = Array.from(text);
+    expect(codepoints.length).toBeGreaterThanOrEqual(1);
+    expect(codepoints.join('').trim()).toBe('\u{1F4E3}');
+  });
+
   test('Share code button is visible', async ({ page }) => {
     const shareBtn = page.locator('#copyRoomCodeButton');
     await expect(shareBtn).toBeVisible();
@@ -147,6 +168,13 @@ test.describe('Lobby clarity — both players present', () => {
     await page1.waitForTimeout(500);
     const guidanceP1 = await page1.locator('#nextActionText').textContent() ?? '';
     expect(guidanceP1).toMatch(/Ready|both/i);
+
+    // Regression guard for issue #99 follow-up: the nextActionIcon on the
+    // both-present state must render a real checkered-flag glyph (🏁 = U+1F3C1),
+    // not a raw `&#x1F3C1;` HTML-entity literal.
+    const iconP1 = (await page1.locator('#nextActionIcon').textContent()) ?? '';
+    expect(iconP1).not.toContain('&#x');
+    expect(Array.from(iconP1.trim()).join('')).toBe('\u{1F3C1}');
 
     // Both should see 2 player cards
     const cardsP1 = await page1.locator('.player').count();

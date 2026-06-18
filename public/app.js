@@ -611,19 +611,19 @@ function renderLobby(state) {
   const bothPresent = state.allPlayersPresent;
 
   if (!opponentPresent) {
-    nextActionIcon.textContent = '&#x1F4E3;';
+    nextActionIcon.textContent = String.fromCodePoint(0x1F4E3); // 📣 megaphone
     nextActionText.textContent = 'Share the room code above and wait for your opponent to join.';
   } else if (you && !you.isReady && opponent && !opponent.isReady) {
-    nextActionIcon.textContent = '&#x1F3C1;';
+    nextActionIcon.textContent = String.fromCodePoint(0x1F3C1); // 🏁 checkered flag
     nextActionText.textContent = 'Both players are here! Hit "Ready" when you\'re set to go.';
   } else if (you && !you.isReady) {
-    nextActionIcon.textContent = '&#x1F3C1;';
+    nextActionIcon.textContent = String.fromCodePoint(0x1F3C1); // 🏁 checkered flag
     nextActionText.textContent = 'Your opponent is ready. Hit "Ready" to start the match!';
   } else if (you && you.isReady && opponent && !opponent.isReady) {
-    nextActionIcon.textContent = '&#x23F3;';
+    nextActionIcon.textContent = String.fromCodePoint(0x23F3); // ⏳ hourglass
     nextActionText.textContent = 'You\'re ready! Waiting for your opponent to ready up.';
   } else if (bothReady) {
-    nextActionIcon.textContent = '&#x1F680;';
+    nextActionIcon.textContent = String.fromCodePoint(0x1F680); // 🚀 rocket
     nextActionText.textContent = 'Both ready — launching into the arena!';
   }
 
