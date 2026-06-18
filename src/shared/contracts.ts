@@ -91,6 +91,14 @@ export interface PublicSnakeState {
   score: number;
 }
 
+export interface CoOpStatePayload {
+  layoutId: string;
+  objective: 'both-reach-exit';
+  exit: GridPoint;
+  walls: GridPoint[];
+  playersAtExit: { 0: boolean; 1: boolean };
+}
+
 export interface PublicGameStatePayload {
   roomCode: string;
   roomMode: RoomMode;
@@ -98,7 +106,7 @@ export interface PublicGameStatePayload {
   yourSlotIndex: 0 | 1 | null;
   tickNumber: number;
   board: { width: 30; height: 30 };
-  food: GridPoint;
+  food: GridPoint | null;
   snakes: [PublicSnakeState, PublicSnakeState];
   players: [PlayerIdentityView, PlayerIdentityView];
   foodsEaten: number;
@@ -109,6 +117,7 @@ export interface PublicGameStatePayload {
   result?: { outcome: RoundResult; winnerSlotIndex: 0 | 1 | null; deathReasons: Array<{ slotIndex: 0 | 1; reason: DeathReason }> };
   rematch: RematchView;
   version: number;
+  coOp?: CoOpStatePayload;
 }
 
 export interface PlayerSessionPayload {
@@ -147,6 +156,7 @@ export interface GameStartPayload {
   tickIntervalMs: number;
   startedAt: number;
   version: number;
+  coOp?: CoOpStatePayload;
 }
 
 export type GameStatePayload = PublicGameStatePayload;

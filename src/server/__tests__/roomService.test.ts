@@ -43,7 +43,7 @@ describe('RoomService', () => {
         expect(lobbyState.players[0].name).toBe('Alex');
         expect(lobbyState.players[0].displayName).toBe('Alex');
     });
-    test('co-op rooms preserve room mode across create and join without starting gameplay', () => {
+    test('co-op rooms preserve room mode and start a real countdown with layout payload once both players are ready', () => {
         const emitted = [];
         const service = new RoomService();
         service.setEventSink((events) => emitted.push(...events));
@@ -63,18 +63,24 @@ describe('RoomService', () => {
         expect(guestLobby.roomMode).toBe('co-op');
         expect(hostLobby.canStart).toBe(false);
         expect(guestLobby.canStart).toBe(false);
-        expect(hostLobby.message).toContain('Phase 0 foundation only');
+        expect(hostLobby.message).toContain('Game starts automatically when both players are ready');
         const hostReady = service.setReady('socket-a', true);
-        const guestReady = service.setReady('socket-b', true);
-        const finalLobby = payloads(guestReady, 'lobby:state').find((payload) => payload.yourSlotIndex === 0);
         expect(payloads(hostReady, 'game:countdown')).toHaveLength(0);
-        expect(payloads(guestReady, 'game:countdown')).toHaveLength(0);
-        expect(payloads(guestReady, 'game:start')).toHaveLength(0);
-        expect(payloads(guestReady, 'game:state')).toHaveLength(0);
-        expect(finalLobby.allReady).toBe(true);
-        expect(finalLobby.canStart).toBe(false);
-        vi.advanceTimersByTime(5000);
-        expect(emitted).toEqual([]);
+        const guestReady = service.setReady('socket-b', true);
+        const countdownEvents = payloads(guestReady, 'game:countdown');
+        const gameStateEvents = payloads(guestReady, 'game:state');
+        expect(countdownEvents).toHaveLength(2);
+        expect(gameStateEvents).toHaveLength(2);
+        expect(gameStateEvents[0].coOp.exit).toBeDefined();
+        expect(gameStateEvents[0].coOp.walls.length).toBeGreaterThan(0);
+        expect(gameStateEvents[0].food).toBeNull();
+        expect(gameStateEvents[0].countdownSecondsRemaining).toBe(3);
+        vi.advanceTimersByTime(3000);
+        const gameStarts = emitted.filter((event) => event.type === 'game:start');
+        expect(gameStarts).toHaveLength(2);
+        expect(gameStarts[0].payload.roomMode).toBe('co-op');
+        expect(gameStarts[0].payload.coOp.exit).toBeDefined();
+        expect(gameStarts[0].payload.coOp.walls.length).toBeGreaterThan(0);
     });
     test('starts with a real countdown before emitting game start', () => {
         const emitted = [];
