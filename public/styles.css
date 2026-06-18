@@ -257,8 +257,204 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 .player.you { border-color: rgba(46, 139, 255, 0.44); box-shadow: var(--glow-primary); }
 .player.ready { border-color: rgba(46, 139, 255, 0.32); }
 .player.waiting { opacity: 0.72; }
-.player-state { margin-top: 8px; }
+.player-state { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+.player-status-text {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
 .ready-button { min-height: 54px; }
+
+/* ═══ Lobby Clarity / Polish ═══ */
+
+/* ── Lobby Emblem ── */
+.lobby-emblem {
+  text-align: center;
+  padding: 16px 0 8px;
+  animation: emblemFadeIn 420ms var(--ease-arcade) both;
+  position: relative;
+}
+.emblem-snake {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.emblem-svg {
+  width: clamp(100px, 28vw, 160px);
+  height: auto;
+  filter: drop-shadow(0 0 10px rgba(46, 139, 255, 0.3));
+}
+.lobby-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  margin: 0 0 4px;
+  text-shadow: 0 0 16px rgba(46, 139, 255, 0.25);
+}
+.scanline-accent {
+  width: min(100%, 240px);
+  height: 2px;
+  margin: 8px auto 0;
+  background: linear-gradient(90deg, transparent 0%, var(--p1-blue) 30%, var(--p2-orange) 70%, transparent 100%);
+  opacity: 0.5;
+  animation: scanlineSlide 3s ease-in-out infinite;
+}
+
+/* ── Room Code Hero (enhanced) ── */
+.room-code-column { display: grid; gap: 4px; }
+.room-code-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+.room-code {
+  animation: roomCodePulse 2.4s ease-in-out infinite;
+}
+.share-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  background: linear-gradient(135deg, var(--accent-primary), #1a6fe6);
+}
+.share-icon { font-size: 1.1em; line-height: 1; }
+
+/* ── Lobby Player Cards (enhanced) ── */
+.player {
+  padding: 16px;
+  background: rgba(10, 18, 34, 0.9);
+  transition: border-color var(--motion-base) var(--ease-arcade), box-shadow var(--motion-base) var(--ease-arcade);
+}
+.player.p1-card {
+  border-left: 3px solid var(--p1-blue);
+  border-color: var(--p1-blue-glow);
+}
+.player.p2-card {
+  border-left: 3px solid var(--p2-orange);
+  border-color: var(--p2-orange-glow);
+}
+.player.p1-card.ready {
+  box-shadow: 0 0 0 1px var(--p1-blue-glow), 0 0 20px rgba(46, 139, 255, 0.15);
+}
+.player.p2-card.ready {
+  box-shadow: 0 0 0 1px var(--p2-orange-glow), 0 0 20px rgba(255, 122, 26, 0.15);
+}
+.player.you { border-color: rgba(46, 139, 255, 0.44); box-shadow: var(--glow-primary); }
+.player.ready { border-color: rgba(46, 139, 255, 0.32); }
+.player.waiting { opacity: 0.72; }
+.player-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.player-meta strong {
+  font-size: 1.05rem;
+}
+.player-meta .player-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+}
+.player-state { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+.player-status-text {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+.player-ready-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.player-ready-badge.is-ready {
+  background: rgba(135, 255, 181, 0.12);
+  border: 1px solid rgba(135, 255, 181, 0.32);
+  color: var(--accent-success);
+}
+.player-ready-badge.not-ready {
+  background: rgba(255, 209, 102, 0.10);
+  border: 1px solid rgba(255, 209, 102, 0.28);
+  color: var(--accent-warning);
+}
+
+/* Fade-in for lobby player cards */
+.players .player:nth-child(1) { animation: cardFadeIn 320ms var(--ease-arcade) both; }
+.players .player:nth-child(2) { animation: cardFadeIn 320ms var(--ease-arcade) 100ms both; }
+
+/* ── Next Action Area ── */
+.next-action-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: rgba(46, 139, 255, 0.06);
+  border: 1px solid rgba(46, 139, 255, 0.14);
+}
+.next-action-icon { font-size: 1.3rem; line-height: 1; }
+.next-action-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  line-height: 1.4;
+}
+
+/* ── Both Ready Indicator ── */
+.both-ready-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 18px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, rgba(135, 255, 181, 0.10), rgba(46, 139, 255, 0.08));
+  border: 1px solid rgba(135, 255, 181, 0.28);
+  animation: bothReadyPulse 1.6s ease-in-out infinite;
+}
+.both-ready-check { font-size: 1.2rem; }
+.both-ready-text {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-success);
+  letter-spacing: 0.04em;
+}
+
+/* ── Lobby Animations ── */
+@keyframes roomCodePulse {
+  0%, 100% { opacity: 1; text-shadow: 0 0 8px rgba(46, 139, 255, 0.2); }
+  50% { opacity: 0.88; text-shadow: 0 0 20px rgba(46, 139, 255, 0.45), 0 0 40px rgba(46, 139, 255, 0.15); }
+}
+@keyframes emblemFadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scanlineSlide {
+  0%, 100% { transform: scaleX(0.6); opacity: 0.3; }
+  50% { transform: scaleX(1); opacity: 0.6; }
+}
+@keyframes cardFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes bothReadyPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(135, 255, 181, 0); }
+  50% { box-shadow: 0 0 18px rgba(135, 255, 181, 0.18); }
+}
+
 .game { margin-top: 0; align-content: start; }
 .game-shell {
   display: grid;

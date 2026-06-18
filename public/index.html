@@ -49,19 +49,52 @@
         </div>
 
         <div id="lobby" class="screen lobby hidden">
+          <div class="lobby-emblem" aria-hidden="true">
+            <div class="emblem-snake">
+              <svg viewBox="0 0 120 40" class="emblem-svg" aria-hidden="true">
+                <defs>
+                  <linearGradient id="snakeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="var(--p1-blue)" />
+                    <stop offset="100%" stop-color="var(--p2-orange)" />
+                  </linearGradient>
+                </defs>
+                <path d="M10 20 H30 Q36 20 36 14 V10 Q36 4 42 4 H78 Q84 4 84 10 V14 Q84 20 90 20 H110" fill="none" stroke="url(#snakeGrad)" stroke-width="3" stroke-linecap="round" />
+                <circle cx="110" cy="20" r="3" fill="var(--p2-orange)" />
+                <rect x="50" y="14" width="8" height="12" rx="2" fill="var(--accent-cyan)" opacity="0.7" />
+              </svg>
+            </div>
+            <h2 class="lobby-title">Snake Arena</h2>
+            <div class="scanline-accent" aria-hidden="true"></div>
+          </div>
+
           <div class="room-header room-code-hero">
-            <div>
+            <div class="room-code-column">
               <div class="eyebrow">Room code</div>
               <div id="roomCodeDisplay" class="room-code">----</div>
+              <p class="room-code-hint">Share this code with your opponent</p>
             </div>
-            <button id="copyRoomCodeButton" class="secondary-button" type="button">Copy</button>
+            <button id="copyRoomCodeButton" class="primary-button share-button" type="button">
+              <span class="share-icon">&#x1F4CB;</span> Share Code
+            </button>
           </div>
 
           <div class="lobby-meta-row">
             <div id="phaseBadge" class="badge status-chip">Lobby</div>
             <p id="lobbyMessage" class="message lobby-message"></p>
           </div>
+
           <div id="players" class="players"></div>
+
+          <div id="nextActionArea" class="next-action-area">
+            <div id="nextActionIcon" class="next-action-icon" aria-hidden="true"></div>
+            <p id="nextActionText" class="next-action-text"></p>
+          </div>
+
+          <div id="bothReadyIndicator" class="both-ready-indicator hidden" aria-live="polite">
+            <span class="both-ready-check">&#x2705;</span>
+            <span class="both-ready-text">Both players ready — launching!</span>
+          </div>
+
           <button id="readyButton" class="primary-button ready-button" type="button">Ready</button>
         </div>
 
