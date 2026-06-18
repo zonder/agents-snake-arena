@@ -790,6 +790,7 @@ function ensureBoard(width, height) {
   if (boardReady) return;
   boardEl.innerHTML = '';
   boardEl.style.gridTemplateColumns = `repeat(${width}, minmax(0, 1fr))`;
+  boardEl.style.gridTemplateRows = `repeat(${height}, minmax(0, 1fr))`;
   for (let i = 0; i < width * height; i += 1) {
     const cell = document.createElement('div');
     cell.className = 'cell';
