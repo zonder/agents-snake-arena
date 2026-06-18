@@ -366,7 +366,6 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
 }
 .cell {
   background: linear-gradient(180deg, #111d31, #0b1524);
-  aspect-ratio: 1;
 }
 .cell.wall {
   background: linear-gradient(180deg, #3b4863, #273247);
