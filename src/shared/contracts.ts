@@ -1,4 +1,5 @@
 export type RoomPhase = 'waiting-for-players' | 'lobby' | 'starting' | 'in-progress' | 'game-over';
+export type RoomMode = 'versus' | 'solo' | 'co-op';
 export type Direction = 'up' | 'down' | 'left' | 'right';
 export type RoundResult = 'win' | 'lose' | 'draw';
 export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect';
@@ -67,6 +68,7 @@ export interface LobbyPlayerView extends PlayerIdentityView {
 
 export interface LobbyStatePayload {
   roomCode: string;
+  roomMode: RoomMode;
   phase: RoomPhase;
   yourSlotIndex: 0 | 1 | null;
   players: [LobbyPlayerView, LobbyPlayerView];
@@ -91,6 +93,7 @@ export interface PublicSnakeState {
 
 export interface PublicGameStatePayload {
   roomCode: string;
+  roomMode: RoomMode;
   phase: 'starting' | 'in-progress' | 'game-over';
   yourSlotIndex: 0 | 1 | null;
   tickNumber: number;
@@ -110,6 +113,7 @@ export interface PublicGameStatePayload {
 
 export interface PlayerSessionPayload {
   roomCode: string;
+  roomMode: RoomMode;
   slotIndex: 0 | 1;
   reconnectToken: string;
   issuedAt: number;
@@ -124,8 +128,11 @@ export interface SessionResumeFailedPayload {
   message: string;
 }
 
-export interface RoomCreatedPayload { roomCode: string; yourSlotIndex: 0; }
-export interface RoomJoinedPayload { roomCode: string; yourSlotIndex: 0 | 1; }
+export interface RoomCreateRequestPayload { name?: string; mode?: Exclude<RoomMode, 'solo'>; }
+export interface RoomJoinRequestPayload { roomCode?: string; name?: string; }
+
+export interface RoomCreatedPayload { roomCode: string; roomMode: RoomMode; yourSlotIndex: 0; }
+export interface RoomJoinedPayload { roomCode: string; roomMode: RoomMode; yourSlotIndex: 0 | 1; }
 export interface RoomErrorPayload { reason: LobbyErrorReason; message: string; }
 export interface PlayerLeftPayload { roomCode: string; slotIndex: 0 | 1; reason: 'left' | 'disconnected'; }
 export interface PlayerDirectionSetPayload { direction: Direction; }
@@ -133,6 +140,7 @@ export interface GameCountdownPayload { roomCode: string; phase: 'starting'; sec
 
 export interface GameStartPayload {
   roomCode: string;
+  roomMode: RoomMode;
   phase: 'in-progress';
   board: { width: 30; height: 30 };
   players: [PlayerIdentityView & { name: string }, PlayerIdentityView & { name: string }];
@@ -154,6 +162,7 @@ export interface GameEndedPayload {
 
 export interface GameRematchStatePayload {
   roomCode: string;
+  roomMode: RoomMode;
   phase: 'game-over' | 'waiting-for-players' | 'lobby' | 'starting';
   players: [PlayerIdentityView, PlayerIdentityView];
   rematch: RematchView;

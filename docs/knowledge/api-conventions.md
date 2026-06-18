@@ -71,6 +71,7 @@ Use typed payloads with explicit fields.
 
 Recommended conventions:
 - `roomCode` for joinable room identifier
+- `roomMode` for room-scoped lifecycle and state payloads (`versus | solo | co-op`)
 - `playerId` for anonymous per-session player identifier
 - `ready` as boolean state
 - `direction` as an enum/string union such as `up | down | left | right`

@@ -7,7 +7,7 @@ Per-module health assessment. Updated after each feature ships.
 | Module | Unit Tests | E2E Coverage | Known Issues | Tech Debt |
 |--------|-----------|-------------|-------------|----------|
 | `server/gameLogic.ts` | vitest | — | none | none |
-| `server/roomService.ts` | vitest | — | reconnect edge cases | needs refactor for multi-room cleanup |
+| `server/roomService.ts` | vitest | — | reconnect edge cases | needs refactor for multi-room cleanup; co-op foundation currently stops at room/lifecycle only |
 | `server/index.ts` | — | — | none | event routing could be extracted |
 | `shared/contracts.ts` | — (types only) | — | none | none |
 | `shared/playerName.ts` | — | — | none | none |
@@ -30,6 +30,7 @@ Per-module health assessment. Updated after each feature ships.
 | Replay/rematch | `replay-rematch-flow` | Functional. |
 | UI/UX polish | `uiux-polish-pass` | Audio, animations added. |
 | Mobile support | `mobile-support` | Layout fixes applied. Needs E2E regression. |
+| Co-op mode foundation | `co-op-mode-foundation` | Room-mode contracts/lifecycle added. Co-op rooms stay non-playable in Phase 0 by design. |
 
 ## Update Instructions
 

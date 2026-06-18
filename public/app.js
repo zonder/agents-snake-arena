@@ -62,6 +62,7 @@ let buildMarkerText = 'Build: loading…';
 let buildMarkerTitle = 'Build metadata is loading.';
 let pendingDirection = null;
 let latestSession = null;
+let roomMode = 'versus';
 let soloMode = false;
 const PLAYER_NAME_STORAGE_KEY = 'snake:player-name';
 
@@ -119,6 +120,8 @@ socket.on('room:error', (payload) => {
 
 socket.on('room:created', (payload) => {
   yourSlotIndex = payload.yourSlotIndex;
+  roomMode = payload.roomMode || 'versus';
+  soloMode = roomMode === 'solo';
   errorEl.classList.add('hidden');
   statusEl.textContent = 'Room created.';
   audioManager.play('ui.click');
@@ -126,6 +129,8 @@ socket.on('room:created', (payload) => {
 
 socket.on('room:joined', (payload) => {
   yourSlotIndex = payload.yourSlotIndex;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   errorEl.classList.add('hidden');
   statusEl.textContent = 'Joined room.';
   audioManager.play('ui.click');
@@ -133,6 +138,8 @@ socket.on('room:joined', (payload) => {
 
 socket.on('session:issued', (payload) => {
   latestSession = payload;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   storeSession(payload);
 });
 
@@ -160,7 +167,8 @@ socket.on('player:left', () => {
 socket.on('lobby:state', (payload) => {
   const previousLobbyState = latestLobbyState;
   latestLobbyState = payload;
-  if (payload.soloMode !== undefined) soloMode = payload.soloMode;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = payload.soloMode !== undefined ? payload.soloMode : roomMode === 'solo';
   if (payload.yourSlotIndex !== undefined) {
     yourSlotIndex = payload.yourSlotIndex;
   }
@@ -180,6 +188,8 @@ socket.on('game:countdown', (payload) => {
 });
 
 socket.on('game:start', (payload) => {
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   statusEl.textContent = `Game started in room ${payload.roomCode}.`;
   gamePhaseLabel.textContent = 'In progress';
   gameStatusInlineEl.textContent = 'Game live.';
@@ -194,6 +204,8 @@ socket.on('game:start', (payload) => {
 socket.on('game:state', (payload) => {
   const previousGameState = latestGameState;
   latestGameState = payload;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   pendingDirection = null;
   latestRematchState = { roomCode: payload.roomCode, phase: payload.phase, rematch: payload.rematch, version: payload.version };
   renderGame(payload);
@@ -224,6 +236,8 @@ socket.on('game:ended', (payload) => {
 socket.on('game:rematch-state', (payload) => {
   const previousRematch = latestRematchState;
   latestRematchState = payload;
+  roomMode = payload.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   renderRematch(payload.rematch, payload.phase, payload.message);
   applyRematchEffects(previousRematch, payload);
 });
@@ -281,6 +295,7 @@ function storeSession(payload) {
   if (!payload?.roomCode || !payload?.reconnectToken) return;
   const record = {
     roomCode: payload.roomCode,
+    roomMode: payload.roomMode,
     reconnectToken: payload.reconnectToken,
     slotIndex: payload.slotIndex,
     issuedAt: payload.issuedAt,
@@ -312,6 +327,8 @@ function tryResumeStoredSession() {
   const stored = getStoredSession();
   if (!stored?.roomCode || !stored?.reconnectToken) return false;
   latestSession = stored;
+  roomMode = stored.roomMode || roomMode;
+  soloMode = roomMode === 'solo';
   socket.emit('session:resume', { roomCode: stored.roomCode, reconnectToken: stored.reconnectToken });
   return true;
 }
