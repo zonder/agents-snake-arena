@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { computeSpeedInterval, createInitialMatchState, spawnFood, type SnakeState } from '../gameLogic.js';
+import {
+  advanceOneTick,
+  computeSpeedInterval,
+  createInitialCoOpMatchState,
+  createInitialMatchState,
+  spawnFood,
+  type GridPoint,
+  type SnakeState,
+} from '../gameLogic.js';
 
 describe('computeSpeedInterval', () => {
   it('uses the gentler speed schedule', () => {
@@ -29,13 +37,65 @@ describe('createInitialMatchState', () => {
 
   it('spawns the initial food with a fair opening distance', () => {
     const match = createInitialMatchState('ROOM', () => 0);
+    expect(match.food).not.toBeNull();
+    const food = match.food!;
     const [leftHead, rightHead] = match.snakes.map((snake) => snake.body[0]);
-    const dist0 = manhattan(match.food, leftHead);
-    const dist1 = manhattan(match.food, rightHead);
+    const dist0 = manhattan(food, leftHead);
+    const dist1 = manhattan(food, rightHead);
 
     expect(dist0).toBeGreaterThanOrEqual(4);
     expect(dist1).toBeGreaterThanOrEqual(4);
     expect(Math.abs(dist0 - dist1)).toBeLessThanOrEqual(2);
+  });
+});
+
+describe('createInitialCoOpMatchState', () => {
+  it('generates a co-op room with a reachable exit for both spawn lanes', () => {
+    const match = createInitialCoOpMatchState('ROOM', () => 0);
+    expect(match.roomMode).toBe('co-op');
+    expect(match.food).toBeNull();
+    expect(match.coOp).not.toBeNull();
+
+    const coOp = match.coOp!;
+    const blocked = new Set(coOp.walls.map((wall) => `${wall.x},${wall.y}`));
+
+    expect(pathExists(match.snakes[0].body[0], coOp.exit, blocked, match.board)).toBe(true);
+    expect(pathExists(match.snakes[1].body[0], coOp.exit, blocked, match.board)).toBe(true);
+  });
+});
+
+describe('advanceOneTick co-op objective', () => {
+  it('locks the first player at the exit and wins when the teammate arrives later', () => {
+    const match = createInitialCoOpMatchState('ROOM', () => 0);
+    const exit = match.coOp!.exit;
+
+    match.snakes[0].body = [
+      { x: exit.x - 1, y: exit.y },
+      { x: exit.x - 2, y: exit.y },
+      { x: exit.x - 3, y: exit.y },
+    ];
+    match.snakes[0].direction = 'right';
+    match.snakes[0].pendingDirection = null;
+
+    const afterFirstArrival = advanceOneTick(match, 1000);
+    expect(afterFirstArrival.result).toBeNull();
+    expect(afterFirstArrival.coOp?.playersAtExit[0]).toBe(true);
+    expect(afterFirstArrival.snakes[0].body[0]).toEqual(exit);
+
+    afterFirstArrival.snakes[1].body = [
+      { x: exit.x, y: exit.y + 1 },
+      { x: exit.x, y: exit.y + 2 },
+      { x: exit.x, y: exit.y + 3 },
+    ];
+    afterFirstArrival.snakes[1].direction = 'up';
+    afterFirstArrival.snakes[1].pendingDirection = null;
+
+    const completed = advanceOneTick(afterFirstArrival, 1200);
+    expect(completed.result).toBe('co-op-win');
+    expect(completed.coOp?.playersAtExit[0]).toBe(true);
+    expect(completed.coOp?.playersAtExit[1]).toBe(true);
+    expect(completed.snakes[0].body[0]).toEqual(exit);
+    expect(completed.snakes[1].body[0]).toEqual(exit);
   });
 });
 
@@ -72,6 +132,34 @@ function manhattan(a: { x: number; y: number }, b: { x: number; y: number }) {
   return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 }
 
+function pathExists(start: GridPoint, target: GridPoint, blocked: Set<string>, board: { width: number; height: number }) {
+  const key = (point: GridPoint) => `${point.x},${point.y}`;
+  const queue: GridPoint[] = [start];
+  const visited = new Set([key(start)]);
+
+  while (queue.length > 0) {
+    const point = queue.shift()!;
+    if (point.x === target.x && point.y === target.y) {
+      return true;
+    }
+
+    for (const candidate of [
+      { x: point.x + 1, y: point.y },
+      { x: point.x - 1, y: point.y },
+      { x: point.x, y: point.y + 1 },
+      { x: point.x, y: point.y - 1 },
+    ]) {
+      if (candidate.x < 0 || candidate.x >= board.width || candidate.y < 0 || candidate.y >= board.height) continue;
+      const candidateKey = key(candidate);
+      if (blocked.has(candidateKey) || visited.has(candidateKey)) continue;
+      visited.add(candidateKey);
+      queue.push(candidate);
+    }
+  }
+
+  return false;
+}
+
 describe('solo mode', () => {
   it('creates a match with 1 alive snake and 1 dead snake', () => {
     const match = createInitialMatchState('TEST', Math.random, true);
@@ -85,9 +173,10 @@ describe('solo mode', () => {
 
   it('food spawns on the board (not at dead snake position)', () => {
     const match = createInitialMatchState('TEST', () => 0.5, true);
-    expect(match.food.x).toBeGreaterThanOrEqual(0);
-    expect(match.food.x).toBeLessThan(30);
-    expect(match.food.y).toBeGreaterThanOrEqual(0);
-    expect(match.food.y).toBeLessThan(30);
+    expect(match.food).not.toBeNull();
+    expect(match.food!.x).toBeGreaterThanOrEqual(0);
+    expect(match.food!.x).toBeLessThan(30);
+    expect(match.food!.y).toBeGreaterThanOrEqual(0);
+    expect(match.food!.y).toBeLessThan(30);
   });
 });

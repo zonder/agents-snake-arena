@@ -15,6 +15,7 @@ const gameRoomCodeEl = document.getElementById('gameRoomCode');
 const playersEl = document.getElementById('players');
 const readyButton = document.getElementById('readyButton');
 const lobbyMessage = document.getElementById('lobbyMessage');
+const createCoOpRoomButton = document.getElementById('createCoOpRoomButton');
 const phaseBadge = document.getElementById('phaseBadge');
 const gameStageEl = document.getElementById('gameStage');
 const boardEl = document.getElementById('board');
@@ -226,6 +227,10 @@ socket.on('game:ended', (payload) => {
   if (soloMode) {
     const yourScore = payload.finalState.snakes[0]?.score ?? 0;
     statusText = `Game over! You scored ${yourScore}.`;
+  } else if (roomMode === 'co-op') {
+    statusText = yourOutcome === 'win'
+      ? 'Escape complete! Both players reached the exit.'
+      : 'Co-op run failed. Try the room again.';
   } else {
     statusText = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
   }
@@ -267,7 +272,19 @@ document.getElementById('createRoomButton').addEventListener('click', () => {
   if (!name) return;
   audioManager.play('ui.click');
   persistPlayerName(name);
+  roomMode = 'versus';
+  soloMode = false;
   socket.emit('room:create', { name });
+});
+
+createCoOpRoomButton.addEventListener('click', () => {
+  const name = getValidPlayerNameOrShowError();
+  if (!name) return;
+  audioManager.play('ui.click');
+  persistPlayerName(name);
+  roomMode = 'co-op';
+  soloMode = false;
+  socket.emit('room:create', { name, mode: 'co-op' });
 });
 
 document.getElementById('playSoloButton').addEventListener('click', () => {
@@ -679,7 +696,7 @@ function renderGame(state, perSlotResult) {
   showScreen('gameplay');
   gameRoomCodeEl.textContent = state.roomCode;
   ensureBoard(state.board.width, state.board.height);
-  score0El.textContent = String(state.snakes[0].score);
+  score0El.textContent = state.roomMode === 'co-op' ? (state.coOp?.playersAtExit?.[0] ? 'EXIT' : 'RUN') : String(state.snakes[0].score);
   scoreLabel0El.textContent = `${state.players[0].displayName} · ${state.players[0].label}`;
 
   if (soloMode) {
@@ -688,7 +705,7 @@ function renderGame(state, perSlotResult) {
     scoreLabel1El.textContent = 'Solo mode';
   } else {
     scoreCard1El.classList.remove('hidden');
-    score1El.textContent = String(state.snakes[1].score);
+    score1El.textContent = state.roomMode === 'co-op' ? (state.coOp?.playersAtExit?.[1] ? 'EXIT' : 'RUN') : String(state.snakes[1].score);
     scoreLabel1El.textContent = `${state.players[1].displayName} · ${state.players[1].label}`;
   }
 
@@ -698,15 +715,19 @@ function renderGame(state, perSlotResult) {
 
   if (state.phase === 'starting') {
     gamePhaseLabel.textContent = 'Countdown';
-    gameStatusInlineEl.textContent = 'Match starts in moments. Queue your opener now.';
+    gameStatusInlineEl.textContent = state.roomMode === 'co-op' ? 'Co-op room loading. Plan your routes to the exit.' : 'Match starts in moments. Queue your opener now.';
     countdownLabel.textContent = `Countdown: ${state.countdownSecondsRemaining ?? 3}`;
-    gameMessageEl.textContent = 'Queue your opening turn now. Opening food is filtered for a fairer race.';
+    gameMessageEl.textContent = state.roomMode === 'co-op'
+      ? 'Reach the glowing exit together. Walls are lethal, and a player who reaches the exit waits there for their teammate.'
+      : 'Queue your opening turn now. Opening food is filtered for a fairer race.';
     applyPhaseTheme('countdown', 'neutral');
   } else if (state.phase === 'in-progress') {
     gamePhaseLabel.textContent = 'In progress';
     gameStatusInlineEl.textContent = describeReconnect(state) || 'Game live.';
     countdownLabel.textContent = `Tick: ${state.tickNumber}`;
-    gameMessageEl.textContent = describeReconnect(state) || 'Avoid walls, avoid bodies, and race for the shared food.';
+    gameMessageEl.textContent = describeReconnect(state) || (state.roomMode === 'co-op'
+      ? describeCoOpProgress(state)
+      : 'Avoid walls, avoid bodies, and race for the shared food.');
     applyPhaseTheme('live', 'neutral');
   } else {
     gamePhaseLabel.textContent = 'Game over';
@@ -716,6 +737,12 @@ function renderGame(state, perSlotResult) {
       const yourScore = state.snakes[0]?.score ?? 0;
       gameStatusInlineEl.textContent = `Game over! You scored ${yourScore}.`;
       gameMessageEl.textContent = `You scored ${yourScore}. Press rematch to try again.`;
+      applyPhaseTheme('result', yourOutcome === 'win' ? 'win' : 'lose');
+    } else if (state.roomMode === 'co-op') {
+      gameStatusInlineEl.textContent = yourOutcome === 'win' ? 'Escape complete!' : 'Co-op run failed.';
+      gameMessageEl.textContent = yourOutcome === 'win'
+        ? 'Both players reached the exit. Rematch is ready immediately.'
+        : 'A snake went down before the team escaped. Rematch is ready immediately.';
       applyPhaseTheme('result', yourOutcome === 'win' ? 'win' : 'lose');
     } else {
       gameStatusInlineEl.textContent = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
@@ -781,7 +808,17 @@ function paintBoard(state) {
     if (MOTION_REDUCED()) cell.classList.add('reduce-motion');
   }
 
-  paintCell(state.food.x, state.food.y, 'food', state.board.width);
+  if (state.coOp) {
+    state.coOp.walls.forEach((wall) => paintCell(wall.x, wall.y, 'wall', state.board.width));
+    paintCell(state.coOp.exit.x, state.coOp.exit.y, 'exit', state.board.width);
+    if (state.coOp.playersAtExit[0] || state.coOp.playersAtExit[1]) {
+      paintCell(state.coOp.exit.x, state.coOp.exit.y, 'exit-ready', state.board.width);
+    }
+  }
+
+  if (state.food) {
+    paintCell(state.food.x, state.food.y, 'food', state.board.width);
+  }
 
   state.snakes.forEach((snake) => {
     snake.body.forEach((segment, index) => {
@@ -804,7 +841,17 @@ function updateScoreCards(state, perSlotResult) {
     cardEl.classList.toggle('is-leading', state.phase === 'in-progress' && snake.score === leadScore && leadScore > 0);
     cardEl.classList.toggle('is-eliminated', state.phase === 'game-over' && !snake.alive && (!perSlotResult || perSlotResult[snake.slotIndex] !== 'win'));
 
-    if (state.phase === 'game-over' && perSlotResult) {
+    if (state.roomMode === 'co-op') {
+      if (state.phase === 'game-over' && perSlotResult) {
+        stateEl.textContent = perSlotResult[snake.slotIndex] === 'win' ? 'Escaped' : 'Down';
+      } else if (state.coOp?.playersAtExit?.[snake.slotIndex]) {
+        stateEl.textContent = 'At exit';
+      } else if (state.phase === 'starting') {
+        stateEl.textContent = 'Ready';
+      } else {
+        stateEl.textContent = snake.alive ? 'Exploring' : 'Down';
+      }
+    } else if (state.phase === 'game-over' && perSlotResult) {
       stateEl.textContent = perSlotResult[snake.slotIndex] === 'win' ? 'Winner' : perSlotResult[snake.slotIndex] === 'lose' ? 'Eliminated' : 'Draw';
     } else if (state.phase === 'starting') {
       stateEl.textContent = 'Ready';
@@ -812,6 +859,13 @@ function updateScoreCards(state, perSlotResult) {
       stateEl.textContent = snake.alive ? 'Alive' : 'Out';
     }
   });
+}
+
+function describeCoOpProgress(state) {
+  const reached = Number(Boolean(state.coOp?.playersAtExit?.[0])) + Number(Boolean(state.coOp?.playersAtExit?.[1]));
+  if (reached === 2) return 'Both players are at the exit. Resolution incoming.';
+  if (reached === 1) return 'One player is safe at the exit. Guide the teammate in.';
+  return 'Reach the glowing exit together. Walls are deadly.';
 }
 
 function applyLobbyEffects(previousLobbyState, nextLobbyState) {
