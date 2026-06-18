@@ -85,6 +85,8 @@ test.describe('Design system tokens', () => {
     });
 
     // Primary button background should reference the blue primary
-    expect(btnBg).toContain('2E8BFF');
+    // getComputedStyle returns rgb() values, not hex — check for rgb(46, 139, 255)
+    // which is the decimal equivalent of #2E8BFF
+    expect(btnBg).toContain('46, 139, 255');
   });
 });
