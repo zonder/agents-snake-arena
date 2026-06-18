@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Multiplayer Snake</title>
+    <title>Snake Arena</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -11,9 +14,9 @@
       <section class="panel phase-entry" data-phase="entry" data-outcome="neutral">
         <div id="panelTop" class="panel-top">
           <div>
-            <p class="kicker">Retro arcade multiplayer</p>
-            <h1>Multiplayer Snake</h1>
-            <p class="subtitle">Create a room, share the code, ready up, then survive the round.</p>
+            <p class="kicker">2-player arcade</p>
+            <h1>Snake Arena</h1>
+            <p class="subtitle">Create a room, share the code, and battle it out.</p>
           </div>
           <div class="topbar-actions">
             <button id="soundToggleButton" class="secondary-button sound-toggle" type="button" aria-pressed="false">Sound: on</button>
@@ -28,12 +31,12 @@
           <div class="hero-card">
             <div class="hero-copy">
               <div class="eyebrow">2-player showdown</div>
-              <h2>Clean boards. Neon tension. Quick rematches.</h2>
-              <p>Spin up a room in one tap or punch in a code to jump straight into the arena.</p>
+              <h2>Neon boards. Quick rounds. No mercy.</h2>
+              <p>Spin up a room or punch in a code to enter the arena.</p>
             </div>
             <div class="actions arcade-actions">
               <input id="playerNameInput" maxlength="24" placeholder="Your name" />
-              <p id="nameHelp" class="message">Enter a name up to 12 characters. Spaces are fine; emoji are not.</p>
+              <p id="nameHelp" class="message">Up to 24 characters. Spaces OK, emoji not.</p>
               <button id="createRoomButton" class="primary-button">Create versus room</button>
               <button id="createCoOpRoomButton" class="primary-button coop-button">Create co-op room</button>
               <button id="playSoloButton" class="primary-button solo-button">Play Solo</button>
@@ -77,7 +80,7 @@
               </div>
               <div id="rematchPanel" class="info-card rematch-card hidden">
                 <div class="eyebrow">Rematch</div>
-                <p id="rematchStatus" class="info-copy">Want another round? Accept rematch to stay in this room.</p>
+                <p id="rematchStatus" class="info-copy">Want another round? Accept to stay in this room.</p>
                 <button id="rematchButton" class="primary-button" type="button">Accept rematch</button>
               </div>
               <div id="scoreCard0" class="info-card compact-score-card player-card" data-player="0">
@@ -141,7 +144,7 @@
               </div>
             </aside>
           </div>
-          <p class="controls-hint">Swipe or tap the arrows on mobile. Arrow keys or WASD on desktop.</p>
+          <p class="controls-hint">Swipe or tap arrows on mobile. Arrow keys or WASD on desktop.</p>
         </section>
       </section>
     </main>

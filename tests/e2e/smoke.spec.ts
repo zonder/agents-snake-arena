@@ -4,11 +4,11 @@ test('app loads and shows entry screen', async ({ page }) => {
   await page.goto('/');
 
   // Page title
-  await expect(page).toHaveTitle('Multiplayer Snake');
+  await expect(page).toHaveTitle('Snake Arena');
 
   // Entry screen is visible with key UI
   await expect(page.locator('#entry')).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Multiplayer Snake' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Snake Arena' })).toBeVisible();
 
   // Player name input and room controls are present
   await expect(page.locator('#playerNameInput')).toBeVisible();
