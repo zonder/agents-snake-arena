@@ -18,11 +18,29 @@ export interface SnakeState {
   score: number;
 }
 
+export type SwitchActivationType = 'hold' | 'toggle';
+
+export interface PuzzleSwitch {
+  id: string;
+  position: GridPoint;
+  activationType: SwitchActivationType;
+  active: boolean;
+}
+
+export interface PuzzleDoor {
+  id: string;
+  position: GridPoint;
+  open: boolean;
+  requiresSwitches: string[];
+}
+
 export interface CoOpLayoutTemplate {
   layoutId: string;
   walls: GridPoint[];
   exit: GridPoint;
   snakes: [Pick<SnakeState, 'slotIndex' | 'direction' | 'body'>, Pick<SnakeState, 'slotIndex' | 'direction' | 'body'>];
+  switches?: PuzzleSwitch[];
+  doors?: PuzzleDoor[];
 }
 
 export interface CoOpObjectiveState {
@@ -31,6 +49,8 @@ export interface CoOpObjectiveState {
   exit: GridPoint;
   walls: GridPoint[];
   playersAtExit: { 0: boolean; 1: boolean };
+  switches: PuzzleSwitch[];
+  doors: PuzzleDoor[];
 }
 
 export interface MatchState {
@@ -108,6 +128,29 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
       { slotIndex: 1, direction: 'left', body: [{ x: 26, y: 15 }, { x: 27, y: 15 }, { x: 28, y: 15 }] },
     ],
   },
+  {
+    layoutId: 'dual-switch-gate',
+    walls: [
+      // Horizontal wall across the middle, blocking direct path from top to bottom
+      ...horizontalLine(0, 12, 14),
+      ...horizontalLine(16, 12, 29),
+      // Pillar obstacles in top section
+      ...verticalLine(8, 2, 8),
+      ...verticalLine(21, 2, 8),
+    ],
+    exit: { x: 15, y: 25 },
+    snakes: [
+      { slotIndex: 0, direction: 'right', body: [{ x: 3, y: 5 }, { x: 2, y: 5 }, { x: 1, y: 5 }] },
+      { slotIndex: 1, direction: 'left', body: [{ x: 26, y: 5 }, { x: 27, y: 5 }, { x: 28, y: 5 }] },
+    ],
+    switches: [
+      { id: 'plate-left', position: { x: 4, y: 9 }, activationType: 'toggle', active: false },
+      { id: 'plate-right', position: { x: 25, y: 9 }, activationType: 'toggle', active: false },
+    ],
+    doors: [
+      { id: 'gate-center', position: { x: 15, y: 12 }, open: false, requiresSwitches: ['plate-left', 'plate-right'] },
+    ],
+  },
 ];
 
 export function createInitialMatchState(roomCode: string, random: () => number = Math.random, soloMode: boolean = false): MatchState {
@@ -171,13 +214,24 @@ export function createInitialCoOpMatchState(roomCode: string, random: () => numb
       exit: { ...layout.exit },
       walls: layout.walls.map((wall) => ({ ...wall })),
       playersAtExit: { 0: false, 1: false },
+      switches: (layout.switches ?? []).map((sw) => ({
+        ...sw,
+        position: { ...sw.position },
+        active: false,
+      })),
+      doors: (layout.doors ?? []).map((door) => ({
+        ...door,
+        position: { ...door.position },
+        open: false,
+        requiresSwitches: [...door.requiresSwitches],
+      })),
     },
   };
 }
 
 export function createRandomCoOpLayout(random: () => number = Math.random): CoOpLayoutTemplate {
   const selected = CO_OP_LAYOUT_TEMPLATES[Math.floor(random() * CO_OP_LAYOUT_TEMPLATES.length)] ?? CO_OP_LAYOUT_TEMPLATES[0];
-  const layout = {
+  const layout: CoOpLayoutTemplate = {
     layoutId: selected.layoutId,
     exit: { ...selected.exit },
     walls: selected.walls.map((wall) => ({ ...wall })),
@@ -186,6 +240,17 @@ export function createRandomCoOpLayout(random: () => number = Math.random): CoOp
       direction: snake.direction,
       body: snake.body.map((segment) => ({ ...segment })),
     })) as CoOpLayoutTemplate['snakes'],
+    switches: (selected.switches ?? []).map((sw) => ({
+      ...sw,
+      position: { ...sw.position },
+      active: false,
+    })),
+    doors: (selected.doors ?? []).map((door) => ({
+      ...door,
+      position: { ...door.position },
+      open: false,
+      requiresSwitches: [...door.requiresSwitches],
+    })),
   };
 
   validateCoOpLayout(layout, BOARD);
@@ -219,10 +284,52 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
         exit: { ...match.coOp.exit },
         walls: match.coOp.walls.map((wall) => ({ ...wall })),
         playersAtExit: { ...match.coOp.playersAtExit },
+        switches: match.coOp.switches.map((sw) => ({
+          ...sw,
+          position: { ...sw.position },
+        })),
+        doors: match.coOp.doors.map((door) => ({
+          ...door,
+          position: { ...door.position },
+          requiresSwitches: [...door.requiresSwitches],
+        })),
       }
     : null;
   const isCoOp = match.roomMode === 'co-op' && Boolean(coOp);
   const wallSet = coOp ? new Set(coOp.walls.map((wall) => `${wall.x},${wall.y}`)) : null;
+
+  // --- Puzzle tick: update switch activation and door state ---
+  if (isCoOp && coOp) {
+    // Reset hold-type switches, keep toggle switches as-is
+    for (const sw of coOp.switches) {
+      if (sw.activationType === 'hold') {
+        sw.active = false;
+      }
+    }
+    // Activate switches where a snake head is standing
+    for (const snake of snakes) {
+      if (!snake.alive) continue;
+      const head = snake.body[0];
+      for (const sw of coOp.switches) {
+        if (samePoint(head, sw.position)) {
+          sw.active = true;
+        }
+      }
+    }
+    // Update door open state based on required switches
+    for (const door of coOp.doors) {
+      door.open = door.requiresSwitches.every((switchId) => {
+        const sw = coOp.switches.find((s) => s.id === switchId);
+        return sw?.active ?? false;
+      });
+    }
+    // Add closed door positions to wall set (open doors are passable)
+    for (const door of coOp.doors) {
+      if (!door.open) {
+        wallSet!.add(`${door.position.x},${door.position.y}`);
+      }
+    }
+  }
 
   for (const snake of snakes) {
     const lockedAtExit = isCoOp && coOp!.playersAtExit[snake.slotIndex];
@@ -382,6 +489,15 @@ export function applyDisconnectResult(match: MatchState, slotIndex: 0 | 1, now: 
         exit: { ...match.coOp.exit },
         walls: match.coOp.walls.map((wall) => ({ ...wall })),
         playersAtExit: { ...match.coOp.playersAtExit },
+        switches: match.coOp.switches.map((sw) => ({
+          ...sw,
+          position: { ...sw.position },
+        })),
+        doors: match.coOp.doors.map((door) => ({
+          ...door,
+          position: { ...door.position },
+          requiresSwitches: [...door.requiresSwitches],
+        })),
       }
     : null;
   snakes[slotIndex].alive = false;
@@ -600,8 +716,47 @@ function validateCoOpLayout(layout: CoOpLayoutTemplate, board: { width: number; 
       assert(!wallSet.has(`${segment.x},${segment.y}`), `snake ${snake.slotIndex} overlaps wall at (${segment.x},${segment.y})`);
     }
 
-    assert(pathExists(snake.body[0], layout.exit, wallSet, board), `snake ${snake.slotIndex} cannot reach exit`);
     assert(canReachOuterField(snake.body[0], wallSet, board), `snake ${snake.slotIndex} is trapped in a reduced inner room`);
+  }
+
+  // Validate puzzle entities
+  const switches = layout.switches ?? [];
+  const doors = layout.doors ?? [];
+  const switchIdSet = new Set(switches.map((sw) => sw.id));
+  const occupiedSet = new Set([
+    ...wallSet,
+    `${layout.exit.x},${layout.exit.y}`,
+    ...layout.snakes.flatMap((snake) => snake.body.map((seg) => `${seg.x},${seg.y}`)),
+  ]);
+
+  for (const sw of switches) {
+    assert(isInsideBoard(sw.position, board), `switch '${sw.id}' out of bounds at (${sw.position.x},${sw.position.y})`);
+    assert(!wallSet.has(`${sw.position.x},${sw.position.y}`), `switch '${sw.id}' overlaps wall at (${sw.position.x},${sw.position.y})`);
+    assert(!occupiedSet.has(`${sw.position.x},${sw.position.y}`), `switch '${sw.id}' overlaps exit or snake spawn at (${sw.position.x},${sw.position.y})`);
+  }
+
+  for (const door of doors) {
+    assert(isInsideBoard(door.position, board), `door '${door.id}' out of bounds at (${door.position.x},${door.position.y})`);
+    assert(!wallSet.has(`${door.position.x},${door.position.y}`), `door '${door.id}' overlaps wall at (${door.position.x},${door.position.y})`);
+    for (const switchId of door.requiresSwitches) {
+      assert(switchIdSet.has(switchId), `door '${door.id}' references unknown switch '${switchId}'`);
+    }
+  }
+
+  // Solvability: with all switches active (doors open), both snakes must reach exit
+  if (doors.length > 0) {
+    const openDoorPositions = new Set(doors.map((door) => `${door.position.x},${door.position.y}`));
+    const relaxedBlocked = new Set([...wallSet].filter((key) => !openDoorPositions.has(key)));
+    for (const snake of layout.snakes) {
+      assert(
+        pathExists(snake.body[0], layout.exit, relaxedBlocked, board),
+        `snake ${snake.slotIndex} cannot reach exit even with all doors open`,
+      );
+    }
+  } else {
+    for (const snake of layout.snakes) {
+      assert(pathExists(snake.body[0], layout.exit, wallSet, board), `snake ${snake.slotIndex} cannot reach exit`);
+    }
   }
 }
 

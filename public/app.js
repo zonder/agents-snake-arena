@@ -763,10 +763,10 @@ function renderGame(state, perSlotResult) {
 
   if (state.phase === 'starting') {
     gamePhaseLabel.textContent = 'Countdown';
-    gameStatusInlineEl.textContent = state.roomMode === 'co-op' ? 'Co-op room loading. Plan your routes to the exit.' : 'Match starts in moments. Queue your opener now.';
+    gameStatusInlineEl.textContent = state.roomMode === 'co-op' ? (state.coOp?.switches?.length ? 'Co-op puzzle room. Coordinate to activate switches.' : 'Co-op room loading. Plan your routes to the exit.') : 'Match starts in moments. Queue your opener now.';
     countdownLabel.textContent = `Countdown: ${state.countdownSecondsRemaining ?? 3}`;
     gameMessageEl.textContent = state.roomMode === 'co-op'
-      ? 'Reach the glowing exit together. Walls are lethal, and a player who reaches the exit waits there for their teammate.'
+      ? (state.coOp?.switches?.length ? 'Purple plates are pressure switches. Brown tiles are closed doors. Step on switches to open the path.' : 'Reach the glowing exit together. Walls are lethal, and a player who reaches the exit waits there for their teammate.')
       : 'Queue your opening turn now. Opening food is filtered for a fairer race.';
     applyPhaseTheme('countdown', 'neutral');
   } else if (state.phase === 'in-progress') {
@@ -774,7 +774,7 @@ function renderGame(state, perSlotResult) {
     gameStatusInlineEl.textContent = describeReconnect(state) || 'Game live.';
     countdownLabel.textContent = `Tick: ${state.tickNumber}`;
     gameMessageEl.textContent = describeReconnect(state) || (state.roomMode === 'co-op'
-      ? describeCoOpProgress(state)
+      ? (state.coOp?.switches?.length ? 'Stand on purple pressure plates to open doors. Both players must coordinate to reach the exit.' : describeCoOpProgress(state))
       : 'Avoid walls, avoid bodies, and race for the shared food.');
     applyPhaseTheme('live', 'neutral');
   } else {
@@ -862,6 +862,18 @@ function paintBoard(state) {
     paintCell(state.coOp.exit.x, state.coOp.exit.y, 'exit', state.board.width);
     if (state.coOp.playersAtExit[0] || state.coOp.playersAtExit[1]) {
       paintCell(state.coOp.exit.x, state.coOp.exit.y, 'exit-ready', state.board.width);
+    }
+    // Render puzzle doors (before switches so switches paint on top if overlapping)
+    if (state.coOp.doors) {
+      state.coOp.doors.forEach((door) => {
+        paintCell(door.position.x, door.position.y, door.open ? 'door-open' : 'door-closed', state.board.width);
+      });
+    }
+    // Render puzzle switches
+    if (state.coOp.switches) {
+      state.coOp.switches.forEach((sw) => {
+        paintCell(sw.position.x, sw.position.y, sw.active ? 'switch-active' : 'switch', state.board.width);
+      });
     }
   }
 

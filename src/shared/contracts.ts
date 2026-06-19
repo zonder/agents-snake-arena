@@ -91,12 +91,30 @@ export interface PublicSnakeState {
   score: number;
 }
 
+export type SwitchActivationType = 'hold' | 'toggle';
+
+export interface PuzzleSwitchView {
+  id: string;
+  position: GridPoint;
+  activationType: SwitchActivationType;
+  active: boolean;
+}
+
+export interface PuzzleDoorView {
+  id: string;
+  position: GridPoint;
+  open: boolean;
+  requiresSwitches: string[];
+}
+
 export interface CoOpStatePayload {
   layoutId: string;
   objective: 'both-reach-exit';
   exit: GridPoint;
   walls: GridPoint[];
   playersAtExit: { 0: boolean; 1: boolean };
+  switches: PuzzleSwitchView[];
+  doors: PuzzleDoorView[];
 }
 
 export interface PublicGameStatePayload {
