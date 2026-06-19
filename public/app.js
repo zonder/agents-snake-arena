@@ -852,6 +852,7 @@ function ensureBoard(width, height) {
 
 function paintBoard(state) {
   const cells = Array.from(boardEl.children);
+  const paintedCells = new Set();
   for (const cell of cells) {
     cell.className = 'cell';
     if (MOTION_REDUCED()) cell.classList.add('reduce-motion');
@@ -873,6 +874,24 @@ function paintBoard(state) {
     if (state.coOp.switches) {
       state.coOp.switches.forEach((sw) => {
         paintCell(sw.position.x, sw.position.y, sw.active ? 'switch-active' : 'switch', state.board.width);
+      });
+    }
+    // Render hazards
+    if (state.coOp.hazards) {
+      state.coOp.hazards.forEach((hz) => {
+        if (hz.hazardType === 'sweeper' && hz.path) {
+          // Render sweeper path faintly (only in cooldown or non-lethal phases)
+          hz.path.forEach((wp) => {
+            const key = `${wp.x},${wp.y}`;
+            if (!paintedCells.has(key)) {
+              paintCell(wp.x, wp.y, 'sweeper-path', state.board.width);
+              paintedCells.add(key);
+            }
+          });
+        }
+        // Render the hazard tile with its current phase
+        const cls = hz.lethal ? 'hazard-active' : hz.phase === 'warning' ? 'hazard-warning' : 'hazard-cooldown';
+        paintCell(hz.position.x, hz.position.y, cls, state.board.width);
       });
     }
   }
