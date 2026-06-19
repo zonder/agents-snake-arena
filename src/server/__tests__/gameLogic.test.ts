@@ -5,8 +5,11 @@ import {
   createInitialCoOpMatchState,
   createInitialMatchState,
   createRandomCoOpLayout,
+  getHazardPosition,
+  isHazardLethal,
   spawnFood,
   type GridPoint,
+  type HazardState,
   type SnakeState,
   type PuzzleSwitch,
   type PuzzleDoor,
@@ -67,7 +70,7 @@ describe('createInitialCoOpMatchState', () => {
   });
 
   it('keeps every layout on free cells and preserves a solvable route', () => {
-    const layouts = [0, 0.25, 0.5, 0.75].map((seed) => createRandomCoOpLayout(() => seed));
+    const layouts = [0, 0.2, 0.35, 0.55].map((seed) => createRandomCoOpLayout(() => seed));
     expect(new Set(layouts.map((layout) => layout.layoutId))).toEqual(
       new Set(['crossroads-open', 'double-corridor-open', 'split-pillars-open', 'dual-switch-gate']),
     );
@@ -125,8 +128,8 @@ describe('advanceOneTick co-op objective', () => {
 
 describe('co-op puzzle primitives', () => {
   it('generates dual-switch-gate layout with switches and doors', () => {
-    // Seed 0.75 selects the dual-switch-gate layout (4th template)
-    const layout = createRandomCoOpLayout(() => 0.75);
+    // Seed 0.55 selects the dual-switch-gate layout (index 3 of 6 templates)
+    const layout = createRandomCoOpLayout(() => 0.55);
     expect(layout.layoutId).toBe('dual-switch-gate');
     expect(layout.switches).toBeDefined();
     expect(layout.switches!.length).toBe(2);
@@ -136,7 +139,7 @@ describe('co-op puzzle primitives', () => {
   });
 
   it('creates co-op match state with puzzle entities initialized', () => {
-    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.55);
     expect(match.coOp).not.toBeNull();
     expect(match.coOp!.switches.length).toBe(2);
     expect(match.coOp!.doors.length).toBe(1);
@@ -145,7 +148,7 @@ describe('co-op puzzle primitives', () => {
   });
 
   it('activates hold switch when snake head steps on it', () => {
-    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.55);
     const coOp = match.coOp!;
     const plateLeft = coOp.switches.find((sw) => sw.id === 'plate-left')!;
 
@@ -164,7 +167,7 @@ describe('co-op puzzle primitives', () => {
   });
 
   it('toggle switch stays active after snake leaves the plate', () => {
-    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.55);
     const coOp = match.coOp!;
     const plateLeft = coOp.switches.find((sw) => sw.id === 'plate-left')!;
 
@@ -188,7 +191,7 @@ describe('co-op puzzle primitives', () => {
   });
 
   it('opens door when all required switches are simultaneously active', () => {
-    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.55);
     const coOp = match.coOp!;
     const plateLeft = coOp.switches.find((sw) => sw.id === 'plate-left')!;
     const plateRight = coOp.switches.find((sw) => sw.id === 'plate-right')!;
@@ -215,7 +218,7 @@ describe('co-op puzzle primitives', () => {
   });
 
   it('door blocks movement when closed', () => {
-    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.55);
     const door = match.coOp!.doors[0];
 
     // Place snake 0 heading toward the closed door
@@ -233,7 +236,7 @@ describe('co-op puzzle primitives', () => {
   });
 
   it('door allows movement when open', () => {
-    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.55);
     const coOp = match.coOp!;
     const door = coOp.doors[0];
     const plateLeft = coOp.switches.find((sw) => sw.id === 'plate-left')!;
@@ -264,7 +267,7 @@ describe('co-op puzzle primitives', () => {
   });
 
   it('all 4 layouts validate without error', () => {
-    const seeds = [0, 0.25, 0.5, 0.75];
+    const seeds = [0, 0.2, 0.35, 0.55];
     const layouts = seeds.map((seed) => createRandomCoOpLayout(() => seed));
     const ids = layouts.map((l) => l.layoutId);
     expect(ids).toContain('dual-switch-gate');
@@ -273,7 +276,7 @@ describe('co-op puzzle primitives', () => {
   });
 
   it('puzzle state is included in co-op payload', () => {
-    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.55);
     expect(match.coOp!.switches.length).toBe(2);
     expect(match.coOp!.doors.length).toBe(1);
     expect(match.coOp!.switches[0]).toHaveProperty('id');
@@ -394,5 +397,227 @@ describe('solo mode', () => {
     expect(match.food!.x).toBeLessThan(30);
     expect(match.food!.y).toBeGreaterThanOrEqual(0);
     expect(match.food!.y).toBeLessThan(30);
+  });
+});
+
+describe('co-op hazard templates', () => {
+  it('generates hazard-crossroads layout with zone hazards', () => {
+    // Seed 0.8 selects the 5th template (hazard-crossroads) from 6 templates
+    const layout = createRandomCoOpLayout(() => 0.8);
+    expect(layout.layoutId).toBe('hazard-crossroads');
+    expect(layout.hazards).toBeDefined();
+    expect(layout.hazards!.length).toBe(3);
+    expect(layout.hazards!.every((h) => h.type === 'zone')).toBe(true);
+  });
+
+  it('generates sweep-corridor layout with sweeper and zone hazards', () => {
+    const layout = createRandomCoOpLayout(() => 0.95);
+    expect(layout.layoutId).toBe('sweep-corridor');
+    expect(layout.hazards).toBeDefined();
+    expect(layout.hazards!.length).toBe(3);
+    const sweepers = layout.hazards!.filter((h) => h.type === 'sweep');
+    const zones = layout.hazards!.filter((h) => h.type === 'zone');
+    expect(sweepers.length).toBe(1);
+    expect(zones.length).toBe(2);
+  });
+
+  it('all 6 layouts validate without error', () => {
+    const seeds = [0, 0.18, 0.35, 0.55, 0.7, 0.9];
+    const layouts = seeds.map((seed) => createRandomCoOpLayout(() => seed));
+    const ids = layouts.map((l) => l.layoutId);
+    expect(ids).toContain('hazard-crossroads');
+    expect(ids).toContain('sweep-corridor');
+    expect(ids).toContain('dual-switch-gate');
+    // All should have passed validation (no throw)
+    expect(layouts.length).toBe(6);
+  });
+});
+
+describe('co-op hazard state initialization', () => {
+  it('creates co-op match state with hazards initialized in cooldown phase', () => {
+    const match = createInitialCoOpMatchState('HAZARD', () => 0.8);
+    expect(match.coOp).not.toBeNull();
+    expect(match.coOp!.hazards.length).toBe(3);
+    for (const h of match.coOp!.hazards) {
+      expect(h.phase).toBe('cooldown');
+      expect(h.ticksInPhase).toBe(0);
+      expect(isHazardLethal(h)).toBe(false);
+    }
+  });
+
+  it('zone hazard has correct position', () => {
+    const match = createInitialCoOpMatchState('HAZARD', () => 0.8);
+    const zone = match.coOp!.hazards.find((h) => h.type === 'zone')!;
+    const pos = getHazardPosition(zone);
+    expect(pos.x).toBeGreaterThanOrEqual(0);
+    expect(pos.x).toBeLessThan(30);
+    expect(pos.y).toBeGreaterThanOrEqual(0);
+    expect(pos.y).toBeLessThan(30);
+  });
+
+  it('sweeper hazard starts at first path waypoint', () => {
+    const match = createInitialCoOpMatchState('SWEEP', () => 0.95);
+    const sweep = match.coOp!.hazards.find((h) => h.type === 'sweep')!;
+    expect(sweep.type).toBe('sweep');
+    expect((sweep as any).pathIndex).toBe(0);
+    const pos = getHazardPosition(sweep);
+    expect(pos).toEqual((sweep as any).path[0]);
+  });
+});
+
+describe('co-op hazard tick cycle', () => {
+  it('zone hazard cycles: cooldown -> warning -> active -> cooldown', () => {
+    // hazard-crossroads has zone-n with warningTicks=3, activeTicks=3, cooldownTicks=3
+    const match = createInitialCoOpMatchState('CYCLE', () => 0.8);
+    const zone = match.coOp!.hazards.find((h) => h.id === 'zone-n')!;
+    expect(zone.phase).toBe('cooldown');
+    expect(zone.ticksInPhase).toBe(0);
+
+    // Advance through cooldown (3 ticks)
+    let state = match;
+    for (let i = 0; i < 3; i++) {
+      state = advanceOneTick(state, Date.now());
+    }
+    const z1 = state.coOp!.hazards.find((h) => h.id === 'zone-n')!;
+    expect(z1.phase).toBe('warning');
+    expect(z1.ticksInPhase).toBe(0);
+    expect(isHazardLethal(z1)).toBe(false);
+
+    // Advance through warning (3 ticks)
+    for (let i = 0; i < 3; i++) {
+      state = advanceOneTick(state, Date.now());
+    }
+    const z2 = state.coOp!.hazards.find((h) => h.id === 'zone-n')!;
+    expect(z2.phase).toBe('active');
+    expect(z2.ticksInPhase).toBe(0);
+    expect(isHazardLethal(z2)).toBe(true);
+
+    // Advance through active (3 ticks)
+    for (let i = 0; i < 3; i++) {
+      state = advanceOneTick(state, Date.now());
+    }
+    const z3 = state.coOp!.hazards.find((h) => h.id === 'zone-n')!;
+    expect(z3.phase).toBe('cooldown');
+    expect(z3.ticksInPhase).toBe(0);
+    expect(isHazardLethal(z3)).toBe(false);
+  });
+
+  it('sweeper advances along path each cooldown phase', () => {
+    const match = createInitialCoOpMatchState('SWEEP', () => 0.95);
+    const sweep = match.coOp!.hazards.find((h) => h.id === 'sweep-horiz')!;
+    expect(sweep.type).toBe('sweep');
+    const sweepState = sweep as any;
+    const pathLen = sweepState.path.length;
+    expect(pathLen).toBeGreaterThanOrEqual(2);
+
+    // Initial position at path[0]
+    expect(getHazardPosition(sweep)).toEqual(sweepState.path[0]);
+
+    // The sweeper has warningTicks=0, activeTicks=1.
+    // Cycle: cooldown(1 tick) -> advance path, then active(1 tick) -> cooldown
+    // Tick 1: cooldown expires, moves to path[1], enters active
+    let state = advanceOneTick(match, Date.now());
+    let sw = state.coOp!.hazards.find((h) => h.id === 'sweep-horiz') as any;
+    expect(sw.pathIndex).toBe(1);
+    expect(sw.phase).toBe('active');
+    expect(getHazardPosition(sw)).toEqual(sw.path[1]);
+  });
+});
+
+describe('co-op hazard collision', () => {
+  it('snake dies when entering active hazard zone', () => {
+    const match = createInitialCoOpMatchState('KILL', () => 0.8);
+
+    // Manually set the hazard to active phase (skip the cooldown/warning cycle)
+    const zone = match.coOp!.hazards.find((h) => h.id === 'zone-n')!;
+    zone.phase = 'active';
+    zone.ticksInPhase = 0;
+
+    const activePos = getHazardPosition(zone);
+
+    // Place snake 0 one cell to the left of the active hazard
+    match.snakes[0].body = [
+      { x: activePos.x - 1, y: activePos.y },
+      { x: activePos.x - 2, y: activePos.y },
+      { x: activePos.x - 3, y: activePos.y },
+    ];
+    match.snakes[0].direction = 'right';
+    match.snakes[0].pendingDirection = null;
+
+    // Place snake 1 safely away
+    match.snakes[1].body = [
+      { x: 25, y: 25 },
+      { x: 25, y: 26 },
+      { x: 25, y: 27 },
+    ];
+    match.snakes[1].direction = 'up';
+    match.snakes[1].pendingDirection = null;
+
+    const after = advanceOneTick(match, Date.now());
+    // Snake 0 head moves right into the active hazard
+    expect(after.snakes[0].alive).toBe(false);
+    expect(after.deathReasons.some((d) => d.slotIndex === 0 && d.reason === 'hazard')).toBe(true);
+    expect(after.result).toBe('co-op-fail');
+  });
+
+  it('snake survives when hazard is in cooldown phase', () => {
+    const match = createInitialCoOpMatchState('SAFE', () => 0.8);
+    const zone = match.coOp!.hazards.find((h) => h.id === 'zone-n')!;
+    const zonePos = getHazardPosition(zone);
+
+    // Hazard starts in cooldown (safe)
+    expect(zone.phase).toBe('cooldown');
+    expect(isHazardLethal(zone)).toBe(false);
+
+    // Place snake one cell to the left of the hazard
+    match.snakes[0].body = [
+      { x: zonePos.x - 1, y: zonePos.y },
+      { x: zonePos.x - 2, y: zonePos.y },
+      { x: zonePos.x - 3, y: zonePos.y },
+    ];
+    match.snakes[0].direction = 'right';
+    match.snakes[0].pendingDirection = null;
+    match.snakes[1].body = [
+      { x: 25, y: 25 },
+      { x: 25, y: 26 },
+      { x: 25, y: 27 },
+    ];
+    match.snakes[1].direction = 'up';
+    match.snakes[1].pendingDirection = null;
+
+    const after = advanceOneTick(match, Date.now());
+    // Snake 0 should be alive (hazard was in cooldown)
+    expect(after.snakes[0].alive).toBe(true);
+  });
+
+  it('hazard death reason is recorded correctly', () => {
+    const match = createInitialCoOpMatchState('REASON', () => 0.8);
+
+    // Manually set the hazard to active
+    const zone = match.coOp!.hazards.find((h) => h.id === 'zone-n')!;
+    zone.phase = 'active';
+    zone.ticksInPhase = 0;
+
+    const activePos = getHazardPosition(zone);
+
+    match.snakes[0].body = [
+      { x: activePos.x - 1, y: activePos.y },
+      { x: activePos.x - 2, y: activePos.y },
+      { x: activePos.x - 3, y: activePos.y },
+    ];
+    match.snakes[0].direction = 'right';
+    match.snakes[0].pendingDirection = null;
+    match.snakes[1].body = [
+      { x: 25, y: 25 },
+      { x: 25, y: 26 },
+      { x: 25, y: 27 },
+    ];
+    match.snakes[1].direction = 'up';
+    match.snakes[1].pendingDirection = null;
+
+    const after = advanceOneTick(match, Date.now());
+    expect(after.deathReasons).toEqual(
+      expect.arrayContaining([expect.objectContaining({ slotIndex: 0, reason: 'hazard' })]),
+    );
   });
 });

@@ -1,5 +1,5 @@
 export type Direction = 'up' | 'down' | 'left' | 'right';
-export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect';
+export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect' | 'hazard';
 export type MatchStatus = 'countdown' | 'active' | 'ended';
 export type RoundResultKey = 'player-0-win' | 'player-1-win' | 'draw' | 'co-op-win' | 'co-op-fail';
 export type RoomMode = 'versus' | 'solo' | 'co-op';
@@ -34,6 +34,68 @@ export interface PuzzleDoor {
   requiresSwitches: string[];
 }
 
+/* --- Hazard definitions (templates) --- */
+
+export interface HazardZoneDef {
+  id: string;
+  type: 'zone';
+  position: GridPoint;
+  warningTicks: number;
+  activeTicks: number;
+  cooldownTicks: number;
+}
+
+export interface HazardSweepDef {
+  id: string;
+  type: 'sweep';
+  /** Ordered waypoints. Sweeper moves one step per tick, loops at end. */
+  path: GridPoint[];
+  /** Ticks the sweeper stays active at each waypoint. */
+  activeTicks: number;
+  /** Ticks of warning before each active burst. */
+  warningTicks: number;
+}
+
+export type HazardDef = HazardZoneDef | HazardSweepDef;
+
+/* --- Hazard runtime state --- */
+
+export type HazardPhase = 'warning' | 'active' | 'cooldown';
+
+export interface HazardZoneState {
+  id: string;
+  type: 'zone';
+  position: GridPoint;
+  phase: HazardPhase;
+  ticksInPhase: number;
+  warningTicks: number;
+  activeTicks: number;
+  cooldownTicks: number;
+}
+
+export interface HazardSweepState {
+  id: string;
+  type: 'sweep';
+  /** Current position in the path array. */
+  pathIndex: number;
+  path: GridPoint[];
+  phase: HazardPhase;
+  ticksInPhase: number;
+  warningTicks: number;
+  activeTicks: number;
+}
+
+export type HazardState = HazardZoneState | HazardSweepState;
+
+export function isHazardLethal(hazard: HazardState): boolean {
+  return hazard.phase === 'active';
+}
+
+export function getHazardPosition(hazard: HazardState): GridPoint {
+  if (hazard.type === 'zone') return hazard.position;
+  return hazard.path[hazard.pathIndex];
+}
+
 export interface CoOpLayoutTemplate {
   layoutId: string;
   walls: GridPoint[];
@@ -41,6 +103,7 @@ export interface CoOpLayoutTemplate {
   snakes: [Pick<SnakeState, 'slotIndex' | 'direction' | 'body'>, Pick<SnakeState, 'slotIndex' | 'direction' | 'body'>];
   switches?: PuzzleSwitch[];
   doors?: PuzzleDoor[];
+  hazards?: HazardDef[];
 }
 
 export interface CoOpObjectiveState {
@@ -51,6 +114,7 @@ export interface CoOpObjectiveState {
   playersAtExit: { 0: boolean; 1: boolean };
   switches: PuzzleSwitch[];
   doors: PuzzleDoor[];
+  hazards: HazardState[];
 }
 
 export interface MatchState {
@@ -131,10 +195,8 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
   {
     layoutId: 'dual-switch-gate',
     walls: [
-      // Horizontal wall across the middle, blocking direct path from top to bottom
       ...horizontalLine(0, 12, 14),
       ...horizontalLine(16, 12, 29),
-      // Pillar obstacles in top section
       ...verticalLine(8, 2, 8),
       ...verticalLine(21, 2, 8),
     ],
@@ -149,6 +211,46 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
     ],
     doors: [
       { id: 'gate-center', position: { x: 15, y: 12 }, open: false, requiresSwitches: ['plate-left', 'plate-right'] },
+    ],
+  },
+  {
+    layoutId: 'hazard-crossroads',
+    walls: [
+      ...verticalLine(9, 4, 10),
+      ...verticalLine(9, 14, 21),
+      ...verticalLine(20, 8, 15),
+      ...horizontalLine(11, 12, 17),
+    ],
+    exit: { x: 26, y: 25 },
+    snakes: [
+      { slotIndex: 0, direction: 'right', body: [{ x: 3, y: 6 }, { x: 2, y: 6 }, { x: 1, y: 6 }] },
+      { slotIndex: 1, direction: 'down', body: [{ x: 24, y: 4 }, { x: 24, y: 3 }, { x: 24, y: 2 }] },
+    ],
+    hazards: [
+      { id: 'zone-n', type: 'zone', position: { x: 14, y: 8 }, warningTicks: 3, activeTicks: 3, cooldownTicks: 3 },
+      { id: 'zone-s', type: 'zone', position: { x: 14, y: 20 }, warningTicks: 3, activeTicks: 3, cooldownTicks: 3 },
+      { id: 'zone-passage', type: 'zone', position: { x: 14, y: 15 }, warningTicks: 2, activeTicks: 2, cooldownTicks: 2 },
+    ],
+  },
+  {
+    layoutId: 'sweep-corridor',
+    walls: [
+      ...horizontalLine(0, 8, 10),
+      ...horizontalLine(19, 8, 29),
+      ...horizontalLine(0, 20, 10),
+      ...horizontalLine(19, 20, 29),
+      ...verticalLine(10, 8, 14),
+      ...verticalLine(19, 8, 14),
+    ],
+    exit: { x: 14, y: 27 },
+    snakes: [
+      { slotIndex: 0, direction: 'right', body: [{ x: 3, y: 14 }, { x: 2, y: 14 }, { x: 1, y: 14 }] },
+      { slotIndex: 1, direction: 'left', body: [{ x: 26, y: 14 }, { x: 27, y: 14 }, { x: 28, y: 14 }] },
+    ],
+    hazards: [
+      { id: 'sweep-horiz', type: 'sweep', path: horizontalLine(11, 14, 18), warningTicks: 0, activeTicks: 1 },
+      { id: 'zone-left', type: 'zone', position: { x: 5, y: 14 }, warningTicks: 3, activeTicks: 4, cooldownTicks: 3 },
+      { id: 'zone-right', type: 'zone', position: { x: 24, y: 14 }, warningTicks: 3, activeTicks: 4, cooldownTicks: 3 },
     ],
   },
 ];
@@ -225,6 +327,7 @@ export function createInitialCoOpMatchState(roomCode: string, random: () => numb
         open: false,
         requiresSwitches: [...door.requiresSwitches],
       })),
+      hazards: (layout.hazards ?? []).map((h) => createHazardState(h)),
     },
   };
 }
@@ -251,10 +354,41 @@ export function createRandomCoOpLayout(random: () => number = Math.random): CoOp
       open: false,
       requiresSwitches: [...door.requiresSwitches],
     })),
+    hazards: (selected.hazards ?? []).map((h) => {
+      if (h.type === 'zone') {
+        return { ...h, position: { ...h.position } };
+      }
+      return { ...h, path: h.path.map((p) => ({ ...p })) };
+    }),
   };
 
   validateCoOpLayout(layout, BOARD);
   return layout;
+}
+
+function createHazardState(def: HazardDef): HazardState {
+  if (def.type === 'zone') {
+    return {
+      id: def.id,
+      type: 'zone',
+      position: { ...def.position },
+      phase: 'cooldown',
+      ticksInPhase: 0,
+      warningTicks: def.warningTicks,
+      activeTicks: def.activeTicks,
+      cooldownTicks: def.cooldownTicks,
+    };
+  }
+  return {
+    id: def.id,
+    type: 'sweep',
+    pathIndex: 0,
+    path: def.path.map((p) => ({ ...p })),
+    phase: 'cooldown',
+    ticksInPhase: 0,
+    warningTicks: def.warningTicks,
+    activeTicks: def.activeTicks,
+  };
 }
 
 export function queueDirectionInput(snake: SnakeState, direction: Direction): boolean {
@@ -293,6 +427,7 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
           position: { ...door.position },
           requiresSwitches: [...door.requiresSwitches],
         })),
+        hazards: match.coOp.hazards.map((h) => cloneHazardState(h)),
       }
     : null;
   const isCoOp = match.roomMode === 'co-op' && Boolean(coOp);
@@ -300,13 +435,11 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
 
   // --- Puzzle tick: update switch activation and door state ---
   if (isCoOp && coOp) {
-    // Reset hold-type switches, keep toggle switches as-is
     for (const sw of coOp.switches) {
       if (sw.activationType === 'hold') {
         sw.active = false;
       }
     }
-    // Activate switches where a snake head is standing
     for (const snake of snakes) {
       if (!snake.alive) continue;
       const head = snake.body[0];
@@ -316,17 +449,26 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
         }
       }
     }
-    // Update door open state based on required switches
     for (const door of coOp.doors) {
       door.open = door.requiresSwitches.every((switchId) => {
         const sw = coOp.switches.find((s) => s.id === switchId);
         return sw?.active ?? false;
       });
     }
-    // Add closed door positions to wall set (open doors are passable)
     for (const door of coOp.doors) {
       if (!door.open) {
         wallSet!.add(`${door.position.x},${door.position.y}`);
+      }
+    }
+  }
+
+  // --- Hazard tick: advance phase and sweeper position ---
+  const lethalHazardPositions = new Set<string>();
+  if (isCoOp && coOp) {
+    for (const hazard of coOp.hazards) {
+      advanceHazardTick(hazard);
+      if (isHazardLethal(hazard)) {
+        lethalHazardPositions.add(`${getHazardPosition(hazard).x},${getHazardPosition(hazard).y}`);
       }
     }
   }
@@ -372,6 +514,11 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
     }
     if (wallSet?.has(`${head.x},${head.y}`)) {
       deaths.set(snake.slotIndex, 'wall');
+      return;
+    }
+    // Hazard collision check
+    if (lethalHazardPositions.has(`${head.x},${head.y}`)) {
+      deaths.set(snake.slotIndex, 'hazard');
       return;
     }
 
@@ -481,6 +628,51 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
   };
 }
 
+/** Advance hazard phase/position by one tick. Mutates in-place. */
+function advanceHazardTick(hazard: HazardState): void {
+  hazard.ticksInPhase += 1;
+
+  if (hazard.type === 'zone') {
+    if (hazard.phase === 'cooldown' && hazard.ticksInPhase >= hazard.cooldownTicks) {
+      hazard.phase = 'warning';
+      hazard.ticksInPhase = 0;
+    } else if (hazard.phase === 'warning' && hazard.ticksInPhase >= hazard.warningTicks) {
+      hazard.phase = 'active';
+      hazard.ticksInPhase = 0;
+    } else if (hazard.phase === 'active' && hazard.ticksInPhase >= hazard.activeTicks) {
+      hazard.phase = 'cooldown';
+      hazard.ticksInPhase = 0;
+    }
+  } else {
+    // Sweeper
+    if (hazard.phase === 'cooldown') {
+      // Move forward one step along the path
+      hazard.pathIndex = (hazard.pathIndex + 1) % hazard.path.length;
+      hazard.phase = hazard.warningTicks > 0 ? 'warning' : 'active';
+      hazard.ticksInPhase = 0;
+    } else if (hazard.phase === 'warning' && hazard.ticksInPhase >= hazard.warningTicks) {
+      hazard.phase = 'active';
+      hazard.ticksInPhase = 0;
+    } else if (hazard.phase === 'active' && hazard.ticksInPhase >= hazard.activeTicks) {
+      hazard.phase = 'cooldown';
+      hazard.ticksInPhase = 0;
+    }
+  }
+}
+
+function cloneHazardState(hazard: HazardState): HazardState {
+  if (hazard.type === 'zone') {
+    return {
+      ...hazard,
+      position: { ...hazard.position },
+    };
+  }
+  return {
+    ...hazard,
+    path: hazard.path.map((p) => ({ ...p })),
+  };
+}
+
 export function applyDisconnectResult(match: MatchState, slotIndex: 0 | 1, now: number): MatchState {
   const snakes = match.snakes.map((snake) => ({ ...snake, body: snake.body.map((segment) => ({ ...segment })) })) as [SnakeState, SnakeState];
   const coOp = match.coOp
@@ -498,6 +690,7 @@ export function applyDisconnectResult(match: MatchState, slotIndex: 0 | 1, now: 
           position: { ...door.position },
           requiresSwitches: [...door.requiresSwitches],
         })),
+        hazards: match.coOp.hazards.map((h) => cloneHazardState(h)),
       }
     : null;
   snakes[slotIndex].alive = false;
@@ -743,7 +936,26 @@ function validateCoOpLayout(layout: CoOpLayoutTemplate, board: { width: number; 
     }
   }
 
-  // Solvability: with all switches active (doors open), both snakes must reach exit
+  // Validate hazard entities
+  const hazards = layout.hazards ?? [];
+  for (const h of hazards) {
+    if (h.type === 'zone') {
+      assert(isInsideBoard(h.position, board), `hazard '${h.id}' out of bounds at (${h.position.x},${h.position.y})`);
+      assert(!wallSet.has(`${h.position.x},${h.position.y}`), `hazard '${h.id}' overlaps wall at (${h.position.x},${h.position.y})`);
+      assert(!occupiedSet.has(`${h.position.x},${h.position.y}`), `hazard '${h.id}' overlaps exit or snake spawn at (${h.position.x},${h.position.y})`);
+      assert(h.warningTicks >= 0 && h.activeTicks >= 1 && h.cooldownTicks >= 0, `hazard '${h.id}' must have activeTicks >= 1`);
+    } else {
+      assert(h.path.length >= 2, `sweeper '${h.id}' must have at least 2 waypoints`);
+      for (const waypoint of h.path) {
+        assert(isInsideBoard(waypoint, board), `sweeper '${h.id}' waypoint out of bounds at (${waypoint.x},${waypoint.y})`);
+        assert(!wallSet.has(`${waypoint.x},${waypoint.y}`), `sweeper '${h.id}' waypoint overlaps wall at (${waypoint.x},${waypoint.y})`);
+      }
+      assert(h.activeTicks >= 1, `sweeper '${h.id}' must have activeTicks >= 1`);
+    }
+  }
+
+  // Solvability: with all switches active (doors open) and no hazards considered blocking,
+  // both snakes must reach exit
   if (doors.length > 0) {
     const openDoorPositions = new Set(doors.map((door) => `${door.position.x},${door.position.y}`));
     const relaxedBlocked = new Set([...wallSet].filter((key) => !openDoorPositions.has(key)));

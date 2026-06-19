@@ -2,7 +2,7 @@ export type RoomPhase = 'waiting-for-players' | 'lobby' | 'starting' | 'in-progr
 export type RoomMode = 'versus' | 'solo' | 'co-op';
 export type Direction = 'up' | 'down' | 'left' | 'right';
 export type RoundResult = 'win' | 'lose' | 'draw';
-export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect';
+export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect' | 'hazard';
 export type RematchStatus = 'unavailable' | 'idle' | 'waiting' | 'accepted';
 export type ReconnectStatus = 'none' | 'waiting-for-player' | 'resume-countdown';
 
@@ -92,6 +92,8 @@ export interface PublicSnakeState {
 }
 
 export type SwitchActivationType = 'hold' | 'toggle';
+export type HazardType = 'spike' | 'sweeper';
+export type HazardPhase = 'warning' | 'active' | 'cooldown';
 
 export interface PuzzleSwitchView {
   id: string;
@@ -107,6 +109,23 @@ export interface PuzzleDoorView {
   requiresSwitches: string[];
 }
 
+export interface HazardView {
+  id: string;
+  hazardType: HazardType;
+  /** Current position (spike: fixed tile, sweeper: current path node). */
+  position: GridPoint;
+  /** Current telegraph phase. */
+  phase: HazardPhase;
+  /** True when the hazard kills on contact this tick. */
+  lethal: boolean;
+  /** Ticks remaining in current phase (client countdown display). */
+  ticksRemainingInPhase: number;
+  /** Sweeper only: full path waypoints. */
+  path?: GridPoint[];
+  /** Sweeper only: current index into path. */
+  pathIndex?: number;
+}
+
 export interface CoOpStatePayload {
   layoutId: string;
   objective: 'both-reach-exit';
@@ -115,6 +134,7 @@ export interface CoOpStatePayload {
   playersAtExit: { 0: boolean; 1: boolean };
   switches: PuzzleSwitchView[];
   doors: PuzzleDoorView[];
+  hazards: HazardView[];
 }
 
 export interface PublicGameStatePayload {
