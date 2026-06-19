@@ -8,6 +8,8 @@ import {
   spawnFood,
   type GridPoint,
   type SnakeState,
+  type PuzzleSwitch,
+  type PuzzleDoor,
 } from '../gameLogic.js';
 
 describe('computeSpeedInterval', () => {
@@ -64,10 +66,10 @@ describe('createInitialCoOpMatchState', () => {
     expect(pathExists(match.snakes[1].body[0], coOp.exit, blocked, match.board)).toBe(true);
   });
 
-  it('keeps every layout on free cells with access to the full board', () => {
-    const layouts = [0, 0.5, 0.99].map((seed) => createRandomCoOpLayout(() => seed));
+  it('keeps every layout on free cells and preserves a solvable route', () => {
+    const layouts = [0, 0.25, 0.5, 0.75].map((seed) => createRandomCoOpLayout(() => seed));
     expect(new Set(layouts.map((layout) => layout.layoutId))).toEqual(
-      new Set(['crossroads-open', 'double-corridor-open', 'split-pillars-open']),
+      new Set(['crossroads-open', 'double-corridor-open', 'split-pillars-open', 'dual-switch-gate']),
     );
 
     for (const layout of layouts) {
@@ -118,6 +120,170 @@ describe('advanceOneTick co-op objective', () => {
     expect(completed.coOp?.playersAtExit[1]).toBe(true);
     expect(completed.snakes[0].body[0]).toEqual(exit);
     expect(completed.snakes[1].body[0]).toEqual(exit);
+  });
+});
+
+describe('co-op puzzle primitives', () => {
+  it('generates dual-switch-gate layout with switches and doors', () => {
+    // Seed 0.75 selects the dual-switch-gate layout (4th template)
+    const layout = createRandomCoOpLayout(() => 0.75);
+    expect(layout.layoutId).toBe('dual-switch-gate');
+    expect(layout.switches).toBeDefined();
+    expect(layout.switches!.length).toBe(2);
+    expect(layout.doors).toBeDefined();
+    expect(layout.doors!.length).toBe(1);
+    expect(layout.doors![0].requiresSwitches).toEqual(['plate-left', 'plate-right']);
+  });
+
+  it('creates co-op match state with puzzle entities initialized', () => {
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    expect(match.coOp).not.toBeNull();
+    expect(match.coOp!.switches.length).toBe(2);
+    expect(match.coOp!.doors.length).toBe(1);
+    expect(match.coOp!.switches.every((sw) => !sw.active)).toBe(true);
+    expect(match.coOp!.doors.every((door) => !door.open)).toBe(true);
+  });
+
+  it('activates hold switch when snake head steps on it', () => {
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const coOp = match.coOp!;
+    const plateLeft = coOp.switches.find((sw) => sw.id === 'plate-left')!;
+
+    // Move snake 0 to the left plate position
+    match.snakes[0].body = [
+      { ...plateLeft.position },
+      { x: plateLeft.position.x - 1, y: plateLeft.position.y },
+      { x: plateLeft.position.x - 2, y: plateLeft.position.y },
+    ];
+    match.snakes[0].direction = 'right';
+    match.snakes[0].pendingDirection = null;
+
+    const after = advanceOneTick(match, 1000);
+    const updatedPlate = after.coOp!.switches.find((sw) => sw.id === 'plate-left')!;
+    expect(updatedPlate.active).toBe(true);
+  });
+
+  it('toggle switch stays active after snake leaves the plate', () => {
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const coOp = match.coOp!;
+    const plateLeft = coOp.switches.find((sw) => sw.id === 'plate-left')!;
+
+    // Snake head is ON the plate
+    match.snakes[0].body = [
+      { ...plateLeft.position },
+      { x: plateLeft.position.x - 1, y: plateLeft.position.y },
+      { x: plateLeft.position.x - 2, y: plateLeft.position.y },
+    ];
+    match.snakes[0].direction = 'right';
+    match.snakes[0].pendingDirection = null;
+
+    // Tick 1: snake activates the toggle plate
+    const tick1 = advanceOneTick(match, 1000);
+    expect(tick1.coOp!.switches.find((sw) => sw.id === 'plate-left')!.active).toBe(true);
+
+    // Tick 2: snake moves off the plate, toggle stays active
+    tick1.snakes[0].pendingDirection = null;
+    const tick2 = advanceOneTick(tick1, 1200);
+    expect(tick2.coOp!.switches.find((sw) => sw.id === 'plate-left')!.active).toBe(true);
+  });
+
+  it('opens door when all required switches are simultaneously active', () => {
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const coOp = match.coOp!;
+    const plateLeft = coOp.switches.find((sw) => sw.id === 'plate-left')!;
+    const plateRight = coOp.switches.find((sw) => sw.id === 'plate-right')!;
+
+    // Place snake 0 on left plate, snake 1 on right plate
+    match.snakes[0].body = [
+      { ...plateLeft.position },
+      { x: plateLeft.position.x - 1, y: plateLeft.position.y },
+      { x: plateLeft.position.x - 2, y: plateLeft.position.y },
+    ];
+    match.snakes[0].direction = 'right';
+    match.snakes[0].pendingDirection = null;
+
+    match.snakes[1].body = [
+      { ...plateRight.position },
+      { x: plateRight.position.x + 1, y: plateRight.position.y },
+      { x: plateRight.position.x + 2, y: plateRight.position.y },
+    ];
+    match.snakes[1].direction = 'left';
+    match.snakes[1].pendingDirection = null;
+
+    const after = advanceOneTick(match, 1000);
+    expect(after.coOp!.doors[0].open).toBe(true);
+  });
+
+  it('door blocks movement when closed', () => {
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const door = match.coOp!.doors[0];
+
+    // Place snake 0 heading toward the closed door
+    match.snakes[0].body = [
+      { x: door.position.x, y: door.position.y + 1 },
+      { x: door.position.x, y: door.position.y + 2 },
+      { x: door.position.x, y: door.position.y + 3 },
+    ];
+    match.snakes[0].direction = 'up';
+    match.snakes[0].pendingDirection = null;
+
+    const after = advanceOneTick(match, 1000);
+    // Snake should die from hitting the closed door (treated as wall)
+    expect(after.snakes[0].alive).toBe(false);
+  });
+
+  it('door allows movement when open', () => {
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    const coOp = match.coOp!;
+    const door = coOp.doors[0];
+    const plateLeft = coOp.switches.find((sw) => sw.id === 'plate-left')!;
+    const plateRight = coOp.switches.find((sw) => sw.id === 'plate-right')!;
+
+    // Position both snakes on their plates to open the door
+    match.snakes[0].body = [
+      { ...plateLeft.position },
+      { x: plateLeft.position.x - 1, y: plateLeft.position.y },
+      { x: plateLeft.position.x - 2, y: plateLeft.position.y },
+    ];
+    match.snakes[0].direction = 'right';
+    match.snakes[0].pendingDirection = null;
+
+    match.snakes[1].body = [
+      { ...plateRight.position },
+      { x: plateRight.position.x + 1, y: plateRight.position.y },
+      { x: plateRight.position.x + 2, y: plateRight.position.y },
+    ];
+    match.snakes[1].direction = 'left';
+    match.snakes[1].pendingDirection = null;
+
+    // Tick: both plates activate, door opens, snakes survive
+    const after = advanceOneTick(match, 1000);
+    expect(after.coOp!.doors[0].open).toBe(true);
+    expect(after.snakes[0].alive).toBe(true);
+    expect(after.snakes[1].alive).toBe(true);
+  });
+
+  it('all 4 layouts validate without error', () => {
+    const seeds = [0, 0.25, 0.5, 0.75];
+    const layouts = seeds.map((seed) => createRandomCoOpLayout(() => seed));
+    const ids = layouts.map((l) => l.layoutId);
+    expect(ids).toContain('dual-switch-gate');
+    // All should have passed validation (no throw)
+    expect(layouts.length).toBe(4);
+  });
+
+  it('puzzle state is included in co-op payload', () => {
+    const match = createInitialCoOpMatchState('PUZZLE', () => 0.75);
+    expect(match.coOp!.switches.length).toBe(2);
+    expect(match.coOp!.doors.length).toBe(1);
+    expect(match.coOp!.switches[0]).toHaveProperty('id');
+    expect(match.coOp!.switches[0]).toHaveProperty('position');
+    expect(match.coOp!.switches[0]).toHaveProperty('activationType');
+    expect(match.coOp!.switches[0]).toHaveProperty('active');
+    expect(match.coOp!.doors[0]).toHaveProperty('id');
+    expect(match.coOp!.doors[0]).toHaveProperty('position');
+    expect(match.coOp!.doors[0]).toHaveProperty('open');
+    expect(match.coOp!.doors[0]).toHaveProperty('requiresSwitches');
   });
 });
 
