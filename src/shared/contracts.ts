@@ -2,7 +2,7 @@ export type RoomPhase = 'waiting-for-players' | 'lobby' | 'starting' | 'in-progr
 export type RoomMode = 'versus' | 'solo' | 'co-op';
 export type Direction = 'up' | 'down' | 'left' | 'right';
 export type RoundResult = 'win' | 'lose' | 'draw';
-export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect' | 'hazard';
+export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect' | 'hazard' | 'monster';
 export type RematchStatus = 'unavailable' | 'idle' | 'waiting' | 'accepted';
 export type ReconnectStatus = 'none' | 'waiting-for-player' | 'resume-countdown';
 
@@ -135,6 +135,16 @@ export interface CoOpStatePayload {
   switches: PuzzleSwitchView[];
   doors: PuzzleDoorView[];
   hazards: HazardView[];
+  monsters?: PatrolMonsterView[];
+}
+
+export interface PatrolMonsterView {
+  id: string;
+  position: GridPoint;
+  /** Ordered path waypoints for client rendering. */
+  path: GridPoint[];
+  /** Current index into path. */
+  pathIndex: number;
 }
 
 export interface PublicGameStatePayload {
