@@ -1,5 +1,5 @@
 export type Direction = 'up' | 'down' | 'left' | 'right';
-export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect' | 'hazard';
+export type DeathReason = 'wall' | 'self' | 'head-to-head' | 'head-to-body' | 'cross-over' | 'disconnect' | 'hazard' | 'monster';
 export type MatchStatus = 'countdown' | 'active' | 'ended';
 export type RoundResultKey = 'player-0-win' | 'player-1-win' | 'draw' | 'co-op-win' | 'co-op-fail';
 export type RoomMode = 'versus' | 'solo' | 'co-op';
@@ -96,6 +96,42 @@ export function getHazardPosition(hazard: HazardState): GridPoint {
   return hazard.path[hazard.pathIndex];
 }
 
+/* --- Patrol monster definitions (templates) --- */
+
+export interface PatrolMonsterDef {
+  id: string;
+  /** Ordered waypoints. Monster bounces back and forth along the path, one step per tick. */
+  path: GridPoint[];
+}
+
+/* --- Patrol monster runtime state --- */
+
+export interface PatrolMonsterState {
+  id: string;
+  path: GridPoint[];
+  /** Current index into path array. */
+  pathIndex: number;
+  /** Current movement direction: 1 = forward (toward end), -1 = backward (toward start). */
+  direction: 1 | -1;
+}
+
+export function getMonsterPosition(monster: PatrolMonsterState): GridPoint {
+  return monster.path[monster.pathIndex];
+}
+
+/** Advance patrol monster by one tick. Mutates in-place. Bounces at path endpoints. */
+export function advanceMonsterTick(monster: PatrolMonsterState): void {
+  let next = monster.pathIndex + monster.direction;
+  if (next >= monster.path.length) {
+    monster.direction = -1;
+    next = monster.pathIndex - 1;
+  } else if (next < 0) {
+    monster.direction = 1;
+    next = monster.pathIndex + 1;
+  }
+  monster.pathIndex = next;
+}
+
 export interface CoOpLayoutTemplate {
   layoutId: string;
   walls: GridPoint[];
@@ -104,6 +140,7 @@ export interface CoOpLayoutTemplate {
   switches?: PuzzleSwitch[];
   doors?: PuzzleDoor[];
   hazards?: HazardDef[];
+  monsters?: PatrolMonsterDef[];
 }
 
 export interface CoOpObjectiveState {
@@ -115,6 +152,7 @@ export interface CoOpObjectiveState {
   switches: PuzzleSwitch[];
   doors: PuzzleDoor[];
   hazards: HazardState[];
+  monsters: PatrolMonsterState[];
 }
 
 export interface MatchState {
@@ -253,6 +291,28 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
       { id: 'zone-right', type: 'zone', position: { x: 24, y: 14 }, warningTicks: 3, activeTicks: 4, cooldownTicks: 3 },
     ],
   },
+  {
+    layoutId: 'patrol-gauntlet',
+    walls: [
+      ...horizontalLine(0, 6, 8),
+      ...horizontalLine(21, 6, 29),
+      ...horizontalLine(0, 22, 8),
+      ...horizontalLine(21, 22, 29),
+      ...verticalLine(8, 6, 10),
+      ...verticalLine(21, 6, 10),
+      ...verticalLine(8, 18, 22),
+      ...verticalLine(21, 18, 22),
+    ],
+    exit: { x: 14, y: 27 },
+    snakes: [
+      { slotIndex: 0, direction: 'right', body: [{ x: 3, y: 14 }, { x: 2, y: 14 }, { x: 1, y: 14 }] },
+      { slotIndex: 1, direction: 'left', body: [{ x: 26, y: 14 }, { x: 27, y: 14 }, { x: 28, y: 14 }] },
+    ],
+    monsters: [
+      { id: 'patrol-n', path: horizontalLine(10, 10, 19) },
+      { id: 'patrol-s', path: horizontalLine(10, 18, 19) },
+    ],
+  },
 ];
 
 export function createInitialMatchState(roomCode: string, random: () => number = Math.random, soloMode: boolean = false): MatchState {
@@ -328,6 +388,7 @@ export function createInitialCoOpMatchState(roomCode: string, random: () => numb
         requiresSwitches: [...door.requiresSwitches],
       })),
       hazards: (layout.hazards ?? []).map((h) => createHazardState(h)),
+      monsters: (layout.monsters ?? []).map((m) => createMonsterState(m)),
     },
   };
 }
@@ -360,6 +421,10 @@ export function createRandomCoOpLayout(random: () => number = Math.random): CoOp
       }
       return { ...h, path: h.path.map((p) => ({ ...p })) };
     }),
+    monsters: (selected.monsters ?? []).map((m) => ({
+      ...m,
+      path: m.path.map((p) => ({ ...p })),
+    })),
   };
 
   validateCoOpLayout(layout, BOARD);
@@ -388,6 +453,15 @@ function createHazardState(def: HazardDef): HazardState {
     ticksInPhase: 0,
     warningTicks: def.warningTicks,
     activeTicks: def.activeTicks,
+  };
+}
+
+function createMonsterState(def: PatrolMonsterDef): PatrolMonsterState {
+  return {
+    id: def.id,
+    path: def.path.map((p) => ({ ...p })),
+    pathIndex: 0,
+    direction: 1,
   };
 }
 
@@ -428,6 +502,7 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
           requiresSwitches: [...door.requiresSwitches],
         })),
         hazards: match.coOp.hazards.map((h) => cloneHazardState(h)),
+        monsters: match.coOp.monsters.map((m) => cloneMonsterState(m)),
       }
     : null;
   const isCoOp = match.roomMode === 'co-op' && Boolean(coOp);
@@ -470,6 +545,16 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
       if (isHazardLethal(hazard)) {
         lethalHazardPositions.add(`${getHazardPosition(hazard).x},${getHazardPosition(hazard).y}`);
       }
+    }
+  }
+
+  // --- Monster tick: advance patrol position ---
+  const lethalMonsterPositions = new Set<string>();
+  if (isCoOp && coOp) {
+    for (const monster of coOp.monsters) {
+      advanceMonsterTick(monster);
+      const pos = getMonsterPosition(monster);
+      lethalMonsterPositions.add(`${pos.x},${pos.y}`);
     }
   }
 
@@ -519,6 +604,11 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
     // Hazard collision check
     if (lethalHazardPositions.has(`${head.x},${head.y}`)) {
       deaths.set(snake.slotIndex, 'hazard');
+      return;
+    }
+    // Monster collision check
+    if (lethalMonsterPositions.has(`${head.x},${head.y}`)) {
+      deaths.set(snake.slotIndex, 'monster');
       return;
     }
 
@@ -673,6 +763,13 @@ function cloneHazardState(hazard: HazardState): HazardState {
   };
 }
 
+function cloneMonsterState(monster: PatrolMonsterState): PatrolMonsterState {
+  return {
+    ...monster,
+    path: monster.path.map((p) => ({ ...p })),
+  };
+}
+
 export function applyDisconnectResult(match: MatchState, slotIndex: 0 | 1, now: number): MatchState {
   const snakes = match.snakes.map((snake) => ({ ...snake, body: snake.body.map((segment) => ({ ...segment })) })) as [SnakeState, SnakeState];
   const coOp = match.coOp
@@ -691,6 +788,7 @@ export function applyDisconnectResult(match: MatchState, slotIndex: 0 | 1, now: 
           requiresSwitches: [...door.requiresSwitches],
         })),
         hazards: match.coOp.hazards.map((h) => cloneHazardState(h)),
+        monsters: match.coOp.monsters.map((m) => cloneMonsterState(m)),
       }
     : null;
   snakes[slotIndex].alive = false;
@@ -951,6 +1049,17 @@ function validateCoOpLayout(layout: CoOpLayoutTemplate, board: { width: number; 
         assert(!wallSet.has(`${waypoint.x},${waypoint.y}`), `sweeper '${h.id}' waypoint overlaps wall at (${waypoint.x},${waypoint.y})`);
       }
       assert(h.activeTicks >= 1, `sweeper '${h.id}' must have activeTicks >= 1`);
+    }
+  }
+
+  // Validate patrol monster entities
+  const monsters = layout.monsters ?? [];
+  for (const m of monsters) {
+    assert(m.path.length >= 2, `monster '${m.id}' must have at least 2 waypoints`);
+    for (const waypoint of m.path) {
+      assert(isInsideBoard(waypoint, board), `monster '${m.id}' waypoint out of bounds at (${waypoint.x},${waypoint.y})`);
+      assert(!wallSet.has(`${waypoint.x},${waypoint.y}`), `monster '${m.id}' waypoint overlaps wall at (${waypoint.x},${waypoint.y})`);
+      assert(!occupiedSet.has(`${waypoint.x},${waypoint.y}`), `monster '${m.id}' waypoint overlaps exit or snake spawn at (${waypoint.x},${waypoint.y})`);
     }
   }
 

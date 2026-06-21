@@ -607,6 +607,20 @@ button:disabled { cursor: not-allowed; opacity: 0.58; }
   background: linear-gradient(180deg, #1a1a2a, #121222);
   box-shadow: inset 0 0 0 1px rgba(100,100,200,0.1);
 }
+.cell.patrol-monster {
+  background: radial-gradient(circle, #a855f7 0%, #7c3aed 45%, #4c1d95 100%);
+  box-shadow: inset 0 0 0 2px rgba(168,85,247,0.5), 0 0 14px rgba(124,58,237,0.6);
+  animation: monsterPulse 600ms ease-in-out infinite;
+}
+.cell.patrol-monster-path {
+  background: linear-gradient(180deg, #1a1028, #120a20);
+  box-shadow: inset 0 0 0 1px rgba(168,85,247,0.08);
+}
+.cell.reduce-motion.patrol-monster { animation: none; }
+@keyframes monsterPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
 @keyframes hazardPulse {
   0%, 100% { opacity: 0.7; }
   50% { opacity: 1; }

@@ -763,10 +763,10 @@ function renderGame(state, perSlotResult) {
 
   if (state.phase === 'starting') {
     gamePhaseLabel.textContent = 'Countdown';
-    gameStatusInlineEl.textContent = state.roomMode === 'co-op' ? (state.coOp?.switches?.length ? 'Co-op puzzle room. Coordinate to activate switches.' : 'Co-op room loading. Plan your routes to the exit.') : 'Match starts in moments. Queue your opener now.';
+    gameStatusInlineEl.textContent = state.roomMode === 'co-op' ? (state.coOp?.monsters?.length ? 'Patrol room! Dodge the purple monsters.' : state.coOp?.switches?.length ? 'Co-op puzzle room. Coordinate to activate switches.' : 'Co-op room loading. Plan your routes to the exit.') : 'Match starts in moments. Queue your opener now.';
     countdownLabel.textContent = `Countdown: ${state.countdownSecondsRemaining ?? 3}`;
     gameMessageEl.textContent = state.roomMode === 'co-op'
-      ? (state.coOp?.switches?.length ? 'Purple plates are pressure switches. Brown tiles are closed doors. Step on switches to open the path.' : 'Reach the glowing exit together. Walls are lethal, and a player who reaches the exit waits there for their teammate.')
+      ? (state.coOp?.monsters?.length ? 'Purple creatures patrol fixed paths. Time your movements to dodge them. Contact is deadly.' : state.coOp?.switches?.length ? 'Purple plates are pressure switches. Brown tiles are closed doors. Step on switches to open the path.' : 'Reach the glowing exit together. Walls are lethal, and a player who reaches the exit waits there for their teammate.')
       : 'Queue your opening turn now. Opening food is filtered for a fairer race.';
     applyPhaseTheme('countdown', 'neutral');
   } else if (state.phase === 'in-progress') {
@@ -892,6 +892,23 @@ function paintBoard(state) {
         // Render the hazard tile with its current phase
         const cls = hz.lethal ? 'hazard-active' : hz.phase === 'warning' ? 'hazard-warning' : 'hazard-cooldown';
         paintCell(hz.position.x, hz.position.y, cls, state.board.width);
+      });
+    }
+    // Render patrol monsters
+    if (state.coOp.monsters) {
+      state.coOp.monsters.forEach((m) => {
+        // Render patrol path faintly
+        if (m.path) {
+          m.path.forEach((wp) => {
+            const key = `${wp.x},${wp.y}`;
+            if (!paintedCells.has(key)) {
+              paintCell(wp.x, wp.y, 'patrol-monster-path', state.board.width);
+              paintedCells.add(key);
+            }
+          });
+        }
+        // Render the monster at its current position
+        paintCell(m.position.x, m.position.y, 'patrol-monster', state.board.width);
       });
     }
   }
