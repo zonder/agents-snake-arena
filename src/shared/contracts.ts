@@ -126,6 +126,23 @@ export interface HazardView {
   pathIndex?: number;
 }
 
+export interface PatrolMonsterView {
+  id: string;
+  position: GridPoint;
+  /** Ordered path waypoints for client rendering. */
+  path: GridPoint[];
+  /** Current index into path. */
+  pathIndex: number;
+}
+
+export interface RunProgressionView {
+  currentRoom: number;
+  totalRooms: number;
+  roomsCleared: number;
+  /** 0 = easiest, 1 = hardest. Increases each room. */
+  difficulty: number;
+}
+
 export interface CoOpStatePayload {
   layoutId: string;
   objective: 'both-reach-exit';
@@ -136,15 +153,7 @@ export interface CoOpStatePayload {
   doors: PuzzleDoorView[];
   hazards: HazardView[];
   monsters?: PatrolMonsterView[];
-}
-
-export interface PatrolMonsterView {
-  id: string;
-  position: GridPoint;
-  /** Ordered path waypoints for client rendering. */
-  path: GridPoint[];
-  /** Current index into path. */
-  pathIndex: number;
+  run?: RunProgressionView;
 }
 
 export interface PublicGameStatePayload {
@@ -232,10 +241,22 @@ export interface GameRematchStatePayload {
 
 export interface RoomClosedPayload { roomCode: string; reason: 'round-complete' | 'player-disconnected'; version: number; }
 
+export interface GameRoomTransitionPayload {
+  roomCode: string;
+  roomNumber: number;
+  totalRooms: number;
+  roomsCleared: number;
+  difficulty: number;
+  layoutId: string;
+  /** Client should show a transition screen, then render the new room. */
+  transitionMs: number;
+  version: number;
+}
+
 export const EVENTS = {
   roomCreate: 'room:create', roomCreateSolo: 'room:create-solo', roomCreated: 'room:created', roomJoin: 'room:join', roomJoined: 'room:joined', roomError: 'room:error',
   lobbyState: 'lobby:state', playerReadySet: 'player:ready:set', playerLeft: 'player:left', playerDirectionSet: 'player:direction:set',
   gameCountdown: 'game:countdown', gameStart: 'game:start', gameState: 'game:state', gameEnded: 'game:ended', gameRematchRequest: 'game:rematch-request',
-  gameRematchState: 'game:rematch-state', roomClosed: 'room:closed', sessionIssued: 'session:issued', sessionResume: 'session:resume',
+  gameRematchState: 'game:rematch-state', gameRoomTransition: 'game:room-transition', roomClosed: 'room:closed', sessionIssued: 'session:issued', sessionResume: 'session:resume',
   sessionResumeSucceeded: 'session:resume:succeeded', sessionResumeFailed: 'session:resume:failed',
 } as const;

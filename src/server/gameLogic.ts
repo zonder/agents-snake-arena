@@ -141,6 +141,8 @@ export interface CoOpLayoutTemplate {
   doors?: PuzzleDoor[];
   hazards?: HazardDef[];
   monsters?: PatrolMonsterDef[];
+  /** Difficulty tier this layout belongs to. */
+  difficulty: 'easy' | 'medium' | 'hard';
 }
 
 export interface CoOpObjectiveState {
@@ -172,6 +174,21 @@ export interface MatchState {
   winnerSlotIndex: 0 | 1 | null;
   soloMode: boolean;
   coOp: CoOpObjectiveState | null;
+  run: RunProgressionState | null;
+}
+
+/** Tracks multi-room run progression within a co-op session. */
+export interface RunProgressionState {
+  /** 1-indexed room number the players are currently in. */
+  currentRoom: number;
+  /** Total number of rooms in this run. */
+  totalRooms: number;
+  /** Number of rooms successfully cleared so far. */
+  roomsCleared: number;
+  /** Current difficulty tier: 'easy' | 'medium' | 'hard'. */
+  difficulty: 'easy' | 'medium' | 'hard';
+  /** Layout IDs already used in this run (to avoid repeats). */
+  usedLayouts: string[];
 }
 
 const BOARD = { width: 30, height: 30 } as const;
@@ -185,6 +202,7 @@ const OPPOSITE: Record<Direction, Direction> = {
 const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
   {
     layoutId: 'crossroads-open',
+    difficulty: 'easy',
     walls: [
       ...verticalLine(9, 4, 10),
       ...verticalLine(9, 14, 21),
@@ -200,6 +218,7 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
   },
   {
     layoutId: 'double-corridor-open',
+    difficulty: 'easy',
     walls: [
       ...horizontalLine(6, 9, 12),
       ...horizontalLine(17, 9, 23),
@@ -217,6 +236,7 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
   },
   {
     layoutId: 'split-pillars-open',
+    difficulty: 'easy',
     walls: [
       ...rectangleOutline(8, 8, 4, 6),
       ...rectangleOutline(18, 8, 4, 6),
@@ -232,6 +252,7 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
   },
   {
     layoutId: 'dual-switch-gate',
+    difficulty: 'medium',
     walls: [
       ...horizontalLine(0, 12, 14),
       ...horizontalLine(16, 12, 29),
@@ -253,6 +274,7 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
   },
   {
     layoutId: 'hazard-crossroads',
+    difficulty: 'medium',
     walls: [
       ...verticalLine(9, 4, 10),
       ...verticalLine(9, 14, 21),
@@ -272,6 +294,7 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
   },
   {
     layoutId: 'sweep-corridor',
+    difficulty: 'hard',
     walls: [
       ...horizontalLine(0, 8, 10),
       ...horizontalLine(19, 8, 29),
@@ -293,6 +316,7 @@ const CO_OP_LAYOUT_TEMPLATES: readonly CoOpLayoutTemplate[] = [
   },
   {
     layoutId: 'patrol-gauntlet',
+    difficulty: 'hard',
     walls: [
       ...horizontalLine(0, 6, 8),
       ...horizontalLine(21, 6, 29),
@@ -340,6 +364,7 @@ export function createInitialMatchState(roomCode: string, random: () => number =
     winnerSlotIndex: null,
     soloMode,
     coOp: null,
+    run: null,
   };
 }
 
@@ -390,6 +415,136 @@ export function createInitialCoOpMatchState(roomCode: string, random: () => numb
       hazards: (layout.hazards ?? []).map((h) => createHazardState(h)),
       monsters: (layout.monsters ?? []).map((m) => createMonsterState(m)),
     },
+    run: null,
+  };
+}
+
+/** Number of rooms in a standard co-op run. */
+export const CO_OP_RUN_ROOM_COUNT = 5;
+
+/**
+ * Create a co-op match state with multi-room run progression enabled.
+ * The first room uses an easy layout; difficulty ramps through the run.
+ */
+export function createInitialCoOpRunWithRooms(
+  roomCode: string,
+  random: () => number = Math.random,
+  totalRooms: number = CO_OP_RUN_ROOM_COUNT,
+): MatchState {
+  const match = createInitialCoOpMatchState(roomCode, random);
+  const run: RunProgressionState = {
+    currentRoom: 1,
+    totalRooms,
+    roomsCleared: 0,
+    difficulty: 'easy',
+    usedLayouts: [match.coOp!.layoutId],
+  };
+  return { ...match, run };
+}
+
+/**
+ * Compute the difficulty tier for a given room number in a run.
+ * Rooms 1-2 = easy, room 3 = medium, rooms 4+ = hard.
+ */
+export function difficultyForRoom(roomNumber: number, _totalRooms: number): 'easy' | 'medium' | 'hard' {
+  if (roomNumber <= 2) return 'easy';
+  if (roomNumber === 3) return 'medium';
+  return 'hard';
+}
+
+/**
+ * Compute the numeric difficulty value (0..1) for display from run state.
+ */
+export function runDifficultyValue(run: RunProgressionState): number {
+  if (run.totalRooms <= 1) return 0;
+  return (run.currentRoom - 1) / (run.totalRooms - 1);
+}
+
+/**
+ * Select a layout template from the appropriate difficulty bucket.
+ * Avoids layouts already used in this run when possible.
+ */
+export function selectLayoutForDifficulty(
+  difficulty: 'easy' | 'medium' | 'hard',
+  random: () => number,
+  usedLayouts: string[] = [],
+): CoOpLayoutTemplate {
+  const bucket = CO_OP_LAYOUT_TEMPLATES.filter((t) => t.difficulty === difficulty);
+  // Prefer unused layouts
+  const unused = bucket.filter((t) => !usedLayouts.includes(t.layoutId));
+  const pool = unused.length > 0 ? unused : bucket;
+  return pool[Math.floor(random() * pool.length)] ?? pool[0];
+}
+
+/**
+ * Advance a co-op match to the next room in a run.
+ * Resets all room-specific state (walls, switches, doors, hazards, monsters, snake positions)
+ * while preserving run progression metadata. Returns null if the run is complete.
+ *
+ * The returned match has status='active' (no countdown) so the room starts immediately.
+ */
+export function advanceCoOpRoom(match: MatchState, random: () => number = Math.random): MatchState | null {
+  if (!match.run || !match.coOp) return null;
+  const { run } = match;
+  const nextRoom = run.currentRoom + 1;
+  if (nextRoom > run.totalRooms) return null; // run is complete
+
+  const nextDifficulty = difficultyForRoom(nextRoom, run.totalRooms);
+  const layout = selectLayoutForDifficulty(nextDifficulty, random, run.usedLayouts);
+
+  // Build fresh snakes from the layout template
+  const snakes = layout.snakes.map((snake) => ({
+    slotIndex: snake.slotIndex,
+    direction: snake.direction,
+    pendingDirection: null,
+    body: snake.body.map((segment) => ({ ...segment })),
+    alive: true,
+    score: 0,
+  })) as [SnakeState, SnakeState];
+
+  return {
+    roomCode: match.roomCode,
+    roomMode: 'co-op',
+    board: BOARD,
+    tickNumber: 0,
+    status: 'active', // no countdown for room transitions — immediate start
+    snakes,
+    food: null,
+    foodsEaten: 0,
+    tickIntervalMs: computeSpeedInterval(0),
+    startedAt: match.startedAt, // preserve original run start time
+    endedAt: null,
+    result: null,
+    deathReasons: [],
+    winnerSlotIndex: null,
+    soloMode: false,
+    coOp: {
+      layoutId: layout.layoutId,
+      objective: 'both-reach-exit',
+      exit: { ...layout.exit },
+      walls: layout.walls.map((wall) => ({ ...wall })),
+      playersAtExit: { 0: false, 1: false },
+      switches: (layout.switches ?? []).map((sw) => ({
+        ...sw,
+        position: { ...sw.position },
+        active: false,
+      })),
+      doors: (layout.doors ?? []).map((door) => ({
+        ...door,
+        position: { ...door.position },
+        open: false,
+        requiresSwitches: [...door.requiresSwitches],
+      })),
+      hazards: (layout.hazards ?? []).map((h) => createHazardState(h)),
+      monsters: (layout.monsters ?? []).map((m) => createMonsterState(m)),
+    },
+    run: {
+      currentRoom: nextRoom,
+      totalRooms: run.totalRooms,
+      roomsCleared: run.roomsCleared + 1,
+      difficulty: nextDifficulty,
+      usedLayouts: [...run.usedLayouts, layout.layoutId],
+    },
   };
 }
 
@@ -399,6 +554,7 @@ export function createRandomCoOpLayout(random: () => number = Math.random): CoOp
     layoutId: selected.layoutId,
     exit: { ...selected.exit },
     walls: selected.walls.map((wall) => ({ ...wall })),
+    difficulty: selected.difficulty,
     snakes: selected.snakes.map((snake) => ({
       slotIndex: snake.slotIndex,
       direction: snake.direction,
@@ -715,6 +871,7 @@ export function advanceOneTick(match: MatchState, now: number, random: () => num
     deathReasons,
     soloMode: match.soloMode,
     coOp,
+    run: match.run,
   };
 }
 
@@ -809,6 +966,7 @@ export function applyDisconnectResult(match: MatchState, slotIndex: 0 | 1, now: 
     winnerSlotIndex: match.roomMode === 'co-op' ? null : otherConnectedAlive ? otherIndex : null,
     deathReasons: [{ slotIndex, reason: 'disconnect' }],
     coOp,
+    run: match.run,
   };
 }
 

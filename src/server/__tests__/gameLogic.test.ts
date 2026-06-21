@@ -1,14 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   advanceOneTick,
+  advanceCoOpRoom,
   computeSpeedInterval,
   createInitialCoOpMatchState,
+  createInitialCoOpRunWithRooms,
   createInitialMatchState,
   createRandomCoOpLayout,
+  difficultyForRoom,
   getHazardPosition,
   getMonsterPosition,
   isHazardLethal,
   advanceMonsterTick,
+  runDifficultyValue,
+  selectLayoutForDifficulty,
   spawnFood,
   type GridPoint,
   type HazardState,
@@ -16,6 +21,7 @@ import {
   type PuzzleSwitch,
   type PuzzleDoor,
   type PatrolMonsterState,
+  type RunProgressionState,
 } from '../gameLogic.js';
 
 describe('computeSpeedInterval', () => {
@@ -795,5 +801,247 @@ describe('co-op patrol monster collision', () => {
     expect(after.deathReasons).toEqual(
       expect.arrayContaining([expect.objectContaining({ slotIndex: 0, reason: 'monster' })]),
     );
+  });
+});
+
+describe('multi-room run progression', () => {
+  describe('createInitialCoOpRunWithRooms', () => {
+    it('creates a match with run progression enabled', () => {
+      const match = createInitialCoOpRunWithRooms('RUN', Math.random, 5);
+      expect(match.run).not.toBeNull();
+      expect(match.run!.currentRoom).toBe(1);
+      expect(match.run!.totalRooms).toBe(5);
+      expect(match.run!.roomsCleared).toBe(0);
+      expect(match.run!.difficulty).toBe('easy');
+      expect(match.run!.usedLayouts.length).toBe(1);
+    });
+
+    it('uses the same co-op match structure as the base', () => {
+      const match = createInitialCoOpRunWithRooms('RUN', Math.random, 3);
+      expect(match.roomMode).toBe('co-op');
+      expect(match.coOp).not.toBeNull();
+      expect(match.snakes[0].alive).toBe(true);
+      expect(match.snakes[1].alive).toBe(true);
+      expect(match.status).toBe('countdown');
+    });
+  });
+
+  describe('difficultyForRoom', () => {
+    it('returns easy for rooms 1 and 2', () => {
+      expect(difficultyForRoom(1, 5)).toBe('easy');
+      expect(difficultyForRoom(2, 5)).toBe('easy');
+    });
+
+    it('returns medium for room 3', () => {
+      expect(difficultyForRoom(3, 5)).toBe('medium');
+    });
+
+    it('returns hard for rooms 4 and beyond', () => {
+      expect(difficultyForRoom(4, 5)).toBe('hard');
+      expect(difficultyForRoom(5, 5)).toBe('hard');
+      expect(difficultyForRoom(10, 10)).toBe('hard');
+    });
+  });
+
+  describe('runDifficultyValue', () => {
+    it('returns 0 for the first room', () => {
+      const run: RunProgressionState = { currentRoom: 1, totalRooms: 5, roomsCleared: 0, difficulty: 'easy', usedLayouts: [] };
+      expect(runDifficultyValue(run)).toBe(0);
+    });
+
+    it('returns 1 for the last room', () => {
+      const run: RunProgressionState = { currentRoom: 5, totalRooms: 5, roomsCleared: 4, difficulty: 'hard', usedLayouts: [] };
+      expect(runDifficultyValue(run)).toBe(1);
+    });
+
+    it('returns 0.5 for the middle room of a 5-room run', () => {
+      const run: RunProgressionState = { currentRoom: 3, totalRooms: 5, roomsCleared: 2, difficulty: 'medium', usedLayouts: [] };
+      expect(runDifficultyValue(run)).toBe(0.5);
+    });
+
+    it('returns 0 for single-room runs', () => {
+      const run: RunProgressionState = { currentRoom: 1, totalRooms: 1, roomsCleared: 0, difficulty: 'easy', usedLayouts: [] };
+      expect(runDifficultyValue(run)).toBe(0);
+    });
+  });
+
+  describe('selectLayoutForDifficulty', () => {
+    it('selects easy layouts when difficulty is easy', () => {
+      const layout = selectLayoutForDifficulty('easy', () => 0);
+      expect(layout.difficulty).toBe('easy');
+      expect(['crossroads-open', 'double-corridor-open', 'split-pillars-open']).toContain(layout.layoutId);
+    });
+
+    it('selects medium layouts when difficulty is medium', () => {
+      const layout = selectLayoutForDifficulty('medium', () => 0);
+      expect(layout.difficulty).toBe('medium');
+      expect(['dual-switch-gate', 'hazard-crossroads']).toContain(layout.layoutId);
+    });
+
+    it('selects hard layouts when difficulty is hard', () => {
+      const layout = selectLayoutForDifficulty('hard', () => 0);
+      expect(layout.difficulty).toBe('hard');
+      expect(['sweep-corridor', 'patrol-gauntlet']).toContain(layout.layoutId);
+    });
+
+    it('avoids already-used layouts when possible', () => {
+      // There are 3 easy layouts. If we've used 2, it should pick the 3rd.
+      const used = ['crossroads-open', 'double-corridor-open'];
+      const layout = selectLayoutForDifficulty('easy', () => 0, used);
+      expect(layout.layoutId).toBe('split-pillars-open');
+    });
+
+    it('falls back to the bucket if all layouts have been used', () => {
+      const used = ['crossroads-open', 'double-corridor-open', 'split-pillars-open'];
+      const layout = selectLayoutForDifficulty('easy', () => 0.5, used);
+      // Should still return a valid easy layout (wraps around)
+      expect(layout.difficulty).toBe('easy');
+    });
+  });
+
+  describe('advanceCoOpRoom', () => {
+    it('advances to the next room with incremented counters', () => {
+      const match = createInitialCoOpRunWithRooms('ADV', () => 0, 5);
+      const next = advanceCoOpRoom(match, () => 0.5);
+      expect(next).not.toBeNull();
+      expect(next!.run!.currentRoom).toBe(2);
+      expect(next!.run!.roomsCleared).toBe(1);
+      expect(next!.run!.totalRooms).toBe(5);
+      expect(next!.run!.difficulty).toBe('easy');
+    });
+
+    it('returns null when the run is complete (last room)', () => {
+      const match = createInitialCoOpRunWithRooms('DONE', () => 0, 3);
+      // Move to last room
+      match.run!.currentRoom = 3;
+      match.run!.roomsCleared = 2;
+      const result = advanceCoOpRoom(match, () => 0);
+      expect(result).toBeNull();
+    });
+
+    it('resets all stale room state between rooms', () => {
+      // Use seed 0.55 for dual-switch-gate (has switches and doors)
+      const match = createInitialCoOpRunWithRooms('CLEAN', () => 0.55, 5);
+      const coOp = match.coOp!;
+      
+      // Simulate some state changes in the current room
+      coOp.playersAtExit[0] = true;
+      coOp.playersAtExit[1] = true;
+      if (coOp.switches.length > 0) coOp.switches[0].active = true;
+      if (coOp.doors.length > 0) coOp.doors[0].open = true;
+      match.snakes[0].score = 10;
+      match.snakes[0].alive = false;
+      match.tickNumber = 100;
+      
+      // Advance to next room
+      const next = advanceCoOpRoom(match, () => 0.3);
+      expect(next).not.toBeNull();
+      
+      // Verify stale state is fully cleaned
+      expect(next!.coOp!.playersAtExit[0]).toBe(false);
+      expect(next!.coOp!.playersAtExit[1]).toBe(false);
+      expect(next!.coOp!.switches.every((sw) => !sw.active)).toBe(true);
+      expect(next!.coOp!.doors.every((door) => !door.open)).toBe(true);
+      expect(next!.snakes[0].alive).toBe(true);
+      expect(next!.snakes[1].alive).toBe(true);
+      expect(next!.snakes[0].score).toBe(0);
+      expect(next!.snakes[1].score).toBe(0);
+      expect(next!.tickNumber).toBe(0);
+      expect(next!.result).toBeNull();
+      expect(next!.deathReasons).toEqual([]);
+      expect(next!.status).toBe('active');
+    });
+
+    it('resets snake positions to the new layout spawn points', () => {
+      const match = createInitialCoOpRunWithRooms('POS', () => 0, 5);
+      // Move snakes to some arbitrary positions
+      match.snakes[0].body = [{ x: 29, y: 29 }, { x: 28, y: 29 }, { x: 27, y: 29 }];
+      match.snakes[1].body = [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }];
+      
+      const next = advanceCoOpRoom(match, () => 0);
+      expect(next).not.toBeNull();
+      
+      // Snakes should be at new spawn positions (not the old ones)
+      const head0 = next!.snakes[0].body[0];
+      const head1 = next!.snakes[1].body[0];
+      // Verify they're not at the old positions
+      expect(head0).not.toEqual({ x: 29, y: 29 });
+      expect(head1).not.toEqual({ x: 0, y: 0 });
+      // Verify they're valid (3-segment bodies)
+      expect(next!.snakes[0].body.length).toBe(3);
+      expect(next!.snakes[1].body.length).toBe(3);
+    });
+
+    it('records used layouts in the run state', () => {
+      const match = createInitialCoOpRunWithRooms('LAYOUT', () => 0, 5);
+      const firstLayout = match.coOp!.layoutId;
+      
+      const next = advanceCoOpRoom(match, () => 0.5);
+      expect(next).not.toBeNull();
+      expect(next!.run!.usedLayouts).toContain(firstLayout);
+      expect(next!.run!.usedLayouts.length).toBe(2);
+    });
+
+    it('difficulty escalates through the run', () => {
+      const match = createInitialCoOpRunWithRooms('DIFF', () => 0, 5);
+      
+      // Room 1 -> 2: still easy
+      const room2 = advanceCoOpRoom(match, () => 0.5)!;
+      expect(room2.run!.difficulty).toBe('easy');
+      expect(room2.run!.currentRoom).toBe(2);
+      
+      // Room 2 -> 3: medium
+      const room3 = advanceCoOpRoom(room2, () => 0.5)!;
+      expect(room3.run!.difficulty).toBe('medium');
+      expect(room3.run!.currentRoom).toBe(3);
+      
+      // Room 3 -> 4: hard
+      const room4 = advanceCoOpRoom(room3, () => 0.5)!;
+      expect(room4.run!.difficulty).toBe('hard');
+      expect(room4.run!.currentRoom).toBe(4);
+    });
+
+    it('returns null when match has no run progression', () => {
+      const match = createInitialCoOpMatchState('NORUN', () => 0);
+      expect(match.run).toBeNull();
+      const result = advanceCoOpRoom(match, () => 0);
+      expect(result).toBeNull();
+    });
+
+    it('new room has hazard states reset to initial', () => {
+      // Use hazard-crossroads seed
+      const match = createInitialCoOpRunWithRooms('HAZ', () => 0.65, 5);
+      
+      // Advance some hazards through phases
+      for (let i = 0; i < 10; i++) {
+        advanceOneTick(match, Date.now());
+      }
+      
+      const next = advanceCoOpRoom(match, () => 0.95); // select patrol-gauntlet (hard)
+      expect(next).not.toBeNull();
+      // If the next room has hazards, they should be in cooldown/initial state
+      for (const h of next!.coOp!.hazards) {
+        expect(h.phase).toBe('cooldown');
+        expect(h.ticksInPhase).toBe(0);
+      }
+    });
+
+    it('new room has monster states reset to initial', () => {
+      // Use patrol-gauntlet seed
+      const match = createInitialCoOpRunWithRooms('MON', () => 0.95, 5);
+      
+      // Advance monsters
+      for (let i = 0; i < 20; i++) {
+        advanceOneTick(match, Date.now());
+      }
+      
+      const next = advanceCoOpRoom(match, () => 0); // select an easy layout
+      expect(next).not.toBeNull();
+      // If the next room has monsters, they should be at path start
+      for (const m of next!.coOp!.monsters) {
+        expect(m.pathIndex).toBe(0);
+        expect(m.direction).toBe(1);
+      }
+    });
   });
 });
