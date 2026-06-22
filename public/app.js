@@ -218,6 +218,16 @@ socket.on('game:state', (payload) => {
   renderRematch(payload.rematch, payload.phase);
 });
 
+socket.on('game:room-transition', (payload) => {
+  // Show transition overlay with room info
+  const gameStatusInlineEl = document.getElementById('game-status-inline');
+  const gameMessageEl = document.getElementById('game-message');
+  if (gameStatusInlineEl) gameStatusInlineEl.textContent = `Room ${payload.roomsCleared} cleared! Advancing to room ${payload.roomNumber}/${payload.totalRooms}…`;
+  if (gameMessageEl) gameMessageEl.textContent = `Difficulty increasing. Prepare for the next challenge!`;
+  // Brief visual flash — the next game:state event will update the full room
+  applyPhaseTheme('live', 'neutral');
+});
+
 socket.on('game:ended', (payload) => {
   const previousGameState = latestGameState;
   latestGameState = payload.finalState;
@@ -763,7 +773,7 @@ function renderGame(state, perSlotResult) {
 
   if (state.phase === 'starting') {
     gamePhaseLabel.textContent = 'Countdown';
-    gameStatusInlineEl.textContent = state.roomMode === 'co-op' ? (state.coOp?.monsters?.length ? 'Patrol room! Dodge the purple monsters.' : state.coOp?.switches?.length ? 'Co-op puzzle room. Coordinate to activate switches.' : 'Co-op room loading. Plan your routes to the exit.') : 'Match starts in moments. Queue your opener now.';
+    gameStatusInlineEl.textContent = state.roomMode === 'co-op' ? (state.coOp?.run ? `Room ${state.coOp.run.currentRoom}/${state.coOp.run.totalRooms}. ${state.coOp?.monsters?.length ? 'Patrol room! Dodge the purple monsters.' : state.coOp?.switches?.length ? 'Puzzle room. Coordinate switches.' : 'Get ready — reach the exit together.'}` : (state.coOp?.monsters?.length ? 'Patrol room! Dodge the purple monsters.' : state.coOp?.switches?.length ? 'Co-op puzzle room. Coordinate to activate switches.' : 'Co-op room loading. Plan your routes to the exit.')) : 'Match starts in moments. Queue your opener now.';
     countdownLabel.textContent = `Countdown: ${state.countdownSecondsRemaining ?? 3}`;
     gameMessageEl.textContent = state.roomMode === 'co-op'
       ? (state.coOp?.monsters?.length ? 'Purple creatures patrol fixed paths. Time your movements to dodge them. Contact is deadly.' : state.coOp?.switches?.length ? 'Purple plates are pressure switches. Brown tiles are closed doors. Step on switches to open the path.' : 'Reach the glowing exit together. Walls are lethal, and a player who reaches the exit waits there for their teammate.')
@@ -787,10 +797,20 @@ function renderGame(state, perSlotResult) {
       gameMessageEl.textContent = `You scored ${yourScore}. Press rematch to try again.`;
       applyPhaseTheme('result', yourOutcome === 'win' ? 'win' : 'lose');
     } else if (state.roomMode === 'co-op') {
-      gameStatusInlineEl.textContent = yourOutcome === 'win' ? 'Escape complete!' : 'Co-op run failed.';
-      gameMessageEl.textContent = yourOutcome === 'win'
-        ? 'Both players reached the exit. Rematch is ready immediately.'
-        : 'A snake went down before the team escaped. Rematch is ready immediately.';
+      const runInfo = state.coOp?.run;
+      if (yourOutcome === 'win' && runInfo) {
+        gameStatusInlineEl.textContent = `Run complete! Cleared all ${runInfo.totalRooms} rooms!`;
+        gameMessageEl.textContent = `You survived all ${runInfo.totalRooms} rooms of the dungeon run. Rematch to try again!`;
+      } else if (yourOutcome === 'win') {
+        gameStatusInlineEl.textContent = 'Escape complete!';
+        gameMessageEl.textContent = 'Both players reached the exit. Rematch is ready immediately.';
+      } else if (runInfo) {
+        gameStatusInlineEl.textContent = `Run failed at room ${runInfo.currentRoom}/${runInfo.totalRooms}.`;
+        gameMessageEl.textContent = `A snake went down in room ${runInfo.currentRoom}. ${runInfo.roomsCleared} room(s) were cleared. Rematch to try again.`;
+      } else {
+        gameStatusInlineEl.textContent = 'Co-op run failed.';
+        gameMessageEl.textContent = 'A snake went down before the team escaped. Rematch is ready immediately.';
+      }
       applyPhaseTheme('result', yourOutcome === 'win' ? 'win' : 'lose');
     } else {
       gameStatusInlineEl.textContent = yourOutcome === 'win' ? 'You win!' : yourOutcome === 'lose' ? 'You lose.' : 'Round ended in a draw.';
@@ -960,9 +980,10 @@ function updateScoreCards(state, perSlotResult) {
 
 function describeCoOpProgress(state) {
   const reached = Number(Boolean(state.coOp?.playersAtExit?.[0])) + Number(Boolean(state.coOp?.playersAtExit?.[1]));
-  if (reached === 2) return 'Both players are at the exit. Resolution incoming.';
-  if (reached === 1) return 'One player is safe at the exit. Guide the teammate in.';
-  return 'Reach the glowing exit together. Walls are deadly.';
+  const runPrefix = state.coOp?.run ? `Room ${state.coOp.run.currentRoom}/${state.coOp.run.totalRooms}. ` : '';
+  if (reached === 2) return runPrefix + 'Both players are at the exit. Resolution incoming.';
+  if (reached === 1) return runPrefix + 'One player is safe at the exit. Guide the teammate in.';
+  return runPrefix + 'Reach the glowing exit together. Walls are deadly.';
 }
 
 function applyLobbyEffects(previousLobbyState, nextLobbyState) {
